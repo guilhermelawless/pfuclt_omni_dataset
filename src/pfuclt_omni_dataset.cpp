@@ -1,6 +1,27 @@
-
 #include "pfuclt_omni_dataset.h"
 
+template <typename T>
+T calc_stdDev(vector<T> *vec){
+    accumulator_set<T, stats<tag::variance> > acc;
+    for_each(vec->begin(), vec->end(), boost::bind<void>(boost::ref(acc), _1));
+    return (T) sqrt(boost::accumulators::extract::variance(acc));
+}
+
+template <typename T>
+std::vector<size_t> order_index(std::vector<T> const& values)
+{
+    //from http://stackoverflow.com/a/10585614
+    //return sorted indices of vector values
+
+    using namespace boost::phoenix;
+    using namespace boost::phoenix::arg_names;
+
+    std::vector<size_t> indices(values.size());
+    int i = 0;
+    std::transform(values.begin(), values.end(), indices.begin(), ref(i)++);
+    std::sort(indices.begin(), indices.end(), ref(values)[arg1] > ref(values)[arg2]);
+    return indices;
+}
 
 inline bool areAllTeammatesActive(bool* areRobotsStarted)
 {
@@ -47,67 +68,108 @@ void ReadRobotMessages::initializeFixedLandmarks(vector< vector<float> >& runMap
 
 void SelfRobot::initPFset()
 {
-  
-  unsigned int seed_ = 0;
 
+    const float particleSetRandomInitValues[18][2] =
+    {
+        //0,1,2
+        {0, 6.0},
+        {-4.5,4.5},
+        {-PI, PI},
+
+        //3,4,5
+        {0, 6.0},
+        {-4.5,4.5},
+        {-PI, PI},
+
+        //6,7,8
+        {0, 6.0},
+        {-4.5,4.5},
+        {-PI, PI},
+
+        //9,10,11
+        {initArray[6]-0.5, initArray[6]+0.5},
+        {initArray[7]-0.5, initArray[7]+0.5},
+        {PI-0.001, PI+0.001},
+
+        //12,13,14
+        {0, 6.0},
+        {-4.5,4.5},
+        {-PI, PI},
+
+        //15,16,17
+        {0, 6.0},
+        {-4.5,4.5},
+        {-PI, PI},
+    };
+
+    for (int i = 0; i < 18; ++i)
+    {
+        boost::random::uniform_real_distribution<> dist(particleSetRandomInitValues[i][0], particleSetRandomInitValues[i][1]);
+        BOOST_FOREACH( float &f, particleSet_[i]){
+            f = dist(seed_);
+        }
+
+        //std::for_each(particleSet_[i].begin(), particleSet_[i].end(), boost::bind<void>(dist(seed_), _1));
+    }
+
+    //older IPP way of accomplishing this
+/*
 //     ippsRandUniform_Direct_32f (&particleSet_[0][0], nParticles_, fullStateOMNI4.robotPose[0].X-0.5, fullStateOMNI4.robotPose[0].X+0.5, &seed_);
 //     ippsRandUniform_Direct_32f (&particleSet_[1][0], nParticles_, fullStateOMNI4.robotPose[0].Y-0.5, fullStateOMNI4.robotPose[0].Y+0.5, &seed_);
 //     ippsRandUniform_Direct_32f (&particleSet_[2][0], nParticles_, fullStateOMNI4.robotPose[0].Theta-0.001, fullStateOMNI4.robotPose[0].Theta+0.001, &seed_);
-//     
+//
 //     ippsRandUniform_Direct_32f (&particleSet_[3][0], nParticles_, fullStateOMNI3.robotPose[0].X-0.5, fullStateOMNI3.robotPose[0].X+0.5, &seed_);
 //     ippsRandUniform_Direct_32f (&particleSet_[4][0], nParticles_, fullStateOMNI3.robotPose[0].Y-0.5, fullStateOMNI3.robotPose[0].Y+0.5, &seed_);
 //     ippsRandUniform_Direct_32f (&particleSet_[5][0], nParticles_, fullStateOMNI3.robotPose[0].Theta-0.001, fullStateOMNI3.robotPose[0].Theta+0.001, &seed_);
 
-        
+
     ippsRandUniform_Direct_32f (&particleSet_[0][0], nParticles_, 0, 6.0, &seed_);
     ippsRandUniform_Direct_32f (&particleSet_[1][0], nParticles_, -4.5, 4.5, &seed_);
     ippsRandUniform_Direct_32f (&particleSet_[2][0], nParticles_, -PI, PI, &seed_);
-    
+
     ippsRandUniform_Direct_32f (&particleSet_[3][0], nParticles_, 0, 6.0, &seed_);
     ippsRandUniform_Direct_32f (&particleSet_[4][0], nParticles_, -4.5, 4.5, &seed_);
     ippsRandUniform_Direct_32f (&particleSet_[5][0], nParticles_, -PI, PI, &seed_);
-    
+
 //     ippsRandUniform_Direct_32f (&particleSet_[6][0], nParticles_, fullStateOMNI1.robotPose[0].X-0.5, fullStateOMNI1.robotPose[0].X+0.5, &seed_);
 //     ippsRandUniform_Direct_32f (&particleSet_[7][0], nParticles_, fullStateOMNI1.robotPose[0].Y-0.5, fullStateOMNI1.robotPose[0].Y+0.5, &seed_);
 //     ippsRandUniform_Direct_32f (&particleSet_[8][0], nParticles_, fullStateOMNI1.robotPose[0].Theta-0.001, fullStateOMNI1.robotPose[0].Theta+0.001, &seed_);
-    
+
     ippsRandUniform_Direct_32f (&particleSet_[9][0], nParticles_, initArray[6]-0.5, initArray[6]+0.5, &seed_);
     ippsRandUniform_Direct_32f (&particleSet_[10][0], nParticles_, initArray[7]-0.5, initArray[7]+0.5, &seed_);
     ippsRandUniform_Direct_32f (&particleSet_[11][0], nParticles_, PI-0.001, PI+0.001, &seed_);
-    
+
     ippsRandUniform_Direct_32f (&particleSet_[6][0], nParticles_, 0, 6.0, &seed_);
     ippsRandUniform_Direct_32f (&particleSet_[7][0], nParticles_, -4.5, 4.5, &seed_);
     ippsRandUniform_Direct_32f (&particleSet_[8][0], nParticles_, -PI, PI, &seed_);
-    
+
 //     ippsRandUniform_Direct_32f (&particleSet_[9][0], nParticles_, 0, 6.0, &seed_);
 //     ippsRandUniform_Direct_32f (&particleSet_[10][0], nParticles_, -4.5, 4.5, &seed_);
 //     ippsRandUniform_Direct_32f (&particleSet_[11][0], nParticles_, -PI, PI, &seed_);
-    
+
     ippsRandUniform_Direct_32f (&particleSet_[12][0], nParticles_, 0, 6.0, &seed_);
     ippsRandUniform_Direct_32f (&particleSet_[13][0], nParticles_, -4.5, 4.5, &seed_);
     ippsRandUniform_Direct_32f (&particleSet_[14][0], nParticles_, -PI, PI, &seed_);
-    
+
     ippsRandUniform_Direct_32f (&particleSet_[15][0], nParticles_, 0, 6.0, &seed_);
     ippsRandUniform_Direct_32f (&particleSet_[16][0], nParticles_, -4.5, 4.5, &seed_);
-    ippsRandUniform_Direct_32f (&particleSet_[17][0], nParticles_, 0, 0.5, &seed_);    
+    ippsRandUniform_Direct_32f (&particleSet_[17][0], nParticles_, 0, 0.5, &seed_);
+*/
+
+    // Particle weights
+    particleSet_[18].assign(particleSet_[18].size(), 1/nParticles_);
     
-    int particle = 0;
-    for(particle = 0; particle<nParticles_; particle++)
-    {    
-      particleSet_[18][particle] = 1/nParticles_;
-    }  
-    
+    // Put into message
     for(int i=0; i<nParticles_; i++)
     {
       for(int j=0; j<19; j++)
       {
-	
-	//pfParticlesSelf[i][j] = particleSet_[j][i];
-	
-	pfucltPtcls.particles[i].particle[j] = pfParticlesSelf[i][j];
-      }      
+          pfucltPtcls.particles[i].particle[j] = pfParticlesSelf[i][j];
+      }
     }
-//     
+
+
+//
 //     float tempParticles[3][nParticles_];
 //     
 //     // for the robots
@@ -147,6 +209,7 @@ void SelfRobot::initPFset()
 //     }     
 //     
 //     particlePublisher.publish(pfucltPtcls);
+
   
 }
     
@@ -167,57 +230,60 @@ void SelfRobot::PFfuseTargetInfo()
 
 void SelfRobot::PFresample()
 {
-  unsigned int seed_ = 0;
-  Ipp32f stdX,stdY,stdTheta;
-  
- for(int robNo = 0; robNo<6; robNo++)     // for 4 robots : OMNI4, OMNI3, OMNI1 and OMNI5 in a row
-  { 
-    ippsStdDev_32f(&particleSet_[0+robNo*3][0], nParticles_, &stdX,ippAlgHintFast);
-    ippsStdDev_32f(&particleSet_[1+robNo*3][0], nParticles_, &stdY,ippAlgHintFast);
-    ippsStdDev_32f(&particleSet_[2+robNo*3][0], nParticles_, &stdTheta,ippAlgHintFast);
-    //cout<<" At iteration "<<PF_IterationCount_OMNI5<<" stdX = "<<stdX<<" stdY = "<<stdY<<" stdTheta = "<<stdTheta<<endl; 
-  }
-  
-  Ipp32f particlesDuplicate_1[19][nParticles_];
-  ippsCopy_32f (&particleSet_[0][0], &particlesDuplicate_1[0][0], nParticles_* 19); 
- 
-  int sortedIndex[nParticles_];   
-  Ipp32f sortedWt[nParticles_];
-  ippsCopy_32f (&particleSet_[18][0], &sortedWt[0], nParticles_);
-  ippsSortIndexDescend_32f_I(&sortedWt[0],&sortedIndex[0],nParticles_);
+    float stdX,stdY,stdTheta;
 
-  
-  
-  for (int i= 0; i < nParticles_; i++) 
-      {
-	int p = sortedIndex[i];
-	for (int j= 0; j < 19; j++) 
-	    {	
-	      particleSet_[j][i] = particlesDuplicate_1[j][p];
-	    }
-	//cout<<"weight of particle at x = "<<particleSet_[9][i]<<" , Y = "<<particleSet_[10][i]<<" and orientation = "<<particleSet_[11][i] <<" has weight = " <<particleSet_[18][i]<<endl;    
-      }  
-  
+    for(int robNo = 0; robNo<6; robNo++)     // for 4 robots : OMNI4, OMNI3, OMNI1 and OMNI5 in a row
+    {
 
-  //Normalize the weights
-  Ipp32f weightSum;
-  ippsSum_32f (&particleSet_[18][0], nParticles_, &weightSum, ippAlgHintFast);
-  if(weightSum==0.0 || weightSum!=weightSum)
-  {
-    //No resampling if all weights go to zero
-    printf("WeightSum of Particles = %f\n",weightSum);
-    return;
-  }
-  else
-  {
-     printf("WeightSum of Particles = %f\n",weightSum);
-  }
-  
-  ippsCopy_32f (&particleSet_[18][0], &normalizedWeights[0], nParticles_);
-  ippsDivC_32f_I (weightSum, &normalizedWeights[0], nParticles_);
-  
-  Ipp32f particlesDuplicate[19][nParticles_];
-  ippsCopy_32f (&particleSet_[0][0], &particlesDuplicate[0][0], nParticles_* 19);  
+        stdX = calc_stdDev<float>(&particleSet_[0+robNo*3]);
+        stdY = calc_stdDev<float>(&particleSet_[1+robNo*3]);
+        stdTheta = calc_stdDev<float>(&particleSet_[2+robNo*3]);
+
+        //?????????????????????????????? what next? ????????????????????????????????????????????????????
+
+        //IPP
+        /*
+        ippsStdDev_32f(&particleSet_[0+robNo*3][0], nParticles_, &stdX,ippAlgHintFast);
+        ippsStdDev_32f(&particleSet_[1+robNo*3][0], nParticles_, &stdY,ippAlgHintFast);
+        ippsStdDev_32f(&particleSet_[2+robNo*3][0], nParticles_, &stdTheta,ippAlgHintFast);
+        */
+    }
+
+    // Duplicate all particles
+    vector<float> particlesDuplicate[19];
+    for(int i=0; i<19; i++){
+        particlesDuplicate[i] = particleSet_[i];
+    }
+
+    // Duplicate particle weights and get sorted indices
+    vector<size_t> sortedIndex = order_index<float>(particleSet_[18]);
+
+    //Re-arrange particles according to particle weight sorted indices
+    for(int i=0; i < nParticles_; i++)  //for each particle
+    {
+        size_t index = sortedIndex[i];  //get its new index
+
+        for(int j=0; j<19; j++) //and use the duplicated partiles to sort the set
+            particleSet_[j][i] = particlesDuplicate[j][index];
+
+        //ROS_DEBUG("Particle at X = %f, Y = %f, Theta = %f has Weight = %f", particleSet_[])
+    }
+
+    //Normalize the weights using the sum of all weights
+    float weightSum = std::accumulate(particleSet_[18].begin(), particleSet_[18].end(), 0);
+
+    if(weightSum==0.0)
+        ROS_WARN("WeightSum of Particles = %f\n",weightSum);
+    else
+        ROS_INFO("WeightSum of Particles = %f\n",weightSum);
+
+    normalizedWeights = particleSet_[18];
+    std::transform(normalizedWeights.begin(), normalizedWeights.end(), normalizedWeights.begin(), bind1st(divides<float>(),weightSum));
+
+    //Duplicate particles for resampling
+    for(int i=0; i<19; i++){
+        particlesDuplicate[i] = particleSet_[i];
+    }
   
   //Implementing a very basic resampler... a particle gets selected proportional to its weight and 50% of the top particles are kept
   float cumulativeWeights[nParticles_];
@@ -236,10 +302,13 @@ void SelfRobot::PFresample()
 	pfucltPtcls.particles[par].particle[k] = particleSet_[k][par];
       }           
   }
-  
-   ippsRandUniform_Direct_32f (&particleSet_[9][100], nParticles_/2, particleSet_[9][0]-1.5, particleSet_[9][0]+1.5, &seed_);
-   ippsRandUniform_Direct_32f (&particleSet_[10][100], nParticles_/2, particleSet_[10][0]-1.5, particleSet_[10][0]+1.5, &seed_);
-   ippsRandUniform_Direct_32f (&particleSet_[11][100], nParticles_/2, particleSet_[11][0]-1.5, particleSet_[11][0]+1.5, &seed_);  
+
+  for(size_t r=9; r<12; r++){
+      boost::random::uniform_real_distribution<> dist(particleSet_[r][0]-1.5, particleSet_[r][0]+1.5);
+      BOOST_FOREACH(float &f, particleSet_[r]){
+          f = dist(seed_);
+      }
+  }
   
   for(int par=100;par<nParticles_; par++)
   {

@@ -13,6 +13,8 @@
 #include <pfuclt_omni_dataset/particles.h>
 #include <boost/bind.hpp>
 #include <boost/ref.hpp>
+#include <vector>
+#include <algorithm>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -20,7 +22,22 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 
-#include </opt/intel/ipp/include/ipp.h>
+//#include </opt/intel/ipp/include/ipp.h>
+
+//GNU Scientific Library
+/*
+#include <gsl/gsl_rng.h>        //Random Number Generation
+#include <gsl/gsl_randist.h>    //Random Number Distributions
+#include <gsl/gsl_vector.h>     //GSL vectors
+*/
+
+//Boost libraries
+#include <boost/random.hpp>
+#include <boost/foreach.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
+#include <boost/spirit/include/phoenix_core.hpp>
+#include <boost/spirit/include/phoenix_operator.hpp>
 
 // #define M_PI        3.141592653589793238462643383280    /* pi */
 #define PI 3.14159
@@ -57,11 +74,20 @@ const double initArray[10] = {5.086676,-2.648978,0.0,0.0,1.688772,-2.095153,3.26
 
 static const int nParticles_ = 200;
 
-
 using namespace ros;
 using namespace std;
+using namespace boost::accumulators;
 
 vector< vector<float> > map_1;
+
+typedef boost::random::mt19937 RNGType;
+
+//Auxiliary functions
+template <typename T>
+T calc_stdDev(T vec);
+
+template <typename T>
+std::vector<size_t> order_index(std::vector<T> const& values);
 
 class SelfRobot
 {
@@ -80,17 +106,18 @@ class SelfRobot
   
   Publisher State_publisher, targetStatePublisher, virtualGTPublisher, particlePublisher;
   read_omni_dataset::RobotState msg;
-  
-  
-  Ipp32f particleSet_[19][nParticles_]; // fields in rows are : OMNI4: X,Y,Theta,OMNI1: X,Y,Theta,OMNI3: X,Y,Theta,OMNI5: X,Y,Theta,Ball: X,Y,Z,ParticleWeight
-  
-  Ipp32f weightOMNI[4][nParticles_];
-  Ipp32f normalizedWeights[nParticles_];
+
+  RNGType seed_;
+  vector<float> particleSet_[19];
+  //Ipp32f particleSet_[19][nParticles_]; // fields in rows are : OMNI4: X,Y,Theta,OMNI1: X,Y,Theta,OMNI3: X,Y,Theta,OMNI5: X,Y,Theta,Ball: X,Y,Z,ParticleWeight
+
+  vector<float> normalizedWeights;
+  /*
   Ipp32f normalizedWeightsSorted[nParticles_];
   Ipp32f normalizedCumWeightsSorted[nParticles_];
   int normalizedCumWeightsSortedIndex[nParticles_];
   Ipp32f ballWeights[nParticles_];  
-  
+  */
   
   vector< vector<float> >& pfParticlesSelf;
   
@@ -100,7 +127,7 @@ class SelfRobot
   bool particlesInitialized;
   
   public:
-    SelfRobot(NodeHandle *nh, int robotNumber, Eigen::Isometry2d _initPose, bool *_ifRobotIsStarted, vector< vector<float> >& _ptcls): initPose(_initPose), curPose(_initPose), ifRobotIsStarted(_ifRobotIsStarted), pfParticlesSelf(_ptcls)
+    SelfRobot(NodeHandle *nh, int robotNumber, Eigen::Isometry2d _initPose, bool *_ifRobotIsStarted, vector< vector<float> >& _ptcls): initPose(_initPose), curPose(_initPose), ifRobotIsStarted(_ifRobotIsStarted), pfParticlesSelf(_ptcls), seed_(time(0))
     {
     
       sOdom_ = nh->subscribe<nav_msgs::Odometry>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/odometry", 10, boost::bind(&SelfRobot::selfOdometryCallback,this, _1,robotNumber+1));
@@ -126,6 +153,10 @@ class SelfRobot
       
       ifRobotIsStarted[robotNumber] = false;      
       particlesInitialized = false;
+
+      for(int i=0; i<19; i++){
+          particleSet_[i].resize(nParticles_);
+      }
  
     }
 
@@ -157,7 +188,7 @@ class SelfRobot
     
     // publish the estimated state of all the teammate robot
 // private: 
-    void publishState(float, float, float);    
+    void publishState(float, float, float);
     
 };
 
