@@ -1,0 +1,6 @@
+<launch>
+<arg name="read_launch_file" default="all_four_robots.launch"/>
+
+	<node name="performer" pkg="pfuclt_omni_dataset" type="pfuclt_omni_dataset"/>
+	<include file="$(find read_omni_dataset)/launch/$(arg read_launch_file)"/>
+</launch>

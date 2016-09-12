@@ -120,14 +120,11 @@ class SelfRobot
   */
   
   vector< vector<float> >& pfParticlesSelf;
-  
-  
-  
-  bool *ifRobotIsStarted; 
+
   bool particlesInitialized;
   
   public:
-    SelfRobot(NodeHandle *nh, int robotNumber, Eigen::Isometry2d _initPose, bool *_ifRobotIsStarted, vector< vector<float> >& _ptcls): initPose(_initPose), curPose(_initPose), ifRobotIsStarted(_ifRobotIsStarted), pfParticlesSelf(_ptcls), seed_(time(0))
+    SelfRobot(NodeHandle *nh, int robotNumber, Eigen::Isometry2d _initPose, bool *_ifRobotIsStarted, vector< vector<float> >& _ptcls): initPose(_initPose), curPose(_initPose), ifRobotIsStarted_(_ifRobotIsStarted), pfParticlesSelf(_ptcls), seed_(time(0))
     {
     
       sOdom_ = nh->subscribe<nav_msgs::Odometry>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/odometry", 10, boost::bind(&SelfRobot::selfOdometryCallback,this, _1,robotNumber+1));
@@ -151,7 +148,7 @@ class SelfRobot
       
       particlePublisher = nh->advertise<pfuclt_omni_dataset::particles>("/pfuclt_particles",10);
       
-      ifRobotIsStarted[robotNumber] = false;      
+      ifRobotIsStarted_[robotNumber] = false;
       particlesInitialized = false;
 
       for(int i=0; i<19; i++){
@@ -187,9 +184,12 @@ class SelfRobot
     Time prevTime;
     
     // publish the estimated state of all the teammate robot
-// private: 
+// private:
     void publishState(float, float, float);
-    
+
+private:
+    bool *ifRobotIsStarted_;
+
 };
 
 
@@ -279,7 +279,7 @@ class ReadRobotMessages
 	  
 	  if(i+1 == MY_ID)
 	  {
-	    robot_ = new SelfRobot(&nh_,i, initialRobotPose,&robotStarted[0],pfParticles);
+        robot_ = new SelfRobot(&nh_,i, initialRobotPose,&robotStarted[0],pfParticles);
 	  }
 	  else
 	  {	  

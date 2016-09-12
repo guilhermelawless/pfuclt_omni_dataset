@@ -215,7 +215,7 @@ void SelfRobot::initPFset()
     
 void SelfRobot::PFpredict()
 {
-  
+
 }
 
 void SelfRobot::PFfuseRobotInfo()
@@ -297,7 +297,7 @@ void SelfRobot::PFresample()
   {
     for(int k=0; k<19;k++)
       {
-	particleSet_[k][par] = particlesDuplicate[k][par];
+    particleSet_[k][par] = particlesDuplicate[k][par];
 	pfParticlesSelf[par][k] = particleSet_[k][par]; 
 	pfucltPtcls.particles[par].particle[k] = particleSet_[k][par];
       }           
@@ -420,7 +420,7 @@ void SelfRobot::PFresample()
 
 void SelfRobot::selfOdometryCallback(const nav_msgs::Odometry::ConstPtr& odometry, int RobotNumber)
 {
-  ifRobotIsStarted[RobotNumber-1]=true;
+  ifRobotIsStarted_[RobotNumber-1]=true;
   
   uint seq = odometry->header.seq;
   prevTime = curTime;
@@ -449,7 +449,7 @@ void SelfRobot::selfOdometryCallback(const nav_msgs::Odometry::ConstPtr& odometr
   double angle = acos(r(0,0));
   
   
-  if(areAllTeammatesActive(ifRobotIsStarted) && !particlesInitialized)
+  if(areAllTeammatesActive(ifRobotIsStarted_) && !particlesInitialized)
   {
     initPFset();
     particlesInitialized = true;
@@ -466,10 +466,10 @@ void SelfRobot::selfOdometryCallback(const nav_msgs::Odometry::ConstPtr& odometr
 	prevParticle = Eigen::Rotation2Dd(particleSet_[2+(RobotNumber-1)*3][i]).toRotationMatrix();
 	prevParticle.translation() = Eigen::Vector2d(particleSet_[0+(RobotNumber-1)*3][i], particleSet_[1+(RobotNumber-1)*3][i]); 
 	curParticle = prevParticle*odom;
-	Eigen::Vector2d t;
-	t = curParticle.translation();
-	particleSet_[0+(RobotNumber-1)*3][i] = t(0);
-	particleSet_[1+(RobotNumber-1)*3][i] = t(1);
+    Eigen::Vector2d t;
+    t = curParticle.translation();
+    particleSet_[0+(RobotNumber-1)*3][i] = t(0);
+    particleSet_[1+(RobotNumber-1)*3][i] = t(1);
 	Eigen::Matrix<double,2,2> r_particle = curParticle.linear();
 	double angle_particle = acos(r_particle(0,0));	
 	particleSet_[2+(RobotNumber-1)*3][i] = angle_particle;
@@ -484,7 +484,7 @@ void SelfRobot::selfOdometryCallback(const nav_msgs::Odometry::ConstPtr& odometr
     
 
     
-//   publishState(0,0,0);  
+//   publishState(0,0,0);
   //cout<<"just after publishing state"<<endl;
   //ROS_INFO("Odometry propagated self robot state is x=%f, y=%f, theta=%f",t(0),t(1),angle);
 
@@ -821,8 +821,8 @@ void TeammateRobot::teammateOdometryCallback(const nav_msgs::Odometry::ConstPtr&
     }
     
   //ROS_INFO("Odometry propogated state f robot OMNI%d is x=%f, y=%f, theta=%f",RobotNumber, t(0),t(1),angle);
-  
-  
+
+
 
 }
 
