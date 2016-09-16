@@ -73,37 +73,44 @@ void SelfRobot::initPFset()
 
     const float particleSetRandomInitValues[18][2] =
     {
+        //OMNI 1
         //0,1,2
         {0, 6.0},
         {-4.5,4.5},
         {-PI, PI},
 
+        //OMNI 2
         //3,4,5
         {0, 6.0},
         {-4.5,4.5},
         {-PI, PI},
 
+        //OMNI 3
         //6,7,8
         {0, 6.0},
         {-4.5,4.5},
         {-PI, PI},
 
+        //OMNI 4
         //9,10,11
         {initArray[6]-0.5, initArray[6]+0.5},
         {initArray[7]-0.5, initArray[7]+0.5},
         {PI-0.001, PI+0.001},
 
+        //OMNI 5
         //12,13,14
         {0, 6.0},
         {-4.5,4.5},
         {-PI, PI},
 
+        //Ball
         //15,16,17
         {0, 6.0},
         {-4.5,4.5},
         {-PI, PI},
     };
 
+    //Sample from a uniform distribution for every particle subset, according to the values defined in particleSetRandomInitValues
     for (int i = 0; i < 18; ++i)
     {
         boost::random::uniform_real_distribution<> dist(particleSetRandomInitValues[i][0], particleSetRandomInitValues[i][1]);
@@ -158,7 +165,7 @@ void SelfRobot::initPFset()
     ippsRandUniform_Direct_32f (&particleSet_[17][0], nParticles_, 0, 0.5, &seed_);
 */
 
-    // Particle weights
+    // Particle weights init with same weight
     particleSet_[18].assign(particleSet_[18].size(), 1/nParticles_);
 
     // Put into message
@@ -166,7 +173,7 @@ void SelfRobot::initPFset()
     {
         for(int j=0; j<19; j++)
         {
-            pfucltPtcls.particles[i].particle[j] = pfParticlesSelf[i][j];
+            msg_particles.particles[i].particle[j] = pfParticlesSelf[i][j];
         }
     }
 
@@ -301,7 +308,7 @@ void SelfRobot::PFresample()
         {
             particleSet_[k][par] = particlesDuplicate[k][par];
             pfParticlesSelf[par][k] = particleSet_[k][par];
-            pfucltPtcls.particles[par].particle[k] = particleSet_[k][par];
+            msg_particles.particles[par].particle[k] = particleSet_[k][par];
         }
     }
 
@@ -330,7 +337,7 @@ void SelfRobot::PFresample()
         {
             //particleSet_[k][par] = particlesDuplicate[k][m];
             pfParticlesSelf[par][k] = particleSet_[k][par];
-            pfucltPtcls.particles[par].particle[k] = particleSet_[k][par];
+            msg_particles.particles[par].particle[k] = particleSet_[k][par];
         }
     }
 
@@ -900,24 +907,23 @@ void SelfRobot::publishState(float x, float y, float theta)
     //printf("we are here \n\n\n");
 
     // first publish the particles!!!!
-    particlePublisher.publish(pfucltPtcls);
+    particlePublisher.publish(msg_particles);
 
-    msg.header.stamp = curTime; //time of the self-robot must be in the full state
+    msg_state.header.stamp = curTime; //time of the self-robot must be in the full state
     receivedGTdata.header.stamp = curTime;
-    
-    msg.robotPose[MY_ID-1].pose.pose.position.x = x;
-    msg.robotPose[MY_ID-1].pose.pose.position.y = y;
-    msg.robotPose[MY_ID-1].pose.pose.position.z = ROB_HT; //fixed height aboveground
-    
-    msg.robotPose[MY_ID-1].pose.pose.orientation.x = 0;
-    msg.robotPose[MY_ID-1].pose.pose.orientation.y = 0;
-    msg.robotPose[MY_ID-1].pose.pose.orientation.z = sin(theta/2);
-    msg.robotPose[MY_ID-1].pose.pose.orientation.w = cos(theta/2);
+
+    msg_state.robotPose[MY_ID-1].pose.pose.position.x = x;
+    msg_state.robotPose[MY_ID-1].pose.pose.position.y = y;
+    msg_state.robotPose[MY_ID-1].pose.pose.position.z = ROB_HT; //fixed height aboveground
+
+    msg_state.robotPose[MY_ID-1].pose.pose.orientation.x = 0;
+    msg_state.robotPose[MY_ID-1].pose.pose.orientation.y = 0;
+    msg_state.robotPose[MY_ID-1].pose.pose.orientation.z = sin(theta/2);
+    msg_state.robotPose[MY_ID-1].pose.pose.orientation.w = cos(theta/2);
 
     
-    State_publisher.publish(msg);
+    State_publisher.publish(msg_state);
     virtualGTPublisher.publish(receivedGTdata);
-    
 }
 
 int main (int argc, char* argv[])

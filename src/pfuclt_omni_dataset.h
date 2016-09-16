@@ -103,18 +103,17 @@ class SelfRobot
     Subscriber sLandmark_;
     Subscriber GT_sub_;
     read_omni_dataset::LRMGTData receivedGTdata;
-    pfuclt_omni_dataset::particles pfucltPtcls;
+    pfuclt_omni_dataset::particles msg_particles;
 
 
     Eigen::Isometry2d initPose; // x y theta;
     Eigen::Isometry2d prevPose;
 
     Publisher State_publisher, targetStatePublisher, virtualGTPublisher, particlePublisher;
-    read_omni_dataset::RobotState msg;
+    read_omni_dataset::RobotState msg_state;
 
     RNGType seed_;
     vector<float> particleSet_[19];
-    //Ipp32f particleSet_[19][nParticles_]; // fields in rows are : OMNI4: X,Y,Theta,OMNI1: X,Y,Theta,OMNI3: X,Y,Theta,OMNI5: X,Y,Theta,Ball: X,Y,Z,ParticleWeight
 
     vector<float> normalizedWeights;
     /*
