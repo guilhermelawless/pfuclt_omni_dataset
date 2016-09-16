@@ -1,26 +1,28 @@
 #include "pfuclt_omni_dataset.h"
 
-template <typename T>
-T calc_stdDev(vector<T> *vec){
-    accumulator_set<T, stats<tag::variance> > acc;
-    for_each(vec->begin(), vec->end(), boost::bind<void>(boost::ref(acc), _1));
-    return (T) sqrt(boost::accumulators::extract::variance(acc));
-}
+namespace pfuclt_aux{
+    template <typename T>
+    inline T calc_stdDev(vector<T> *vec){
+        accumulator_set<T, stats<tag::variance> > acc;
+        for_each(vec->begin(), vec->end(), boost::bind<void>(boost::ref(acc), _1));
+        return (T) sqrt(boost::accumulators::extract::variance(acc));
+    }
 
-template <typename T>
-std::vector<size_t> order_index(std::vector<T> const& values)
-{
-    //from http://stackoverflow.com/a/10585614
-    //return sorted indices of vector values
+    template <typename T>
+    inline std::vector<unsigned int> order_index(std::vector<T> const& values)
+    {
+        //from http://stackoverflow.com/a/10585614
+        //return sorted indices of vector values
 
-    using namespace boost::phoenix;
-    using namespace boost::phoenix::arg_names;
+        using namespace boost::phoenix;
+        using namespace boost::phoenix::arg_names;
 
-    std::vector<size_t> indices(values.size());
-    int i = 0;
-    std::transform(values.begin(), values.end(), indices.begin(), ref(i)++);
-    std::sort(indices.begin(), indices.end(), ref(values)[arg1] > ref(values)[arg2]);
-    return indices;
+        std::vector<unsigned int> indices(values.size());
+        int i = 0;
+        std::transform(values.begin(), values.end(), indices.begin(), ref(i)++);
+        std::sort(indices.begin(), indices.end(), ref(values)[arg1] > ref(values)[arg2]);
+        return indices;
+    }
 }
 
 inline bool areAllTeammatesActive(vector<bool> *areRobotsStarted)
@@ -35,12 +37,12 @@ inline bool areAllTeammatesActive(vector<bool> *areRobotsStarted)
             returnValue = false;
         }
     }
-    
+
     return returnValue;
 }
 
 
-inline void addLandmark(int vertexId, double x, double y, vector< vector<float> >& runningMap)
+void addLandmark(int vertexId, double x, double y, vector< vector<float> >& runningMap)
 {
     ROS_INFO("A fixed landmark with ID %d at position x=%f, y=%f must be created in your application, e.g., fixed vertices in a graph if your application is graph-based",vertexId,x,y);
 
@@ -158,7 +160,7 @@ void SelfRobot::initPFset()
 
     // Particle weights
     particleSet_[18].assign(particleSet_[18].size(), 1/nParticles_);
-    
+
     // Put into message
     for(int i=0; i<nParticles_; i++)
     {
@@ -235,9 +237,9 @@ void SelfRobot::PFresample()
     for(int robNo = 0; robNo<6; robNo++)     // for 4 robots : OMNI4, OMNI3, OMNI1 and OMNI5 in a row
     {
 
-        stdX = calc_stdDev<float>(&particleSet_[0+robNo*3]);
-        stdY = calc_stdDev<float>(&particleSet_[1+robNo*3]);
-        stdTheta = calc_stdDev<float>(&particleSet_[2+robNo*3]);
+        stdX = pfuclt_aux::calc_stdDev<float>(&particleSet_[0+robNo*3]);
+        stdY = pfuclt_aux::calc_stdDev<float>(&particleSet_[1+robNo*3]);
+        stdTheta = pfuclt_aux::calc_stdDev<float>(&particleSet_[2+robNo*3]);
 
         //?????????????????????????????? what next? ????????????????????????????????????????????????????
 
@@ -256,7 +258,7 @@ void SelfRobot::PFresample()
     }
 
     // Duplicate particle weights and get sorted indices
-    vector<size_t> sortedIndex = order_index<float>(particleSet_[18]);
+    vector<unsigned int> sortedIndex = pfuclt_aux::order_index<float>(particleSet_[18]);
 
     //Re-arrange particles according to particle weight sorted indices
     for(int i=0; i < nParticles_; i++)  //for each particle

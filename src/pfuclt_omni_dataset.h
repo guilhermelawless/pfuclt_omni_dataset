@@ -67,28 +67,30 @@ vector< vector<float> > map_1;
 typedef boost::random::mt19937 RNGType;
 
 //Auxiliary functions
-template <typename T>
-T calc_stdDev(T vec);
+namespace pfuclt_aux{
+    template <typename T>
+    inline T calc_stdDev(T vec);
 
-template <typename T>
-std::vector<size_t> order_index(std::vector<T> const& values);
+    template <typename T>
+    inline std::vector<unsigned int> order_index(std::vector<T> const& values);
 
-template <typename T>
-bool readParamDouble(ros::NodeHandle *nh, const std::string name, T *variable){
+    template <typename T>
+    bool readParamDouble(ros::NodeHandle *nh, const std::string name, T *variable){
 
-    double tmp;
-    ostringstream oss;
-    if(nh->getParam(name, tmp))
-    {
-        *variable = (T)tmp;
-        oss << "Received parameter " << name << "=" << *variable;
-        ROS_INFO("%s", oss.str().c_str());
-        return true;
+        double tmp;
+        ostringstream oss;
+        if(nh->getParam(name, tmp))
+        {
+            *variable = (T)tmp;
+            oss << "Received parameter " << name << "=" << *variable;
+            ROS_INFO("%s", oss.str().c_str());
+            return true;
+        }
+        else
+            ROS_ERROR("Failed to receive parameter %s", name.c_str());
+
+        return false;
     }
-    else
-        ROS_ERROR("Failed to receive parameter %s", name.c_str());
-
-    return false;
 }
 
 class SelfRobot
@@ -263,6 +265,7 @@ public:
     ReadRobotMessages(): loop_rate_(30)
     {
         //Read parameters from param server
+        using pfuclt_aux::readParamDouble;
         readParamDouble<int>(&nh_, "/MAX_ROBOTS", &MAX_ROBOTS);
         readParamDouble<int>(&nh_, "/NUM_ROBOTS", &NUM_ROBOTS);
         readParamDouble<float>(&nh_, "/ROB_HT", &ROB_HT);
