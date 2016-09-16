@@ -1,8 +1,13 @@
+//STL libraries
+#include <vector>
+#include <algorithm>
 #include <cstdio>
 #include <iostream>
 #include <string>
 
-
+//ROS message definitions
+#include <ros/ros.h>
+#include <std_msgs/String.h>
 #include <nav_msgs/Odometry.h>
 #include <tf/transform_broadcaster.h>
 #include <read_omni_dataset/BallData.h>
@@ -11,27 +16,15 @@
 #include <read_omni_dataset/LRMGTData.h>
 #include <pfuclt_omni_dataset/particle.h>
 #include <pfuclt_omni_dataset/particles.h>
-#include <boost/bind.hpp>
-#include <boost/ref.hpp>
-#include <vector>
-#include <algorithm>
 
+//Eigen libraries
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-#include "ros/ros.h"
-#include "std_msgs/String.h"
-
-//#include </opt/intel/ipp/include/ipp.h>
-
-//GNU Scientific Library
-/*
-#include <gsl/gsl_rng.h>        //Random Number Generation
-#include <gsl/gsl_randist.h>    //Random Number Distributions
-#include <gsl/gsl_vector.h>     //GSL vectors
-*/
 
 //Boost libraries
+#include <boost/bind.hpp>
+#include <boost/ref.hpp>
 #include <boost/random.hpp>
 #include <boost/foreach.hpp>
 #include <boost/accumulators/accumulators.hpp>
@@ -42,37 +35,28 @@
 // #define M_PI        3.141592653589793238462643383280    /* pi */
 #define PI 3.14159
 
-///TODO These hard coded values must go out of this place. Preferably as the arguments of the main function and therefore in the launch file.
+int MAX_ROBOTS;
+int NUM_ROBOTS;// total number of playing robots in the team including self
+int NUM_SENSORS_PER_ROBOT;// SENSORS include odometry, each feature sensor like a ball detector, each landmark-set detector and so on. In this case for example the number of sensors are 3, 1-odometry, 1-orange ball, 1-landmarkset. Usually this must co-incide with the number of topics to which each robot is publishing its sensed information.
+int NUM_TARGETS; // Number of targets being tracked. In omni dataset, only one target exists for now: the orange ball. This may be improved in future by adding the blue ball which can be seen the raw footage of the dataset experiment
+std::vector<bool> playingRobots; // indicate which robot(s) is(are) playing
 
-const std::size_t MAX_ROBOTS = 5;
-const std::size_t NUM_ROBOTS = 1;// total number of playing robots in the team including self
-const bool playingRobots[5] = {0,0,0,1,0}; // indicate which robot(s) is(are) playing
-const std::size_t NUM_SENSORS_PER_ROBOs = 3;// SENSORS include odometry, each feature sensor like a ball detector, each landmark-set detector and so on. In this case for example the number of sensors are 3, 1-odometry, 1-orange ball, 1-landmarkset. Usually this must co-incide with the number of topics to which each robot is publishing its sensed information.
-
-const std::size_t NUM_TARGETS = 1; // Number of targets being tracked. In omni dataset, only one target exists for now: the orange ball. This may be improved in future by adding the blue ball which can be seen the raw footage of the dataset experiment
-
-//Below are empirically obtained coefficients in the covariance expression. See (add publications here)
-
+//Empirically obtained coefficients in the covariance expression. See (add publications here)
 
 //coefficients for landmark observation covariance
-const std::size_t K1 = 2.0;
-const std::size_t K2 = 0.5;
+float K1, K2;
 
 //coefficients for target observation covariance
-const std::size_t K3 = 0.2;
-const std::size_t K4 = 0.5;
-const std::size_t K5 = 0.5; 
-//const float K3 = 0.2, K4 = 0.5, K5 = 0.5; 
+float K3, K4, K5;
 
-const std::size_t ROB_HT = 0.81; //(In this dataset) fixed height of the robots above ground in meter
-const std::size_t MY_ID = 4; // Use this flag to set the ID of the robot expected to run a certain decentralized algorithm. Robot with MY_ID will be trated as the self robot running the algorithm while the rest will be considered teammates. Note that in the dataset there are 4 robots with IDs 1,3,4 and 5. Robot with ID=2 is not present.
+float ROB_HT; // Fixed height of the robots above ground in meters
+int MY_ID; // Use this flag to set the ID of the robot expected to run a certain decentralized algorithm. Robot with MY_ID will be trated as the self robot running the algorithm while the rest will be considered teammates. Note that in the dataset there are 4 robots with IDs 1,3,4 and 5. Robot with ID=2 is not present.
 
 //Initial 2D positons of the robot as obtained from the overhead ground truth system. The order is OMNI1 OMNI2 OMNI3 OMNI4 and OMNI5. Notice OMNI2 is initialized as 0,0 because the robot is absent from the dataset.
-//This initialization will work only if the read_omni_dataset node startes befoe the rosbag of the dataset. Obviously, the initialization below is for the initial positions at the begginning of the dataset. Otherwise, the initialization makes the odometry-only trajecory frame transformed to the origin.
-const double initArray[10] = {5.086676,-2.648978,0.0,0.0,1.688772,-2.095153,3.26839,-3.574936,4.058235,-0.127530};
+//This initialization will work only if the node startes befoe the rosbag of the dataset. Obviously, the initialization below is for the initial positions at the begginning of the dataset. Otherwise, the initialization makes the odometry-only trajecory frame transformed to the origin.
+std::vector<double> initArray;
 
-
-static const int nParticles_ = 200;
+int nParticles_;
 
 using namespace ros;
 using namespace std;
@@ -89,6 +73,24 @@ T calc_stdDev(T vec);
 template <typename T>
 std::vector<size_t> order_index(std::vector<T> const& values);
 
+template <typename T>
+bool readParamDouble(ros::NodeHandle *nh, const std::string name, T *variable){
+
+    double tmp;
+    ostringstream oss;
+    if(nh->getParam(name, tmp))
+    {
+        *variable = (T)tmp;
+        oss << "Received parameter " << name << "=" << *variable;
+        ROS_INFO("%s", oss.str().c_str());
+        return true;
+    }
+    else
+        ROS_ERROR("Failed to receive parameter %s", name.c_str());
+
+    return false;
+}
+
 class SelfRobot
 {
   NodeHandle *nh;
@@ -100,6 +102,7 @@ class SelfRobot
   Subscriber GT_sub_;
   read_omni_dataset::LRMGTData receivedGTdata;
   pfuclt_omni_dataset::particles pfucltPtcls;
+
   
   Eigen::Isometry2d initPose; // x y theta;
   Eigen::Isometry2d prevPose;  
@@ -250,43 +253,84 @@ class ReadRobotMessages
   SelfRobot* robot_;
   vector<TeammateRobot*> teammateRobots_;
   
-  bool robotStarted[MAX_ROBOTS]; // to indicaate whether a robot has started or not..
+  bool *robotStarted; // to indicate whether a robot has started or not..
 
   vector< vector<float> > pfParticles;
  
   public:
     ReadRobotMessages(): loop_rate_(30)
-    { 
-      pfParticles.resize(nParticles_);
-      for ( int i = 0 ; i < nParticles_ ; i++ )
-	pfParticles[i].resize((MAX_ROBOTS+1)*3+1);
+    {
+        //Read parameters from param server
+        if(readParamDouble<int>(&nh_, "/MAX_ROBOTS", &MAX_ROBOTS))
+            robotStarted = new bool(MAX_ROBOTS);
+
+        readParamDouble<int>(&nh_, "/NUM_ROBOTS", &NUM_ROBOTS);
+        readParamDouble<float>(&nh_, "/ROB_HT", &ROB_HT);
+        readParamDouble<int>(&nh_, "/MY_ID", &MY_ID);
+        readParamDouble<int>(&nh_, "/N_PARTICLES", &nParticles_);
+        readParamDouble<int>(&nh_, "/NUM_SENSORS_PER_ROBOT", &NUM_SENSORS_PER_ROBOT);
+        readParamDouble<int>(&nh_, "/NUM_TARGETS", &NUM_TARGETS);
+        readParamDouble<float>(&nh_, "/LANDMARK_COV/K1", &K1);
+        readParamDouble<float>(&nh_, "/LANDMARK_COV/K2", &K2);
+        readParamDouble<float>(&nh_, "/LANDMARK_COV/K3", &K3);
+        readParamDouble<float>(&nh_, "/LANDMARK_COV/K4", &K4);
+        readParamDouble<float>(&nh_, "/LANDMARK_COV/K5", &K5);
+
+
+        if(nh_.getParam("/playingRobots", playingRobots)){
+            ostringstream oss;
+            oss << "Received parameter /playingRobots=[ ";
+            for(std::vector<bool>::iterator it = playingRobots.begin(); it!= playingRobots.end(); ++it)
+                oss << std::boolalpha << *it << " ";
+            oss << "]";
+
+            ROS_INFO("%s", oss.str().c_str());
+        }
+        else
+            ROS_ERROR("Failed to receive parameter /playingRobots");
+
+        if(nh_.getParam("/POS_INIT", initArray)){
+            ostringstream oss;
+            oss << "Received parameter /POS_INIT=[ ";
+            for(std::vector<double>::iterator it = initArray.begin(); it!= initArray.end(); ++it)
+                oss << *it << " ";
+            oss << "]";
+
+            ROS_INFO("%s", oss.str().c_str());
+        }
+        else
+            ROS_ERROR("Failed to receive parameter /POS_INIT");
+
+        pfParticles.resize(nParticles_);
+        for ( int i = 0 ; i < nParticles_ ; i++ )
+            pfParticles[i].resize((MAX_ROBOTS+1)*3+1);
       
-      Eigen::Isometry2d initialRobotPose;
+        Eigen::Isometry2d initialRobotPose;
       
-      teammateRobots_.reserve(MAX_ROBOTS);
+        teammateRobots_.reserve(MAX_ROBOTS);
 	
-      for(int j=0;j<MAX_ROBOTS;j++)
-      {
-	robotStarted[j]=false;
-      }
+        for(int j=0;j<MAX_ROBOTS;j++)
+        {
+            robotStarted[j]=false;
+        }
       
-      for(int i=0;i<MAX_ROBOTS;i++)
-      {
-	if(playingRobots[i])
-	{
-	  initialRobotPose = Eigen::Rotation2Dd(-M_PI).toRotationMatrix();
-	  initialRobotPose.translation() = Eigen::Vector2d(initArray[2*i+0],initArray[2*i+1]); 
+        for(int i=0;i<MAX_ROBOTS;i++)
+        {
+            if(playingRobots[i])
+            {
+                initialRobotPose = Eigen::Rotation2Dd(-M_PI).toRotationMatrix();
+                initialRobotPose.translation() = Eigen::Vector2d(initArray[2*i+0],initArray[2*i+1]);
 	  
-	  if(i+1 == MY_ID)
-	  {
-        robot_ = new SelfRobot(&nh_,i, initialRobotPose,&robotStarted[0],pfParticles);
-	  }
-	  else
-	  {	  
-	    TeammateRobot *tempRobot = new TeammateRobot(&nh_,i, initialRobotPose,&robotStarted[0],pfParticles);
-	    teammateRobots_.push_back(tempRobot);
-	  }
-	}
+                if(i+1 == MY_ID)
+                {
+                    robot_ = new SelfRobot(&nh_,i, initialRobotPose,&robotStarted[i],pfParticles);
+                }
+                else
+                {
+                    TeammateRobot *tempRobot = new TeammateRobot(&nh_,i, initialRobotPose,&robotStarted[i],pfParticles);
+                    teammateRobots_.push_back(tempRobot);
+                }
+            }
       }
       
       

@@ -275,7 +275,7 @@ void SelfRobot::PFresample()
     if(weightSum==0.0)
         ROS_WARN("WeightSum of Particles = %f\n",weightSum);
     else
-        ROS_INFO("WeightSum of Particles = %f\n",weightSum);
+        ROS_DEBUG("WeightSum of Particles = %f\n",weightSum);
 
     normalizedWeights = particleSet_[18];
     std::transform(normalizedWeights.begin(), normalizedWeights.end(), normalizedWeights.begin(), bind1st(divides<float>(),weightSum));
@@ -922,14 +922,14 @@ int main (int argc, char* argv[])
 {
   ros::init(argc, argv, "pfuclt_omni_dataset");
  
+  ReadRobotMessages node;
+ 
   if(MY_ID==2)
   {
     //ROS_WARN("OMNI2 not present in dataset. Please try with another Robot ID for self robot");
     return 0;
   }
- 
-  ReadRobotMessages node;
- 
+
   map_1.resize(10);
     for ( int i = 0 ; i < 10 ; i++ )
       map_1[i].resize(2);
