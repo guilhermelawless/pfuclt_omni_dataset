@@ -93,71 +93,76 @@ bool readParamDouble(ros::NodeHandle *nh, const std::string name, T *variable){
 
 class SelfRobot
 {
-  NodeHandle *nh;
-  //One subscriber per sensor in the robot
-  
-  Subscriber sOdom_;
-  Subscriber sBall_;
-  Subscriber sLandmark_;
-  Subscriber GT_sub_;
-  read_omni_dataset::LRMGTData receivedGTdata;
-  pfuclt_omni_dataset::particles pfucltPtcls;
+    NodeHandle *nh;
+    //One subscriber per sensor in the robot
 
-  
-  Eigen::Isometry2d initPose; // x y theta;
-  Eigen::Isometry2d prevPose;  
-  
-  Publisher State_publisher, targetStatePublisher, virtualGTPublisher, particlePublisher;
-  read_omni_dataset::RobotState msg;
+    Subscriber sOdom_;
+    Subscriber sBall_;
+    Subscriber sLandmark_;
+    Subscriber GT_sub_;
+    read_omni_dataset::LRMGTData receivedGTdata;
+    pfuclt_omni_dataset::particles pfucltPtcls;
 
-  RNGType seed_;
-  vector<float> particleSet_[19];
-  //Ipp32f particleSet_[19][nParticles_]; // fields in rows are : OMNI4: X,Y,Theta,OMNI1: X,Y,Theta,OMNI3: X,Y,Theta,OMNI5: X,Y,Theta,Ball: X,Y,Z,ParticleWeight
 
-  vector<float> normalizedWeights;
-  /*
+    Eigen::Isometry2d initPose; // x y theta;
+    Eigen::Isometry2d prevPose;
+
+    Publisher State_publisher, targetStatePublisher, virtualGTPublisher, particlePublisher;
+    read_omni_dataset::RobotState msg;
+
+    RNGType seed_;
+    vector<float> particleSet_[19];
+    //Ipp32f particleSet_[19][nParticles_]; // fields in rows are : OMNI4: X,Y,Theta,OMNI1: X,Y,Theta,OMNI3: X,Y,Theta,OMNI5: X,Y,Theta,Ball: X,Y,Z,ParticleWeight
+
+    vector<float> normalizedWeights;
+    /*
   Ipp32f normalizedWeightsSorted[nParticles_];
   Ipp32f normalizedCumWeightsSorted[nParticles_];
   int normalizedCumWeightsSortedIndex[nParticles_];
-  Ipp32f ballWeights[nParticles_];  
+  Ipp32f ballWeights[nParticles_];
   */
-  
-  vector< vector<float> >& pfParticlesSelf;
 
-  bool particlesInitialized;
-  
-  public:
-    SelfRobot(NodeHandle *nh, int robotNumber, Eigen::Isometry2d _initPose, bool *_ifRobotIsStarted, vector< vector<float> >& _ptcls): initPose(_initPose), curPose(_initPose), ifRobotIsStarted_(_ifRobotIsStarted), pfParticlesSelf(_ptcls), seed_(time(0))
+    vector< vector<float> >& pfParticlesSelf;
+
+    bool particlesInitialized;
+
+private:
+    vector<bool> *ifRobotIsStarted_;
+
+public:
+    SelfRobot(NodeHandle *nh, int robotNumber, Eigen::Isometry2d _initPose, vector<bool> *_robotStarted, vector< vector<float> >& _ptcls): initPose(_initPose), curPose(_initPose), ifRobotIsStarted_(_robotStarted), pfParticlesSelf(_ptcls), seed_(time(0))
     {
-    
-      sOdom_ = nh->subscribe<nav_msgs::Odometry>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/odometry", 10, boost::bind(&SelfRobot::selfOdometryCallback,this, _1,robotNumber+1));
-      
-      sBall_ = nh->subscribe<read_omni_dataset::BallData>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/orangeball3Dposition", 10, boost::bind(&SelfRobot::selfTargetDataCallback,this, _1,robotNumber+1));
-      
-      sLandmark_ = nh->subscribe<read_omni_dataset::LRMLandmarksData>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/landmarkspositions", 10, boost::bind(&SelfRobot::selfLandmarkDataCallback,this, _1,robotNumber+1));
-      
-      
-      //The Graph Generator ans solver should also subscribe to the GT data and publish it... This is important for time synchronization
-      GT_sub_ = nh->subscribe<read_omni_dataset::LRMGTData>("gtData_4robotExp", 10, boost::bind(&SelfRobot::gtDataCallback,this, _1));      
-      //GT_sub_ = nh->subscribe("gtData_4robotExp", 1000, gtDataCallback); 
-      
-      ROS_INFO(" constructing SelfRobot <<object>> and called sensor subscribers for this robot %d",robotNumber+1);
-      
-      State_publisher = nh->advertise<read_omni_dataset::RobotState>("/pfuclt_omni_poses", 1000);
-      
-      targetStatePublisher = nh->advertise<read_omni_dataset::BallData>("/pfuclt_orangeBallState", 1000);
-      
-      virtualGTPublisher = nh->advertise<read_omni_dataset::LRMGTData>("/gtData_synced_pfuclt_estimate", 1000);
-      
-      particlePublisher = nh->advertise<pfuclt_omni_dataset::particles>("/pfuclt_particles",10);
-      
-      ifRobotIsStarted_[robotNumber] = false;
-      particlesInitialized = false;
 
-      for(int i=0; i<19; i++){
-          particleSet_[i].resize(nParticles_);
-      }
- 
+        //Subscribe to topics
+        sOdom_ = nh->subscribe<nav_msgs::Odometry>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/odometry", 10, boost::bind(&SelfRobot::selfOdometryCallback,this, _1,robotNumber+1));
+
+        sBall_ = nh->subscribe<read_omni_dataset::BallData>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/orangeball3Dposition", 10, boost::bind(&SelfRobot::selfTargetDataCallback,this, _1,robotNumber+1));
+
+        sLandmark_ = nh->subscribe<read_omni_dataset::LRMLandmarksData>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/landmarkspositions", 10, boost::bind(&SelfRobot::selfLandmarkDataCallback,this, _1,robotNumber+1));
+
+        //The Graph Generator ans solver should also subscribe to the GT data and publish it... This is important for time synchronization
+        GT_sub_ = nh->subscribe<read_omni_dataset::LRMGTData>("gtData_4robotExp", 10, boost::bind(&SelfRobot::gtDataCallback,this, _1));
+        //GT_sub_ = nh->subscribe("gtData_4robotExp", 1000, gtDataCallback);
+
+        ROS_INFO(" constructing SelfRobot <<object>> and called sensor subscribers for this robot %d",robotNumber+1);
+
+        //Advertise some topics; don't change the names, preferably remap in a launch file
+        State_publisher = nh->advertise<read_omni_dataset::RobotState>("/pfuclt_omni_poses", 1000);
+
+        targetStatePublisher = nh->advertise<read_omni_dataset::BallData>("/pfuclt_orangeBallState", 1000);
+
+        virtualGTPublisher = nh->advertise<read_omni_dataset::LRMGTData>("/gtData_synced_pfuclt_estimate", 1000);
+
+        particlePublisher = nh->advertise<pfuclt_omni_dataset::particles>("/pfuclt_particles",10);
+
+        //Mark initialized flags as false
+        ifRobotIsStarted_->at(robotNumber) = false;
+        particlesInitialized = false;
+
+        //Resize particle set to allow all subparticles
+        for(int i=0; i<19; i++){
+            particleSet_[i].resize(nParticles_);
+        }
     }
 
     /// Use this method to implement perception algorithms
@@ -165,7 +170,7 @@ class SelfRobot
     
     /// Use this method to implement perception algorithms
     void selfTargetDataCallback(const read_omni_dataset::BallData::ConstPtr&, int);
-     
+
     /// Use this method to implement perception algorithms
     void selfLandmarkDataCallback(const read_omni_dataset::LRMLandmarksData::ConstPtr&, int);
     
@@ -187,44 +192,41 @@ class SelfRobot
     Time prevTime;
     
     // publish the estimated state of all the teammate robot
-// private:
     void publishState(float, float, float);
-
-private:
-    bool *ifRobotIsStarted_;
 
 };
 
 
 class TeammateRobot
 {
-  NodeHandle *nh;
-  //One subscriber per sensor in the robot
-  Subscriber sOdom_;
-  Subscriber sBall_;
-  Subscriber sLandmark_;
+    NodeHandle *nh;
+    //One subscriber per sensor in the robot
+    Subscriber sOdom_;
+    Subscriber sBall_;
+    Subscriber sLandmark_;
 
-  Eigen::Isometry2d initPose; // x y theta;
-  Eigen::Isometry2d prevPose;
-  
-  bool *ifRobotIsStarted;
-  
-  vector< vector<float> >& pfParticlesMate;
-  
-  public:
-    TeammateRobot(NodeHandle *nh, int robotNumber, Eigen::Isometry2d _initPose, bool *_ifRobotIsStarted, vector< vector<float> >& _ptcls): initPose(_initPose), curPose(_initPose), ifRobotIsStarted(_ifRobotIsStarted), pfParticlesMate(_ptcls)
+    Eigen::Isometry2d initPose; // x y theta;
+    Eigen::Isometry2d prevPose;
+
+    vector< vector<float> >& pfParticlesMate;
+
+private:
+    vector<bool> *ifRobotIsStarted;
+
+public:
+    TeammateRobot(NodeHandle *nh, int robotNumber, Eigen::Isometry2d _initPose, vector<bool> *_robotStarted, vector< vector<float> >& _ptcls): initPose(_initPose), curPose(_initPose), ifRobotIsStarted(_robotStarted), pfParticlesMate(_ptcls)
     {
-    
-      sOdom_ = nh->subscribe<nav_msgs::Odometry>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/odometry", 10, boost::bind(&TeammateRobot::teammateOdometryCallback,this, _1,robotNumber+1));
-      
-      sBall_ = nh->subscribe<read_omni_dataset::BallData>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/orangeball3Dposition", 10, boost::bind(&TeammateRobot::teammateTargetDataCallback,this, _1,robotNumber+1));
-      
-      sLandmark_ = nh->subscribe<read_omni_dataset::LRMLandmarksData>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/landmarkspositions", 10, boost::bind(&TeammateRobot::teammateLandmarkDataCallback,this, _1,robotNumber+1));
-      
-      ROS_INFO(" constructing TeammateRobot object and called sensor subscribers for robot %d",robotNumber+1);
-      
-      ifRobotIsStarted[robotNumber] = false;
-      
+
+        sOdom_ = nh->subscribe<nav_msgs::Odometry>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/odometry", 10, boost::bind(&TeammateRobot::teammateOdometryCallback,this, _1,robotNumber+1));
+
+        sBall_ = nh->subscribe<read_omni_dataset::BallData>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/orangeball3Dposition", 10, boost::bind(&TeammateRobot::teammateTargetDataCallback,this, _1,robotNumber+1));
+
+        sLandmark_ = nh->subscribe<read_omni_dataset::LRMLandmarksData>("/omni"+boost::lexical_cast<string>(robotNumber+1)+"/landmarkspositions", 10, boost::bind(&TeammateRobot::teammateLandmarkDataCallback,this, _1,robotNumber+1));
+
+        ROS_INFO(" constructing TeammateRobot object and called sensor subscribers for robot %d",robotNumber+1);
+
+        ifRobotIsStarted->at(robotNumber) = false;
+
     }
 
     /// Use this method to implement perception algorithms
@@ -235,7 +237,7 @@ class TeammateRobot
     
     /// Use this method to implement perception algorithms
     void teammateLandmarkDataCallback(const read_omni_dataset::LRMLandmarksData::ConstPtr&, int);
-  
+
 
     Eigen::Isometry2d curPose;
     Time curTime;
@@ -247,23 +249,21 @@ class TeammateRobot
 
 class ReadRobotMessages
 {
-  NodeHandle nh_;
-  Rate loop_rate_;
-  
-  SelfRobot* robot_;
-  vector<TeammateRobot*> teammateRobots_;
-  
-  bool *robotStarted; // to indicate whether a robot has started or not..
+    NodeHandle nh_;
+    Rate loop_rate_;
 
-  vector< vector<float> > pfParticles;
- 
-  public:
+    SelfRobot* robot_;
+    vector<TeammateRobot*> teammateRobots_;
+
+    vector<bool> robotStarted; // to indicate whether a robot has started or not..
+
+    vector< vector<float> > pfParticles;
+
+public:
     ReadRobotMessages(): loop_rate_(30)
     {
         //Read parameters from param server
-        if(readParamDouble<int>(&nh_, "/MAX_ROBOTS", &MAX_ROBOTS))
-            robotStarted = new bool(MAX_ROBOTS);
-
+        readParamDouble<int>(&nh_, "/MAX_ROBOTS", &MAX_ROBOTS);
         readParamDouble<int>(&nh_, "/NUM_ROBOTS", &NUM_ROBOTS);
         readParamDouble<float>(&nh_, "/ROB_HT", &ROB_HT);
         readParamDouble<int>(&nh_, "/MY_ID", &MY_ID);
@@ -304,36 +304,31 @@ class ReadRobotMessages
         pfParticles.resize(nParticles_);
         for ( int i = 0 ; i < nParticles_ ; i++ )
             pfParticles[i].resize((MAX_ROBOTS+1)*3+1);
-      
+
         Eigen::Isometry2d initialRobotPose;
-      
-        teammateRobots_.reserve(MAX_ROBOTS);
-	
-        for(int j=0;j<MAX_ROBOTS;j++)
-        {
-            robotStarted[j]=false;
-        }
-      
+
+        robotStarted.resize(MAX_ROBOTS, false);
+
         for(int i=0;i<MAX_ROBOTS;i++)
         {
             if(playingRobots[i])
             {
                 initialRobotPose = Eigen::Rotation2Dd(-M_PI).toRotationMatrix();
                 initialRobotPose.translation() = Eigen::Vector2d(initArray[2*i+0],initArray[2*i+1]);
-	  
+
                 if(i+1 == MY_ID)
                 {
-                    robot_ = new SelfRobot(&nh_,i, initialRobotPose,&robotStarted[i],pfParticles);
+                    robot_ = new SelfRobot(&nh_,i, initialRobotPose,&robotStarted,pfParticles);
                 }
                 else
                 {
-                    TeammateRobot *tempRobot = new TeammateRobot(&nh_,i, initialRobotPose,&robotStarted[i],pfParticles);
+                    TeammateRobot *tempRobot = new TeammateRobot(&nh_,i, initialRobotPose,&robotStarted,pfParticles);
                     teammateRobots_.push_back(tempRobot);
                 }
             }
-      }
-      
-      
+        }
+
+
     }
     
     void initializeFixedLandmarks(vector< vector<float> >&);
