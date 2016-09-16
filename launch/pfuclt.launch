@@ -15,6 +15,8 @@
     <param name="N_PARTICLES" value="200"/>
 
     <node name="performer" pkg="pfuclt_omni_dataset" type="pfuclt_omni_dataset" output="screen">
+    	<remap from="/pfuclt_orangeBallState" to="/estimatedOrangeBallState"/>
+		<remap from="/pfuclt_omni_poses" to="/estimated_omni_poses"/>
     </node>
 
     <arg name="path" default="/home/$(optenv USER gsl)/datasets/omni/four_msl_robots_dataset"/>
