@@ -1,5 +1,6 @@
 # Paths
 .idea/
+CMakeLists.txt.use*
 
 # Compiled Object files
 *.slo
