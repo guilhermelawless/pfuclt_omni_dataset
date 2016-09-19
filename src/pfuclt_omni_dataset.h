@@ -46,7 +46,7 @@ int NUM_TARGETS; // Number of targets being tracked. In omni dataset, only one
                  // target exists for now: the orange ball. This may be improved
                  // in future by adding the blue ball which can be seen the raw
                  // footage of the dataset experiment
-std::vector<bool> playingRobots; // indicate which robot(s) is(are) playing
+std::vector<bool> PLAYING_ROBOTS; // indicate which robot(s) is(are) playing
 
 // Empirically obtained coefficients in the covariance expression. See (add
 // publications here)
@@ -71,57 +71,49 @@ int MY_ID; // Use this flag to set the ID of the robot expected to run a certain
 // the dataset. Obviously, the initialization below is for the initial positions
 // at the begginning of the dataset. Otherwise, the initialization makes the
 // odometry-only trajecory frame transformed to the origin.
-std::vector<double> initArray;
+std::vector<double> POS_INIT;
 
 int nParticles_;
 
-using namespace ros;
-using namespace std;
-
-vector<vector<float> > map_1;
+std::vector<std::vector<float> > map_1;
 
 typedef boost::random::mt19937 RNGType;
 
 class SelfRobot
 {
-  NodeHandle* nh;
+  ros::NodeHandle* nh;
   // One subscriber per sensor in the robot
 
-  Subscriber sOdom_;
-  Subscriber sBall_;
-  Subscriber sLandmark_;
-  Subscriber GT_sub_;
+  ros::Subscriber sOdom_;
+  ros::Subscriber sBall_;
+  ros::Subscriber sLandmark_;
+  ros::Subscriber GT_sub_;
   read_omni_dataset::LRMGTData receivedGTdata;
   pfuclt_omni_dataset::particles msg_particles;
 
   Eigen::Isometry2d initPose; // x y theta;
   Eigen::Isometry2d prevPose;
 
-  Publisher State_publisher, targetStatePublisher, virtualGTPublisher,
+  ros::Publisher State_publisher, targetStatePublisher, virtualGTPublisher,
       particlePublisher;
   read_omni_dataset::RobotState msg_state;
 
   RNGType seed_;
-  vector<float> particleSet_[19];
+  std::vector<float> particleSet_[19];
 
-  vector<float> normalizedWeights;
-  /*
-  Ipp32f normalizedWeightsSorted[nParticles_];
-  Ipp32f normalizedCumWeightsSorted[nParticles_];
-  int normalizedCumWeightsSortedIndex[nParticles_];
-  Ipp32f ballWeights[nParticles_];
-  */
+  std::vector<float> normalizedWeights;
 
-  vector<vector<float> >& pfParticlesSelf;
+  std::vector<std::vector<float> >& pfParticlesSelf;
 
   bool particlesInitialized;
 
 private:
-  vector<bool>* ifRobotIsStarted_;
+  std::vector<bool>* ifRobotIsStarted_;
 
 public:
-  SelfRobot(NodeHandle* nh, int robotNumber, Eigen::Isometry2d _initPose,
-            vector<bool>* _robotStarted, vector<vector<float> >& _ptcls)
+  SelfRobot(ros::NodeHandle* nh, int robotNumber, Eigen::Isometry2d _initPose,
+            std::vector<bool>* _robotStarted,
+            std::vector<std::vector<float> >& _ptcls)
       : initPose(_initPose), curPose(_initPose),
         ifRobotIsStarted_(_robotStarted), pfParticlesSelf(_ptcls),
         seed_(time(0))
@@ -129,18 +121,19 @@ public:
 
     // Subscribe to topics
     sOdom_ = nh->subscribe<nav_msgs::Odometry>(
-        "/omni" + boost::lexical_cast<string>(robotNumber + 1) + "/odometry",
+        "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
+            "/odometry",
         10, boost::bind(&SelfRobot::selfOdometryCallback, this, _1,
                         robotNumber + 1));
 
     sBall_ = nh->subscribe<read_omni_dataset::BallData>(
-        "/omni" + boost::lexical_cast<string>(robotNumber + 1) +
+        "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
             "/orangeball3Dposition",
         10, boost::bind(&SelfRobot::selfTargetDataCallback, this, _1,
                         robotNumber + 1));
 
     sLandmark_ = nh->subscribe<read_omni_dataset::LRMLandmarksData>(
-        "/omni" + boost::lexical_cast<string>(robotNumber + 1) +
+        "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
             "/landmarkspositions",
         10, boost::bind(&SelfRobot::selfLandmarkDataCallback, this, _1,
                         robotNumber + 1));
@@ -206,8 +199,8 @@ public:
   void PFresample();
 
   Eigen::Isometry2d curPose;
-  Time curTime;
-  Time prevTime;
+  ros::Time curTime;
+  ros::Time prevTime;
 
   // publish the estimated state of all the teammate robot
   void publishState(float, float, float);
@@ -215,40 +208,42 @@ public:
 
 class TeammateRobot
 {
-  NodeHandle* nh;
+  ros::NodeHandle* nh;
   // One subscriber per sensor in the robot
-  Subscriber sOdom_;
-  Subscriber sBall_;
-  Subscriber sLandmark_;
+  ros::Subscriber sOdom_;
+  ros::Subscriber sBall_;
+  ros::Subscriber sLandmark_;
 
   Eigen::Isometry2d initPose; // x y theta;
   Eigen::Isometry2d prevPose;
 
-  vector<vector<float> >& pfParticlesMate;
+  std::vector<std::vector<float> >& pfParticlesMate;
 
 private:
-  vector<bool>* ifRobotIsStarted;
+  std::vector<bool>* ifRobotIsStarted;
 
 public:
-  TeammateRobot(NodeHandle* nh, int robotNumber, Eigen::Isometry2d _initPose,
-                vector<bool>* _robotStarted, vector<vector<float> >& _ptcls)
+  TeammateRobot(ros::NodeHandle* nh, int robotNumber,
+                Eigen::Isometry2d _initPose, std::vector<bool>* _robotStarted,
+                std::vector<std::vector<float> >& _ptcls)
       : initPose(_initPose), curPose(_initPose),
         ifRobotIsStarted(_robotStarted), pfParticlesMate(_ptcls)
   {
 
     sOdom_ = nh->subscribe<nav_msgs::Odometry>(
-        "/omni" + boost::lexical_cast<string>(robotNumber + 1) + "/odometry",
+        "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
+            "/odometry",
         10, boost::bind(&TeammateRobot::teammateOdometryCallback, this, _1,
                         robotNumber + 1));
 
     sBall_ = nh->subscribe<read_omni_dataset::BallData>(
-        "/omni" + boost::lexical_cast<string>(robotNumber + 1) +
+        "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
             "/orangeball3Dposition",
         10, boost::bind(&TeammateRobot::teammateTargetDataCallback, this, _1,
                         robotNumber + 1));
 
     sLandmark_ = nh->subscribe<read_omni_dataset::LRMLandmarksData>(
-        "/omni" + boost::lexical_cast<string>(robotNumber + 1) +
+        "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
             "/landmarkspositions",
         10, boost::bind(&TeammateRobot::teammateLandmarkDataCallback, this, _1,
                         robotNumber + 1));
@@ -272,26 +267,27 @@ public:
       const read_omni_dataset::LRMLandmarksData::ConstPtr&, int);
 
   Eigen::Isometry2d curPose;
-  Time curTime;
-  Time prevTime;
+  ros::Time curTime;
+  ros::Time prevTime;
 };
 
 class ReadRobotMessages
 {
-  NodeHandle nh_;
-  Rate loop_rate_;
+  ros::NodeHandle nh_;
+  ros::Rate loop_rate_;
 
   SelfRobot* robot_;
-  vector<TeammateRobot*> teammateRobots_;
+  std::vector<TeammateRobot*> teammateRobots_;
 
-  vector<bool> robotStarted; // to indicate whether a robot has started or not..
+  std::vector<bool>
+      robotStarted; // to indicate whether a robot has started or not..
 
-  vector<vector<float> > pfParticles;
+  std::vector<std::vector<float> > pfParticles;
 
 public:
   ReadRobotMessages() : loop_rate_(30)
   {
-    // Read parameters from param server
+    // read parameters from param server
     using pfuclt_aux::readParam;
     readParam<int>(&nh_, "/MAX_ROBOTS", &MAX_ROBOTS);
     readParam<int>(&nh_, "/NUM_ROBOTS", &NUM_ROBOTS);
@@ -305,34 +301,8 @@ public:
     readParam<float>(&nh_, "/LANDMARK_COV/K3", &K3);
     readParam<float>(&nh_, "/LANDMARK_COV/K4", &K4);
     readParam<float>(&nh_, "/LANDMARK_COV/K5", &K5);
-
-    if (nh_.getParam("/playingRobots", playingRobots))
-    {
-      ostringstream oss;
-      oss << "Received parameter /playingRobots=[ ";
-      for (std::vector<bool>::iterator it = playingRobots.begin();
-           it != playingRobots.end(); ++it)
-        oss << std::boolalpha << *it << " ";
-      oss << "]";
-
-      ROS_INFO("%s", oss.str().c_str());
-    }
-    else
-      ROS_ERROR("Failed to receive parameter /playingRobots");
-
-    if (nh_.getParam("/POS_INIT", initArray))
-    {
-      ostringstream oss;
-      oss << "Received parameter /POS_INIT=[ ";
-      for (std::vector<double>::iterator it = initArray.begin();
-           it != initArray.end(); ++it)
-        oss << *it << " ";
-      oss << "]";
-
-      ROS_INFO("%s", oss.str().c_str());
-    }
-    else
-      ROS_ERROR("Failed to receive parameter /POS_INIT");
+    readParam<bool>(&nh_, "/PLAYING_ROBOTS", &PLAYING_ROBOTS);
+    readParam<double>(&nh_, "/POS_INIT", &POS_INIT);
 
     pfParticles.resize(nParticles_);
     for (int i = 0; i < nParticles_; i++)
@@ -344,11 +314,11 @@ public:
 
     for (int i = 0; i < MAX_ROBOTS; i++)
     {
-      if (playingRobots[i])
+      if (PLAYING_ROBOTS[i])
       {
         initialRobotPose = Eigen::Rotation2Dd(-M_PI).toRotationMatrix();
         initialRobotPose.translation() =
-            Eigen::Vector2d(initArray[2 * i + 0], initArray[2 * i + 1]);
+            Eigen::Vector2d(POS_INIT[2 * i + 0], POS_INIT[2 * i + 1]);
 
         if (i + 1 == MY_ID)
         {
@@ -365,5 +335,5 @@ public:
     }
   }
 
-  void initializeFixedLandmarks(vector<vector<float> >&);
+  void initializeFixedLandmarks(std::vector<std::vector<float> >&);
 };

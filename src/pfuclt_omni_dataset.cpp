@@ -1,14 +1,14 @@
 #include "pfuclt_aux.h"
 #include "pfuclt_omni_dataset.h"
 
-inline bool areAllTeammatesActive(vector<bool>* areRobotsStarted)
+inline bool areAllTeammatesActive(std::vector<bool>* areRobotsStarted)
 {
   bool returnValue = true;
 
   for (int i = 0; i < 5; i++)
   {
     // cout<<"areRobotStarted["<<i<<"] = "<<areRobotsStarted[i]<<endl;
-    if (playingRobots[i] == true && areRobotsStarted->at(i) == false)
+    if (PLAYING_ROBOTS[i] == true && areRobotsStarted->at(i) == false)
     {
       returnValue = false;
     }
@@ -17,19 +17,17 @@ inline bool areAllTeammatesActive(vector<bool>* areRobotsStarted)
   return returnValue;
 }
 
-void ReadRobotMessages::initializeFixedLandmarks(vector<vector<float> >& runMap)
+void ReadRobotMessages::initializeFixedLandmarks(
+    std::vector<std::vector<float> >& runMap)
 {
   using namespace pfuclt_aux;
 
   std::string filename;
-  string buff;
+  std::string buff;
 
   // get the filename from parameter server
-  if (!nh_.getParam("/LANDMARKS_CONFIG", filename))
-  {
-    ROS_ERROR("Couldn't read parameter /LANDMARKS_CONFIG");
+  if (!pfuclt_aux::readParam<std::string>(&nh_, "/LANDMARKS_CONFIG", &filename))
     return;
-  }
 
   // parse CSV file
   std::vector<Landmark> lm_vec = getLandmarks(filename.c_str());
@@ -71,8 +69,8 @@ void SelfRobot::initPFset()
 
     // OMNI 4
     // 9,10,11
-    { initArray[6] - 0.5, initArray[6] + 0.5 },
-    { initArray[7] - 0.5, initArray[7] + 0.5 },
+    { POS_INIT[6] - 0.5, POS_INIT[6] + 0.5 },
+    { POS_INIT[7] - 0.5, POS_INIT[7] + 0.5 },
     { PI - 0.001, PI + 0.001 },
 
     // OMNI 5
@@ -198,14 +196,14 @@ void SelfRobot::PFresample()
   }
 
   // Duplicate all particles
-  vector<float> particlesDuplicate[19];
+  std::vector<float> particlesDuplicate[19];
   for (int i = 0; i < 19; i++)
   {
     particlesDuplicate[i] = particleSet_[i];
   }
 
   // Duplicate particle weights and get sorted indices
-  vector<unsigned int> sortedIndex =
+  std::vector<unsigned int> sortedIndex =
       pfuclt_aux::order_index<float>(particleSet_[18]);
 
   // Re-arrange particles according to particle weight sorted indices
@@ -234,7 +232,7 @@ void SelfRobot::PFresample()
   normalizedWeights = particleSet_[18];
   std::transform(normalizedWeights.begin(), normalizedWeights.end(),
                  normalizedWeights.begin(),
-                 bind1st(divides<float>(), weightSum));
+                 std::bind1st(std::divides<float>(), weightSum));
 
   // Duplicate particles for resampling
   for (int i = 0; i < 19; i++)
@@ -465,7 +463,7 @@ void SelfRobot::selfTargetDataCallback(
     const read_omni_dataset::BallData::ConstPtr& ballData, int RobotNumber)
 {
   // ROS_INFO("Got ball data from self robot %d",RobotNumber);
-  Time curObservationTime = ballData->header.stamp;
+  ros::Time curObservationTime = ballData->header.stamp;
 
   if (ballData->found)
   {
@@ -871,7 +869,7 @@ void TeammateRobot::teammateTargetDataCallback(
     const read_omni_dataset::BallData::ConstPtr& ballData, int RobotNumber)
 {
   // ROS_INFO("Got ball data from teammate robot %d",RobotNumber);
-  Time curObservationTime = ballData->header.stamp;
+  ros::Time curObservationTime = ballData->header.stamp;
 
   if (ballData->found)
   {
@@ -991,6 +989,6 @@ int main(int argc, char* argv[])
 
   node.initializeFixedLandmarks(map_1);
 
-  spin();
+  ros::spin();
   return 0;
 }

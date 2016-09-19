@@ -39,7 +39,7 @@ struct Landmark
  * @return lm_vec
  * @remark if filename empty, not found or unreadable, will return empty vector
  */
-std::vector<Landmark> getLandmarks(const char *filename);
+std::vector<Landmark> getLandmarks(const char* filename);
 
 /**
   * @brief calc_stdDev - Calculates standard deviation from a vector of type T
@@ -115,6 +115,41 @@ bool readParam(ros::NodeHandle* nh, const std::string name, T* variable)
     ROS_ERROR("Failed to receive parameter %s", name.c_str());
 
   return false;
+}
+
+/* @brief readParam (vectors) - reads and returns a parameter from the ROS parameter
+ * server
+ * @param nh - pointer to the ROS nodehandle that will perform the parameter
+ * reading task
+ * @param name - the parameter's name
+ * @param variable - pointer to the location where the parameter should be
+ * stored as type std::vector<T>
+ * @remark this function is overloaded from readParam for use with vectors
+ * @return
+ */
+template <typename T>
+bool readParam(ros::NodeHandle* nh, const std::string name,
+               std::vector<T>* variable)
+{
+  std::ostringstream oss;
+  if (nh->getParam(name, *variable))
+  { 
+    oss << "Received parameter " << name << "=[ ";
+    for (typename std::vector<T>::iterator it = variable->begin(); it != variable->end();
+         ++it)
+    {
+      if(typeid(T) == typeid(bool))
+        oss << std::boolalpha << *it << " ";
+      else
+        oss << *it << " ";
+    }
+    oss << "]";
+
+    ROS_INFO("%s", oss.str().c_str());
+    return true;
+  }
+  else
+    ROS_ERROR("Failed to receive parameter %s", name.c_str());
 }
 
 // end of namespace

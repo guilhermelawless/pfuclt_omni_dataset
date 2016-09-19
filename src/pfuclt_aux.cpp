@@ -23,4 +23,6 @@ std::vector<Landmark> getLandmarks(const char* filename)
   is.close();
   return lm_vec;
 }
+
+//end of namespace
 }

@@ -3,7 +3,7 @@
     <param name="NUM_ROBOTS" value="1"/>
     <param name="MY_ID" value="4"/>
     <param name="ROB_HT" type="double" value="0.81"/>
-    <rosparam param="playingRobots"> [0, 0, 0, 1, 0] </rosparam>
+    <rosparam param="PLAYING_ROBOTS"> [0, 0, 0, 1, 0] </rosparam>
     <param name="NUM_SENSORS_PER_ROBOT" value="3"/>
     <param name="NUM_TARGETS" value="1"/>
     <param name="LANDMARK_COV/K1" type="double" value="2.0"/>
