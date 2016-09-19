@@ -1,31 +1,5 @@
+#include "pfuclt_aux.h"
 #include "pfuclt_omni_dataset.h"
-
-namespace pfuclt_aux
-{
-template <typename T> inline T calc_stdDev(vector<T>* vec)
-{
-  accumulator_set<T, stats<tag::variance> > acc;
-  for_each(vec->begin(), vec->end(), boost::bind<void>(boost::ref(acc), _1));
-  return (T)sqrt(boost::accumulators::extract::variance(acc));
-}
-
-template <typename T>
-inline std::vector<unsigned int> order_index(std::vector<T> const& values)
-{
-  // from http://stackoverflow.com/a/10585614
-  // return sorted indices of vector values
-
-  using namespace boost::phoenix;
-  using namespace boost::phoenix::arg_names;
-
-  std::vector<unsigned int> indices(values.size());
-  int i = 0;
-  std::transform(values.begin(), values.end(), indices.begin(), ref(i)++);
-  std::sort(indices.begin(), indices.end(),
-            ref(values)[arg1] > ref(values)[arg2]);
-  return indices;
-}
-}
 
 inline bool areAllTeammatesActive(vector<bool>* areRobotsStarted)
 {
@@ -195,7 +169,7 @@ void SelfRobot::PFfuseTargetInfo() {}
 
 void SelfRobot::PFresample()
 {
-  float stdX, stdY, stdTheta;
+  double stdX, stdY, stdTheta;
 
   for (int robNo = 0; robNo < 6;
        robNo++) // for 4 robots : OMNI4, OMNI3, OMNI1 and OMNI5 in a row

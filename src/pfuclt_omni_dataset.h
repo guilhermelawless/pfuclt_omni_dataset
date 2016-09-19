@@ -26,10 +26,9 @@
 #include <boost/ref.hpp>
 #include <boost/random.hpp>
 #include <boost/foreach.hpp>
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics.hpp>
-#include <boost/spirit/include/phoenix_core.hpp>
-#include <boost/spirit/include/phoenix_operator.hpp>
+
+// Auxiliary libraries
+#include "pfuclt_aux.h"
 
 // #define M_PI        3.141592653589793238462643383280    /* pi */
 #define PI 3.14159
@@ -78,39 +77,11 @@ int nParticles_;
 
 using namespace ros;
 using namespace std;
-using namespace boost::accumulators;
 
 vector<vector<float> > map_1;
 
 typedef boost::random::mt19937 RNGType;
 
-// Auxiliary functions
-namespace pfuclt_aux
-{
-template <typename T> inline T calc_stdDev(T vec);
-
-template <typename T>
-inline std::vector<unsigned int> order_index(std::vector<T> const& values);
-
-template <typename T>
-bool readParamDouble(ros::NodeHandle* nh, const std::string name, T* variable)
-{
-
-  double tmp;
-  ostringstream oss;
-  if (nh->getParam(name, tmp))
-  {
-    *variable = (T)tmp;
-    oss << "Received parameter " << name << "=" << *variable;
-    ROS_INFO("%s", oss.str().c_str());
-    return true;
-  }
-  else
-    ROS_ERROR("Failed to receive parameter %s", name.c_str());
-
-  return false;
-}
-}
 
 class SelfRobot
 {
