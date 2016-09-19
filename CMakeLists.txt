@@ -42,8 +42,8 @@ INCLUDE_DIRECTORIES(${Eigen_INCLUDE_DIRS})
 find_package(Boost COMPONENTS filesystem REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-set(SOURCE_FILES src/pfuclt_omni_dataset.cpp)
-set(HEADER_FILES src/pfuclt_omni_dataset.h src/pfuclt_aux.h)
+set(SOURCE_FILES src/pfuclt_omni_dataset.cpp src/pfuclt_aux.cpp)
+set(HEADER_FILES src/pfuclt_omni_dataset.h src/pfuclt_aux.h src/minicsv.h)
 
 add_executable(pfuclt_omni_dataset ${SOURCE_FILES} ${HEADER_FILES})
 add_dependencies(pfuclt_omni_dataset pfuclt_omni_dataset_generate_messages_cpp)

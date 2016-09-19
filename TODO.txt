@@ -6,7 +6,7 @@ Primary:
 		-Number of robots
 		-State space configuration (position and orientation)
 		-Number of targets
-	-CSV file for landmarks, file path in launch file
+	DONE-CSV file for landmarks, file path in launch file
 
 Secondary:
 	-Use TF instead of Eigen

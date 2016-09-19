@@ -2,7 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include <cstdio>
-#include <iostream>
+#include <fstream>
 #include <string>
 
 // ROS message definitions
@@ -81,7 +81,6 @@ using namespace std;
 vector<vector<float> > map_1;
 
 typedef boost::random::mt19937 RNGType;
-
 
 class SelfRobot
 {
@@ -293,20 +292,19 @@ public:
   ReadRobotMessages() : loop_rate_(30)
   {
     // Read parameters from param server
-    using pfuclt_aux::readParamDouble;
-    readParamDouble<int>(&nh_, "/MAX_ROBOTS", &MAX_ROBOTS);
-    readParamDouble<int>(&nh_, "/NUM_ROBOTS", &NUM_ROBOTS);
-    readParamDouble<float>(&nh_, "/ROB_HT", &ROB_HT);
-    readParamDouble<int>(&nh_, "/MY_ID", &MY_ID);
-    readParamDouble<int>(&nh_, "/N_PARTICLES", &nParticles_);
-    readParamDouble<int>(&nh_, "/NUM_SENSORS_PER_ROBOT",
-                         &NUM_SENSORS_PER_ROBOT);
-    readParamDouble<int>(&nh_, "/NUM_TARGETS", &NUM_TARGETS);
-    readParamDouble<float>(&nh_, "/LANDMARK_COV/K1", &K1);
-    readParamDouble<float>(&nh_, "/LANDMARK_COV/K2", &K2);
-    readParamDouble<float>(&nh_, "/LANDMARK_COV/K3", &K3);
-    readParamDouble<float>(&nh_, "/LANDMARK_COV/K4", &K4);
-    readParamDouble<float>(&nh_, "/LANDMARK_COV/K5", &K5);
+    using pfuclt_aux::readParam;
+    readParam<int>(&nh_, "/MAX_ROBOTS", &MAX_ROBOTS);
+    readParam<int>(&nh_, "/NUM_ROBOTS", &NUM_ROBOTS);
+    readParam<float>(&nh_, "/ROB_HT", &ROB_HT);
+    readParam<int>(&nh_, "/MY_ID", &MY_ID);
+    readParam<int>(&nh_, "/N_PARTICLES", &nParticles_);
+    readParam<int>(&nh_, "/NUM_SENSORS_PER_ROBOT", &NUM_SENSORS_PER_ROBOT);
+    readParam<int>(&nh_, "/NUM_TARGETS", &NUM_TARGETS);
+    readParam<float>(&nh_, "/LANDMARK_COV/K1", &K1);
+    readParam<float>(&nh_, "/LANDMARK_COV/K2", &K2);
+    readParam<float>(&nh_, "/LANDMARK_COV/K3", &K3);
+    readParam<float>(&nh_, "/LANDMARK_COV/K4", &K4);
+    readParam<float>(&nh_, "/LANDMARK_COV/K5", &K5);
 
     if (nh_.getParam("/playingRobots", playingRobots))
     {

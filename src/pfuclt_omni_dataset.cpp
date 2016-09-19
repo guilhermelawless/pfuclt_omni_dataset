@@ -17,30 +17,34 @@ inline bool areAllTeammatesActive(vector<bool>* areRobotsStarted)
   return returnValue;
 }
 
-void addLandmark(int vertexId, double x, double y,
-                 vector<vector<float> >& runningMap)
-{
-  ROS_INFO("A fixed landmark with ID %d at position x=%f, y=%f must be created "
-           "in your application, e.g., fixed vertices in a graph if your "
-           "application is graph-based",
-           vertexId, x, y);
-
-  runningMap[vertexId][0] = x;
-  runningMap[vertexId][1] = y;
-}
-
 void ReadRobotMessages::initializeFixedLandmarks(vector<vector<float> >& runMap)
 {
-  addLandmark(0, 6.0, 4.5, runMap);
-  addLandmark(1, 6.0, -4.5, runMap);
-  addLandmark(2, 0.0, -4.5, runMap);
-  addLandmark(3, 0.0, 4.5, runMap);
-  addLandmark(4, 0.0, -1.5, runMap);
-  addLandmark(5, 0.0, 1.5, runMap);
-  addLandmark(6, 3.0, -4.5, runMap);
-  addLandmark(7, 3.0, 4.5, runMap);
-  addLandmark(8, 3.75, -2.25, runMap);
-  addLandmark(9, 3.75, 2.25, runMap);
+  using namespace pfuclt_aux;
+
+  std::string filename;
+  string buff;
+
+  // get the filename from parameter server
+  if (!nh_.getParam("/LANDMARKS_CONFIG", filename))
+  {
+    ROS_ERROR("Couldn't read parameter /LANDMARKS_CONFIG");
+    return;
+  }
+
+  // parse CSV file
+  std::vector<Landmark> lm_vec = getLandmarks(filename.c_str());
+  ROS_ERROR_COND(lm_vec.empty(), "Couldn't open file \"%s\"", filename.c_str());
+
+  // iterate over the vector and add each landmark to the map
+  for (std::vector<Landmark>::iterator it = lm_vec.begin(); it != lm_vec.end();
+       ++it)
+  {
+    ROS_INFO("A fixed landmark with ID %d at position x=%f, y=%f was created",
+             it->serial, it->x, it->y);
+
+    runMap[it->serial][0] = it->x;
+    runMap[it->serial][1] = it->y;
+  }
 }
 
 void SelfRobot::initPFset()

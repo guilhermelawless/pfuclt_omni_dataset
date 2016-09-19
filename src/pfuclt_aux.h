@@ -3,6 +3,7 @@
 
 #include <ros/ros.h>
 #include <vector>
+#include <fstream>
 #include "pfuclt_aux.h"
 #include <boost/ref.hpp>
 #include <boost/accumulators/accumulators.hpp>
@@ -21,6 +22,24 @@ enum ORDER_TYPE
   ASC,
   DESC
 };
+
+/**
+ * @brief The Landmark struct - used to store a landmark, defined by its serial
+ * number, and its position {x,y}
+ */
+struct Landmark
+{
+  int serial;
+  float x, y;
+};
+
+/**
+ * @brief getLandmarks - read landmark configuration from CSV file
+ * @param filename - the CSV file
+ * @return lm_vec
+ * @remark if filename empty, not found or unreadable, will return empty vector
+ */
+std::vector<Landmark> getLandmarks(const char *filename);
 
 /**
   * @brief calc_stdDev - Calculates standard deviation from a vector of type T
@@ -73,7 +92,7 @@ std::vector<unsigned int> order_index(std::vector<T> const& values,
 }
 
 /**
- * @brief readParamDouble - reads and returns a parameter from the ROS parameter
+ * @brief readParam - reads and returns a parameter from the ROS parameter
  * server
  * @param nh - pointer to the ROS nodehandle that will perform the parameter
  * reading task
@@ -83,13 +102,11 @@ std::vector<unsigned int> order_index(std::vector<T> const& values,
  * @return
  */
 template <typename T>
-bool readParamDouble(ros::NodeHandle* nh, const std::string name, T* variable)
+bool readParam(ros::NodeHandle* nh, const std::string name, T* variable)
 {
-  double tmp;
   std::ostringstream oss;
-  if (nh->getParam(name, tmp))
+  if (nh->getParam(name, *variable))
   {
-    *variable = (T)tmp;
     oss << "Received parameter " << name << "=" << *variable;
     ROS_INFO("%s", oss.str().c_str());
     return true;
