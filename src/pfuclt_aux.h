@@ -51,7 +51,7 @@ template <typename T> double calc_stdDev(std::vector<T>* vec)
   using namespace boost::accumulators;
 
   accumulator_set<T, stats<tag::variance> > acc;
-  for_each(vec->begin(), vec->end(), boost::bind<void>(boost::ref(acc), _1));
+  std::for_each(vec->begin(), vec->end(), boost::bind<void>(boost::ref(acc), _1));
   return (double)sqrt(extract::variance(acc));
 }
 
@@ -102,12 +102,12 @@ std::vector<unsigned int> order_index(std::vector<T> const& values,
  * @return
  */
 template <typename T>
-bool readParam(ros::NodeHandle* nh, const std::string name, T* variable)
+bool readParam(ros::NodeHandle& nh, const std::string name, T& variable)
 {
   std::ostringstream oss;
-  if (nh->getParam(name, *variable))
+  if (nh.getParam(name, variable))
   {
-    oss << "Received parameter " << name << "=" << *variable;
+    oss << "Received parameter " << name << "=" << variable;
     ROS_INFO("%s", oss.str().c_str());
     return true;
   }
@@ -119,23 +119,23 @@ bool readParam(ros::NodeHandle* nh, const std::string name, T* variable)
 
 /* @brief readParam (vectors) - reads and returns a parameter from the ROS parameter
  * server
- * @param nh - pointer to the ROS nodehandle that will perform the parameter
+ * @param nh - reference to the ROS nodehandle that will perform the parameter
  * reading task
  * @param name - the parameter's name
- * @param variable - pointer to the location where the parameter should be
+ * @param variable - reference to the location where the parameter should be
  * stored as type std::vector<T>
  * @remark this function is overloaded from readParam for use with vectors
  * @return
  */
 template <typename T>
-bool readParam(ros::NodeHandle* nh, const std::string name,
-               std::vector<T>* variable)
+bool readParam(ros::NodeHandle& nh, const std::string name,
+               std::vector<T>& variable)
 {
   std::ostringstream oss;
-  if (nh->getParam(name, *variable))
+  if (nh.getParam(name, variable))
   { 
     oss << "Received parameter " << name << "=[ ";
-    for (typename std::vector<T>::iterator it = variable->begin(); it != variable->end();
+    for (typename std::vector<T>::iterator it = variable.begin(); it != variable.end();
          ++it)
     {
       if(typeid(T) == typeid(bool))
