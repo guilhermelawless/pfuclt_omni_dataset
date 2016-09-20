@@ -80,22 +80,10 @@ std::vector<pfuclt_aux::Landmark> landmarks;
 // This will be the generator use for randomizing
 typedef boost::random::mt19937 RNGType;
 
-// So everyone knows which classes exist before they are fully declared
+// ReadRobotMessages needs a forward declaration of the robot class
 class Robot;
-class ReadRobotMessages;
-class SelfRobot;
-class TeammateRobot;
 
-class Robot
-{
-protected:
-  ReadRobotMessages* parent_;
-  bool started_;
-
-public:
-  bool isStarted() { return started_; }
-  void setStarted(bool value) { started_ = value; }
-};
+typedef std::vector<std::vector<float> > particles_t;
 
 /**
  * @brief The ReadRobotMessages class - Creates and keeps information on the
@@ -112,7 +100,7 @@ private:
   // SelfRobot* robot_;
   // std::vector<TeammateRobot*> teammateRobots_;
 
-  std::vector<std::vector<float> > pfParticles_;
+  particles_t pfParticles_;
 
 public:
   ReadRobotMessages();
@@ -125,33 +113,45 @@ public:
    */
   void initializeFixedLandmarks();
 
-  inline bool areAllTeammatesActive()
-  {
-    bool returnValue = true;
-    for (std::vector<Robot*>::iterator it = robots_.begin();
-         it != robots_.end(); ++it)
-    {
-      if (!(*it)->isStarted())
-        return false;
-    }
-    return true;
-  }
+  /**
+   * @brief areAllTeammatesActive - uses each robot's public methods to check if they have started yet
+   * @return true if every robot is active, false otherwise
+   */
+  bool areAllRobotsActive();
 };
 
+/**
+ * @brief The Robot class - has the common variables and methods of selfRobot
+ * and TeammateRobot's
+ */
+class Robot
+{
+protected:
+  ros::NodeHandle& nh_;
+  ReadRobotMessages* parent_;
+  bool started_;
+  ros::Subscriber sOdom_, sBall_, sLandmark_;
+  uint robotNumber_;
+
+  Eigen::Isometry2d initPose; // x y theta;
+  Eigen::Isometry2d prevPose; // x y theta
+
+public:
+  Robot(ros::NodeHandle& nh, ReadRobotMessages* parent) : nh_(nh), parent_(parent) {}
+  bool isStarted() { return started_; }
+  void setStarted(bool value) { started_ = value; }
+};
+
+/**
+ * @brief The SelfRobot class - this is the object that performs the PF-UCLT
+ * algorithm
+ */
 class SelfRobot : public Robot
 {
-  ros::NodeHandle& nh_;
-  // One subscriber per sensor in the robot
-
-  ros::Subscriber sOdom_;
-  ros::Subscriber sBall_;
-  ros::Subscriber sLandmark_;
+private:
   ros::Subscriber GT_sub_;
   read_omni_dataset::LRMGTData receivedGTdata;
   pfuclt_omni_dataset::particles msg_particles;
-
-  Eigen::Isometry2d initPose; // x y theta;
-  Eigen::Isometry2d prevPose;
 
   ros::Publisher State_publisher, targetStatePublisher, virtualGTPublisher,
       particlePublisher;
@@ -162,16 +162,13 @@ class SelfRobot : public Robot
 
   std::vector<float> normalizedWeights;
 
-  std::vector<std::vector<float> >& pfParticlesSelf;
+  particles_t& pfParticlesSelf;
 
   bool particlesInitialized;
 
-  uint robotNumber_;
-
-private:
 public:
   SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d _initPose,
-            std::vector<std::vector<float> >& _ptcls, ReadRobotMessages* caller,
+            particles_t& _ptcls, ReadRobotMessages* caller,
             uint robotNumber);
 
   /// Use this method to implement perception algorithms
@@ -207,25 +204,20 @@ public:
   void publishState(float, float, float);
 };
 
+/**
+ * @brief The TeammateRobot class - this class doesn't perform the PF-UCLT
+ * algorithm. Instead, it is used for callbacks and storing information to be
+ * used later by the SelfRobot class
+ */
 class TeammateRobot : public Robot
 {
-  ros::NodeHandle* nh;
-  // One subscriber per sensor in the robot
-  ros::Subscriber sOdom_;
-  ros::Subscriber sBall_;
-  ros::Subscriber sLandmark_;
-
-  Eigen::Isometry2d initPose; // x y theta;
-  Eigen::Isometry2d prevPose;
-
-  std::vector<std::vector<float> >& pfParticlesMate;
+  particles_t& pfParticles;
 
 private:
-  uint robotNumber_;
 
 public:
   TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d _initPose,
-                std::vector<std::vector<float> >& _ptcls,
+                particles_t& _ptcls,
                 ReadRobotMessages* caller, uint robotNumber);
 
   /// Use this method to implement perception algorithms
