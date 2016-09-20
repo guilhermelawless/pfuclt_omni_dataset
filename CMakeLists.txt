@@ -4,6 +4,9 @@ project(pfuclt_omni_dataset)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 find_package(cmake_modules REQUIRED)
 
+#external includes
+INCLUDE_DIRECTORIES(include/)
+
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp

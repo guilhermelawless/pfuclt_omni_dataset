@@ -30,6 +30,8 @@
 // Auxiliary libraries
 #include "pfuclt_aux.h"
 
+namespace pfuclt
+{
 #define PI 3.14159
 
 int MAX_ROBOTS;
@@ -95,14 +97,11 @@ class ReadRobotMessages
 private:
   ros::NodeHandle nh_;
   ros::Rate loop_rate_;
-
   std::vector<Robot*> robots_;
-  // SelfRobot* robot_;
-  // std::vector<TeammateRobot*> teammateRobots_;
-
-  particles_t pfParticles_;
 
 public:
+  particles_t pfParticles;
+
   ReadRobotMessages();
   ~ReadRobotMessages();
 
@@ -114,14 +113,15 @@ public:
   void initializeFixedLandmarks();
 
   /**
-   * @brief areAllTeammatesActive - uses each robot's public methods to check if they have started yet
+   * @brief areAllTeammatesActive - uses each robot's public methods to check if
+   * they have started yet
    * @return true if every robot is active, false otherwise
    */
   bool areAllRobotsActive();
 };
 
 /**
- * @brief The Robot class - has the common variables and methods of selfRobot
+ * @brief The Robot class - Has the common variables and methods of selfRobot
  * and TeammateRobot's
  */
 class Robot
@@ -132,18 +132,27 @@ protected:
   bool started_;
   ros::Subscriber sOdom_, sBall_, sLandmark_;
   uint robotNumber_;
-
-  Eigen::Isometry2d initPose; // x y theta;
-  Eigen::Isometry2d prevPose; // x y theta
+  Eigen::Isometry2d initPose_; // x y theta;
+  Eigen::Isometry2d prevPose_;
+  Eigen::Isometry2d curPose_;
+  ros::Time curTime_;
+  ros::Time prevTime_;
+  particles_t& pfParticles_;
 
 public:
-  Robot(ros::NodeHandle& nh, ReadRobotMessages* parent) : nh_(nh), parent_(parent) {}
+  Robot(ros::NodeHandle& nh, ReadRobotMessages* parent,
+        Eigen::Isometry2d initPose, particles_t& pfParticles, uint robotNumber)
+      : nh_(nh), parent_(parent), initPose_(initPose), curPose_(initPose),
+        pfParticles_(pfParticles), started_(false), robotNumber_(robotNumber)
+  {
+    // nothing, only initialize members above
+  }
   bool isStarted() { return started_; }
   void setStarted(bool value) { started_ = value; }
 };
 
 /**
- * @brief The SelfRobot class - this is the object that performs the PF-UCLT
+ * @brief The SelfRobot class - This is the class that performs the PF-UCLT
  * algorithm
  */
 class SelfRobot : public Robot
@@ -162,14 +171,11 @@ private:
 
   std::vector<float> normalizedWeights;
 
-  particles_t& pfParticlesSelf;
-
   bool particlesInitialized;
 
 public:
-  SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d _initPose,
-            particles_t& _ptcls, ReadRobotMessages* caller,
-            uint robotNumber);
+  SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose, particles_t& ptcls,
+            ReadRobotMessages* caller, uint robotNumber);
 
   /// Use this method to implement perception algorithms
   void selfOdometryCallback(const nav_msgs::Odometry::ConstPtr&,
@@ -196,29 +202,21 @@ public:
 
   void PFresample();
 
-  Eigen::Isometry2d curPose;
-  ros::Time curTime;
-  ros::Time prevTime;
-
   // publish the estimated state of all the teammate robot
   void publishState(float, float, float);
 };
 
 /**
- * @brief The TeammateRobot class - this class doesn't perform the PF-UCLT
+ * @brief The TeammateRobot class - This class doesn't perform the PF-UCLT
  * algorithm. Instead, it is used for callbacks and storing information to be
  * used later by the SelfRobot class
  */
 class TeammateRobot : public Robot
 {
-  particles_t& pfParticles;
-
-private:
-
 public:
-  TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d _initPose,
-                particles_t& _ptcls,
-                ReadRobotMessages* caller, uint robotNumber);
+  TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
+                particles_t& ptcls, ReadRobotMessages* caller,
+                uint robotNumber);
 
   /// Use this method to implement perception algorithms
   void teammateOdometryCallback(const nav_msgs::Odometry::ConstPtr&,
@@ -231,8 +229,7 @@ public:
   /// Use this method to implement perception algorithms
   void teammateLandmarkDataCallback(
       const read_omni_dataset::LRMLandmarksData::ConstPtr&, uint robotNumber);
-
-  Eigen::Isometry2d curPose;
-  ros::Time curTime;
-  ros::Time prevTime;
 };
+
+// end of namespace
+}

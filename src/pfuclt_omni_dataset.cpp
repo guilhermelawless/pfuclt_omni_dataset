@@ -1,28 +1,30 @@
 #include "pfuclt_aux.h"
 #include "pfuclt_omni_dataset.h"
 
+namespace pfuclt
+{
 ReadRobotMessages::ReadRobotMessages() : loop_rate_(30)
 {
   // read parameters from param server
   using pfuclt_aux::readParam;
-  readParam<int>(nh_,     "/MAX_ROBOTS",            MAX_ROBOTS);
-  readParam<int>(nh_,     "/NUM_ROBOTS",            NUM_ROBOTS);
-  readParam<float>(nh_,   "/ROB_HT",                ROB_HT);
-  readParam<int>(nh_,     "/MY_ID",                 MY_ID);
-  readParam<int>(nh_,     "/N_PARTICLES",           nParticles_);
-  readParam<int>(nh_,     "/NUM_SENSORS_PER_ROBOT", NUM_SENSORS_PER_ROBOT);
-  readParam<int>(nh_,     "/NUM_TARGETS",           NUM_TARGETS);
-  readParam<float>(nh_,   "/LANDMARK_COV/K1",       K1);
-  readParam<float>(nh_,   "/LANDMARK_COV/K2",       K2);
-  readParam<float>(nh_,   "/LANDMARK_COV/K3",       K3);
-  readParam<float>(nh_,   "/LANDMARK_COV/K4",       K4);
-  readParam<float>(nh_,   "/LANDMARK_COV/K5",       K5);
-  readParam<bool>(nh_,    "/PLAYING_ROBOTS",        PLAYING_ROBOTS);
-  readParam<double>(nh_,  "/POS_INIT",              POS_INIT);
+  readParam<int>(nh_, "/MAX_ROBOTS", MAX_ROBOTS);
+  readParam<int>(nh_, "/NUM_ROBOTS", NUM_ROBOTS);
+  readParam<float>(nh_, "/ROB_HT", ROB_HT);
+  readParam<int>(nh_, "/MY_ID", MY_ID);
+  readParam<int>(nh_, "/N_PARTICLES", nParticles_);
+  readParam<int>(nh_, "/NUM_SENSORS_PER_ROBOT", NUM_SENSORS_PER_ROBOT);
+  readParam<int>(nh_, "/NUM_TARGETS", NUM_TARGETS);
+  readParam<float>(nh_, "/LANDMARK_COV/K1", K1);
+  readParam<float>(nh_, "/LANDMARK_COV/K2", K2);
+  readParam<float>(nh_, "/LANDMARK_COV/K3", K3);
+  readParam<float>(nh_, "/LANDMARK_COV/K4", K4);
+  readParam<float>(nh_, "/LANDMARK_COV/K5", K5);
+  readParam<bool>(nh_, "/PLAYING_ROBOTS", PLAYING_ROBOTS);
+  readParam<double>(nh_, "/POS_INIT", POS_INIT);
 
-  pfParticles_.resize(nParticles_);
+  pfParticles.resize(nParticles_);
   for (int i = 0; i < nParticles_; i++)
-    pfParticles_[i].resize((MAX_ROBOTS + 1) * 3 + 1);
+    pfParticles[i].resize((MAX_ROBOTS + 1) * 3 + 1);
 
   Eigen::Isometry2d initialRobotPose;
 
@@ -37,12 +39,12 @@ ReadRobotMessages::ReadRobotMessages() : loop_rate_(30)
       if (rn + 1 == MY_ID)
       {
         robots_.push_back(
-            new SelfRobot(nh_, initialRobotPose, pfParticles_, this, rn));
+            new SelfRobot(nh_, initialRobotPose, pfParticles, this, rn));
       }
       else
       {
         robots_.push_back(
-            new TeammateRobot(nh_, initialRobotPose, pfParticles_, this, rn));
+            new TeammateRobot(nh_, initialRobotPose, pfParticles, this, rn));
       }
     }
   }
@@ -97,12 +99,10 @@ bool ReadRobotMessages::areAllRobotsActive()
   return true;
 }
 
-
-SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d _initPose,
-                     particles_t& _ptcls,
-                     ReadRobotMessages* caller, uint robotNumber)
-    : Robot(nh, caller), initPose(_initPose), curPose(_initPose), pfParticlesSelf(_ptcls),
-      seed_(time(0)), robotNumber_(robotNumber)
+SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
+                     particles_t& ptcls, ReadRobotMessages* caller,
+                     uint robotNumber)
+    : Robot(nh, caller, initPose, ptcls, robotNumber), seed_(time(0))
 {
 
   // Subscribe to topics
@@ -223,7 +223,7 @@ void SelfRobot::initPFset()
   {
     for (int j = 0; j < 19; j++)
     {
-      msg_particles.particles[i].particle[j] = pfParticlesSelf[i][j];
+      msg_particles.particles[i].particle[j] = pfParticles_[i][j];
     }
   }
 
@@ -359,7 +359,7 @@ void SelfRobot::PFresample()
     for (int k = 0; k < 19; k++)
     {
       particleSet_[k][par] = particlesDuplicate[k][par];
-      pfParticlesSelf[par][k] = particleSet_[k][par];
+      pfParticles_[par][k] = particleSet_[k][par];
       msg_particles.particles[par].particle[k] = particleSet_[k][par];
     }
   }
@@ -391,7 +391,7 @@ void SelfRobot::PFresample()
     for (int k = 0; k < 19; k++)
     {
       // particleSet_[k][par] = particlesDuplicate[k][m];
-      pfParticlesSelf[par][k] = particleSet_[k][par];
+      pfParticles_[par][k] = particleSet_[k][par];
       msg_particles.particles[par].particle[k] = particleSet_[k][par];
     }
   }
@@ -427,7 +427,7 @@ void SelfRobot::PFresample()
   //   }
   // //   //cout<<"Max i is "<<i<<endl;
 
-  ///@TODO change this to a much more stable way of finding the mean of the
+  ///TODO change this to a much more stable way of finding the mean of the
   /// cluster which will represent the ball position. Because it's not the
   /// highest weight particle which represent's the ball position
   //   for(int robNo = 0; robNo<5; robNo++)     // for 4 robots : OMNI4, OMNI3,
@@ -488,8 +488,8 @@ void SelfRobot::selfOdometryCallback(
   started_ = true;
 
   uint seq = odometry->header.seq;
-  prevTime = curTime;
-  curTime = odometry->header.stamp;
+  prevTime_ = curTime_;
+  curTime_ = odometry->header.stamp;
 
   ROS_DEBUG_THROTTLE(
       1, "(throttled 1Hz) got odometry from self-robot (ID=%d) at time %d\n",
@@ -507,16 +507,16 @@ void SelfRobot::selfOdometryCallback(
   odom.translation() = Eigen::Vector2d(odomVector[0], odomVector[1]);
 
   if (seq == 0)
-    curPose = initPose;
+    curPose_ = initPose_;
   else
   {
-    prevPose = curPose;
-    curPose = prevPose * odom;
+    prevPose_ = curPose_;
+    curPose_ = prevPose_ * odom;
   }
 
   Eigen::Vector2d t;
-  t = curPose.translation();
-  Eigen::Matrix<double, 2, 2> r = curPose.linear();
+  t = curPose_.translation();
+  Eigen::Matrix<double, 2, 2> r = curPose_.linear();
   double angle = acos(r(0, 0));
 
   if (parent_->areAllRobotsActive() && !particlesInitialized)
@@ -770,7 +770,7 @@ void SelfRobot::selfLandmarkDataCallback(
   // float weight[nParticles_];
   for (int p = 0; p < nParticles_; p++)
   {
-    pfParticlesSelf[p][(MAX_ROBOTS + 1) * 3] = 1.0;
+    pfParticles_[p][(MAX_ROBOTS + 1) * 3] = 1.0;
     particleSet_[(MAX_ROBOTS + 1) * 3][p] = 1.0;
   }
   // cout<<"Particle weights are = ";
@@ -904,11 +904,10 @@ void SelfRobot::gtDataCallback(
 ////////////////////////// METHOD DEFINITIONS OF THE TEAMMATEROBOT CLASS
 /////////////////////////
 
-TeammateRobot::TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d _initPose,
-                             particles_t& _ptcls,
-                             ReadRobotMessages* caller, uint robotNumber)
-    : Robot(nh, caller), initPose(_initPose), curPose(_initPose), pfParticles(_ptcls),
-      robotNumber_(robotNumber)
+TeammateRobot::TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
+                             particles_t& ptcls, ReadRobotMessages* caller,
+                             uint robotNumber)
+    : Robot(nh, caller, initPose, ptcls, robotNumber)
 {
 
   sOdom_ = nh.subscribe<nav_msgs::Odometry>(
@@ -946,8 +945,8 @@ void TeammateRobot::teammateOdometryCallback(
   setStarted(true);
 
   uint seq = odometry->header.seq;
-  prevTime = curTime;
-  curTime = odometry->header.stamp;
+  prevTime_ = curTime_;
+  curTime_ = odometry->header.stamp;
 
   // ROS_INFO(" got odometry from teammate-robot (ID=%d) at time
   // %d\n",RobotNumber, odometry->header.stamp.sec);
@@ -964,16 +963,16 @@ void TeammateRobot::teammateOdometryCallback(
   odom.translation() = Eigen::Vector2d(odomVector[0], odomVector[1]);
 
   if (seq == 0)
-    curPose = initPose;
+    curPose_ = initPose_;
   else
   {
-    prevPose = curPose;
-    curPose = prevPose * odom;
+    prevPose_ = curPose_;
+    curPose_ = prevPose_ * odom;
   }
 
   Eigen::Vector2d t;
-  t = curPose.translation();
-  Eigen::Matrix<double, 2, 2> r = curPose.linear();
+  t = curPose_.translation();
+  Eigen::Matrix<double, 2, 2> r = curPose_.linear();
   double angle = acos(r(0, 0));
 
   // particle prediction step
@@ -984,19 +983,17 @@ void TeammateRobot::teammateOdometryCallback(
     if (seq != 0)
     {
       prevParticle =
-          Eigen::Rotation2Dd(pfParticles[i][2 + (RobotNumber - 1) * 3])
+          Eigen::Rotation2Dd(pfParticles_[i][2 + (RobotNumber - 1) * 3])
               .toRotationMatrix();
       prevParticle.translation() =
-          Eigen::Vector2d(pfParticles[i][0 + (RobotNumber - 1) * 3],
-                          pfParticles[i][1 + (RobotNumber - 1) * 3]);
+          Eigen::Vector2d(pfParticles_[i][0 + (RobotNumber - 1) * 3],
+                          pfParticles_[i][1 + (RobotNumber - 1) * 3]);
       curParticle = prevParticle * odom;
-      pfParticles[i][0 + (RobotNumber - 1) * 3] =
-          curParticle.translation()[0];
-      pfParticles[i][1 + (RobotNumber - 1) * 3] =
-          curParticle.translation()[1];
+      pfParticles_[i][0 + (RobotNumber - 1) * 3] = curParticle.translation()[0];
+      pfParticles_[i][1 + (RobotNumber - 1) * 3] = curParticle.translation()[1];
       Eigen::Matrix<double, 2, 2> r_particle = curParticle.linear();
       double angle_particle = acos(r_particle(0, 0));
-      pfParticles[i][2 + (RobotNumber - 1) * 3] = angle_particle;
+      pfParticles_[i][2 + (RobotNumber - 1) * 3] = angle_particle;
     }
   }
 
@@ -1092,8 +1089,8 @@ void SelfRobot::publishState(float x, float y, float theta)
   particlePublisher.publish(msg_particles);
 
   msg_state.header.stamp =
-      curTime; // time of the self-robot must be in the full state
-  receivedGTdata.header.stamp = curTime;
+      curTime_; // time of the self-robot must be in the full state
+  receivedGTdata.header.stamp = curTime_;
 
   msg_state.robotPose[MY_ID - 1].pose.pose.position.x = x;
   msg_state.robotPose[MY_ID - 1].pose.pose.position.y = y;
@@ -1109,13 +1106,16 @@ void SelfRobot::publishState(float x, float y, float theta)
   virtualGTPublisher.publish(receivedGTdata);
 }
 
+// end of namespace
+}
+
 int main(int argc, char* argv[])
 {
   ros::init(argc, argv, "pfuclt_omni_dataset");
 
-  ReadRobotMessages node;
+  pfuclt::ReadRobotMessages node;
 
-  if (MY_ID == 2)
+  if (pfuclt::MY_ID == 2)
   {
     // ROS_WARN("OMNI2 not present in dataset. Please try with another Robot ID
     // for self robot");
