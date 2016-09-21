@@ -1,1 +1,2 @@
-particle[200] particles
+particle[] particles
+uint16 weightSum

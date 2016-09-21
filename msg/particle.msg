@@ -1,1 +1,1 @@
-float32[19] particle
+float32[] particle

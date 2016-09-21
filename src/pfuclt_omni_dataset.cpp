@@ -83,6 +83,10 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
                      particles& ptcls, RobotFactory* caller, uint robotNumber)
   : Robot(nh, caller, initPose, ptcls, robotNumber), seed_(time(0))
 {
+  // Prepare particle message
+  msg_particles.particles.resize(N_PARTICLES);
+  for(uint part=0; part<N_PARTICLES; ++part)
+    msg_particles.particles[part].particle.resize(N_DIMENSIONS);
 
   // Subscribe to topics
   sOdom_ = nh.subscribe<nav_msgs::Odometry>(
@@ -305,6 +309,9 @@ void SelfRobot::PFresample()
   // Normalize the weights using the sum of all weights
   float weightSum =
       std::accumulate(particleSet_[18].begin(), particleSet_[18].end(), 0);
+
+  //Put into message
+  msg_particles.weightSum = (uint16_t) weightSum;
 
   if (weightSum == 0.0)
     ROS_WARN("WeightSum of Particles = %f\n", weightSum);
