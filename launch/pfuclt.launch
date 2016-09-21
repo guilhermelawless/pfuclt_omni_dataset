@@ -13,7 +13,33 @@
     <param name="LANDMARK_COV/K5" type="double" value="0.5"/>
     <rosparam param="POS_INIT"> [5.086676, -2.648978, 0.0, 0.0, 1.688772, -2.095153, 3.26839, -3.574936, 4.058235, -0.127530] </rosparam>
     <param name="N_PARTICLES" value="200"/>
-		<param name="LANDMARKS_CONFIG" value="$(find pfuclt_omni_dataset)/config/landmarks.csv"/>
+	<param name="LANDMARKS_CONFIG" value="$(find pfuclt_omni_dataset)/config/landmarks.csv"/>
+    <param name="USE_CUSTOM_VALUES" value="true"/>
+    <rosparam param="CUSTOM_PARTICLE_INIT">
+        [0,6.0,
+         -4.5,4.5,
+         -3.14159,3.14159,
+
+         0,6.0,
+         -4.5,4.5,
+         -3.14159,3.14159,
+
+         0,6.0,
+         -4.5,4.5,
+         -3.14159,3.14159,
+
+         2.76839,3.76839,
+         -4.074936,-3.074936,
+         3.14059, 3.14259,
+
+         0,6.0,
+         -4.5,4.5,
+         -3.14159,3.14159,
+
+         0,6.0,
+         -4.5,4.5,
+         -3.14159,3.14159]
+     </rosparam>
 
     <node name="performer" pkg="pfuclt_omni_dataset" type="pfuclt_omni_dataset" output="screen">
     	<remap from="/pfuclt_orangeBallState" to="/estimatedOrangeBallState"/>

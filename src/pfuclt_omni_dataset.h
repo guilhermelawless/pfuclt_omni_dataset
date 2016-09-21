@@ -24,8 +24,6 @@
 // Boost libraries
 #include <boost/bind.hpp>
 #include <boost/ref.hpp>
-#include <boost/random.hpp>
-#include <boost/foreach.hpp>
 
 // Auxiliary libraries
 #include "pfuclt_aux.h"
@@ -83,11 +81,11 @@ std::vector<double> POS_INIT;
 int N_PARTICLES;
 int N_DIMENSIONS;
 
+bool USE_CUSTOM_VALUES = false; // If set to true via the parameter server, the custom values will be used
+std::vector<double> CUSTOM_PARTICLE_INIT; // Used to set custom values when initiating the particle filter set (will still be a uniform distribution)
+
 // for ease of access
 std::vector<pfuclt_aux::Landmark> landmarks;
-
-// This will be the generator use for randomizing
-typedef boost::random::mt19937 RNGType;
 
 // RobotFactory needs a forward declaration of the robot class
 class Robot;
@@ -104,7 +102,7 @@ private:
   std::vector<Robot*> robots_;
 
 public:
-  particles pfParticles;
+  particle_filter pfParticles;
 
   RobotFactory(ros::NodeHandle& nh);
   ~RobotFactory();
@@ -141,11 +139,11 @@ protected:
   Eigen::Isometry2d curPose_;
   ros::Time curTime_;
   ros::Time prevTime_;
-  particles& pfParticles_;
+  particle_filter& pfParticles_;
 
 public:
   Robot(ros::NodeHandle& nh, RobotFactory* parent,
-        Eigen::Isometry2d initPose, particles& pfParticles, uint robotNumber)
+        Eigen::Isometry2d initPose, particle_filter& pfParticles, uint robotNumber)
     : nh_(nh), parent_(parent), initPose_(initPose), curPose_(initPose),
       pfParticles_(pfParticles), started_(false), robotNumber_(robotNumber)
   {
@@ -170,7 +168,6 @@ private:
   particlePublisher;
   read_omni_dataset::RobotState msg_state;
 
-  RNGType seed_;
   std::vector<float> particleSet_[19];
 
   std::vector<float> normalizedWeights;
@@ -178,7 +175,7 @@ private:
   bool particlesInitialized;
 
 public:
-  SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose, particles& ptcls,
+  SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose, particle_filter& ptcls,
             RobotFactory* caller, uint robotNumber);
 
   /// Use this method to implement perception algorithms
@@ -195,8 +192,6 @@ public:
                            uint robotNumber);
 
   void gtDataCallback(const read_omni_dataset::LRMGTData::ConstPtr&);
-
-  void initPFset();
 
   void PFpredict();
 
@@ -219,7 +214,7 @@ class TeammateRobot : public Robot
 {
 public:
   TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-                particles& ptcls, RobotFactory* caller,
+                particle_filter& ptcls, RobotFactory* caller,
                 uint robotNumber);
 
   /// Use this method to implement perception algorithms

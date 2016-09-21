@@ -6,7 +6,7 @@ namespace pfuclt
 {
 
 RobotFactory::RobotFactory(ros::NodeHandle& nh)
-  : nh_(nh), pfParticles(pfuclt_ptcls::particles(N_PARTICLES, N_DIMENSIONS))
+  : nh_(nh), pfParticles(pfuclt_ptcls::particle_filter(N_PARTICLES, N_DIMENSIONS+NUM_WEIGHT))
 {
   for (uint rn = 0; rn < MAX_ROBOTS; rn++)
   {
@@ -80,13 +80,13 @@ bool RobotFactory::areAllRobotsActive()
 }
 
 SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-                     particles& ptcls, RobotFactory* caller, uint robotNumber)
-  : Robot(nh, caller, initPose, ptcls, robotNumber), seed_(time(0))
+                     particle_filter& ptcls, RobotFactory* caller, uint robotNumber)
+  : Robot(nh, caller, initPose, ptcls, robotNumber)
 {
   // Prepare particle message
   msg_particles.particles.resize(N_PARTICLES);
   for(uint part=0; part<N_PARTICLES; ++part)
-    msg_particles.particles[part].particle.resize(N_DIMENSIONS);
+    msg_particles.particles[part].particle.resize(N_DIMENSIONS+NUM_WEIGHT);
 
   // Subscribe to topics
   sOdom_ = nh.subscribe<nav_msgs::Odometry>(
@@ -140,124 +140,6 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
   {
     particleSet_[i].resize(N_PARTICLES);
   }
-}
-
-void SelfRobot::initPFset()
-{
-
-  const float particleSetRandomInitValues[18][2] = {
-    // OMNI 1
-    // 0,1,2
-    { 0, 6.0 },
-    { -4.5, 4.5 },
-    { -PI, PI },
-
-    // OMNI 2
-    // 3,4,5
-    { 0, 6.0 },
-    { -4.5, 4.5 },
-    { -PI, PI },
-
-    // OMNI 3
-    // 6,7,8
-    { 0, 6.0 },
-    { -4.5, 4.5 },
-    { -PI, PI },
-
-    // OMNI 4
-    // 9,10,11
-    { POS_INIT[6] - 0.5, POS_INIT[6] + 0.5 },
-    { POS_INIT[7] - 0.5, POS_INIT[7] + 0.5 },
-    { PI - 0.001, PI + 0.001 },
-
-    // OMNI 5
-    // 12,13,14
-    { 0, 6.0 },
-    { -4.5, 4.5 },
-    { -PI, PI },
-
-    // Ball
-    // 15,16,17
-    { 0, 6.0 },
-    { -4.5, 4.5 },
-    { -PI, PI },
-  };
-
-  // Sample from a uniform distribution for every particle subset, according to
-  // the values defined in particleSetRandomInitValues
-  for (int i = 0; i < 18; ++i)
-  {
-    boost::random::uniform_real_distribution<> dist(
-          particleSetRandomInitValues[i][0], particleSetRandomInitValues[i][1]);
-    BOOST_FOREACH (float& f, particleSet_[i])
-    {
-      f = dist(seed_);
-    }
-
-    // std::for_each(particleSet_[i].begin(), particleSet_[i].end(),
-    // boost::bind<void>(dist(seed_), _1));
-  }
-
-  // Particle weights init with same weight
-  particleSet_[18].assign(particleSet_[18].size(), 1 / N_PARTICLES);
-
-  // Put into message
-  for (int i = 0; i < N_PARTICLES; i++)
-  {
-    for (int j = 0; j < 19; j++)
-    {
-      msg_particles.particles[i].particle[j] = pfParticles_[j][i];
-    }
-  }
-
-  //
-  //     float tempParticles[3][nParticles_];
-  //
-  //     // for the robots
-  //     for(int n=0; n<MAX_ROBOTS; n++ )
-  //     {
-  //       ippsRandUniform_Direct_32f (&tempParticles[0][0], nParticles_, 0,
-  //       6.0, &seed_);
-  //       ippsRandUniform_Direct_32f (&tempParticles[1][0], nParticles_, -4.5,
-  //       4.5, &seed_);
-  //       ippsRandUniform_Direct_32f (&tempParticles[2][0], nParticles_, -PI,
-  //       PI, &seed_);
-  //
-  //       for(int i=0; i<nParticles_; i++)
-  //       {
-  // 	for(int j=0; j<3; j++)
-  // 	{
-  // 	  pfParticlesSelf[i][n*3+j] = tempParticles[j][i];
-  // 	  particleSet_[n*3+j][i] = tempParticles[j][i];
-  // 	  pfucltPtcls.particles[i].particle[n*3+j] = pfParticlesSelf[i][n*3+j];
-  // 	}
-  //       }
-  //
-  //     }
-  //     // for that one target
-  //     ippsRandUniform_Direct_32f (&tempParticles[0][0], nParticles_, 0, 6.0,
-  //     &seed_);
-  //     ippsRandUniform_Direct_32f (&tempParticles[1][0], nParticles_, -4.5,
-  //     4.5, &seed_);
-  //     ippsRandUniform_Direct_32f (&tempParticles[2][0], nParticles_, 0, 0.5,
-  //     &seed_);
-  //
-  //     for(int i=0; i<nParticles_; i++)
-  //     {
-  //       pfParticlesSelf[i][(MAX_ROBOTS+1)*3] = 1.0; // initialize all weights
-  //       to 1
-  //       particleSet_[(MAX_ROBOTS+1)*3][i] = 1.0;
-  //
-  //       for(int j=0; j<3; j++)
-  //       {
-  // 	pfParticlesSelf[i][MAX_ROBOTS*3+j] = tempParticles[j][i];
-  // 	particleSet_[MAX_ROBOTS*3+j][i] = tempParticles[j][i];
-  // 	pfucltPtcls.particles[i].particle[MAX_ROBOTS*3+j] =
-  // pfParticlesSelf[i][MAX_ROBOTS*3+j];
-  //       }
-  //     }
-  //
-  //     particlePublisher.publish(pfucltPtcls);
 }
 
 void SelfRobot::PFpredict() {}
@@ -353,12 +235,15 @@ void SelfRobot::PFresample()
 
   for (size_t r = 9; r < 12; r++)
   {
+    //TODO put this back, in a method of the particle filter class
+    /*
     boost::random::uniform_real_distribution<> dist(particleSet_[r][0] - 1.5,
         particleSet_[r][0] + 1.5);
     BOOST_FOREACH (float& f, particleSet_[r])
     {
       f = dist(seed_);
     }
+    */
   }
 
   for (int par = 100; par < N_PARTICLES; par++)
@@ -507,8 +392,22 @@ void SelfRobot::selfOdometryCallback(
 
   if (parent_->areAllRobotsActive() && !particlesInitialized)
   {
-    initPFset();
+    if(USE_CUSTOM_VALUES)
+      pfParticles_.init(CUSTOM_PARTICLE_INIT);
+    else
+      pfParticles_.init();
+
+
     particlesInitialized = true;
+
+    // Put into message
+    for (int i = 0; i < N_PARTICLES; i++)
+    {
+      for (int j = 0; j < 19; j++)
+      {
+        msg_particles.particles[i].particle[j] = pfParticles_[j][i];
+      }
+    }
   }
 
   // particle prediction step
@@ -891,7 +790,7 @@ void SelfRobot::gtDataCallback(
 /////////////////////////
 
 TeammateRobot::TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-                             particles& ptcls, RobotFactory* caller,
+                             particle_filter& ptcls, RobotFactory* caller,
                              uint robotNumber)
   : Robot(nh, caller, initPose, ptcls, robotNumber)
 {
@@ -1127,8 +1026,18 @@ int main(int argc, char* argv[])
   readParam<float>(nh, "/LANDMARK_COV/K5", K5);
   readParam<bool>(nh, "/PLAYING_ROBOTS", PLAYING_ROBOTS);
   readParam<double>(nh, "/POS_INIT", POS_INIT);
+  readParam<bool>(nh, "/USE_CUSTOM_VALUES", USE_CUSTOM_VALUES);
 
-  N_DIMENSIONS = (MAX_ROBOTS + NUM_TARGETS) * STATES_PER_ROBOT + NUM_WEIGHT;
+  N_DIMENSIONS = (MAX_ROBOTS + NUM_TARGETS) * STATES_PER_ROBOT;
+
+  if(USE_CUSTOM_VALUES)
+  {
+    readParam<double>(nh, "/CUSTOM_PARTICLE_INIT", CUSTOM_PARTICLE_INIT);
+    if(CUSTOM_PARTICLE_INIT.size() != (N_DIMENSIONS*2))
+    {
+      ROS_ERROR("/CUSTOM_PARTICLE_INIT given but not of correct size - should have %d numbers and has %d", N_DIMENSIONS*2, (int)CUSTOM_PARTICLE_INIT.size());
+    }
+  }
 
   if (N_PARTICLES < 0 || N_DIMENSIONS < 0)
   {
