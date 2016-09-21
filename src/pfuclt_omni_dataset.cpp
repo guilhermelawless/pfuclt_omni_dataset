@@ -1,56 +1,37 @@
 #include "pfuclt_aux.h"
+#include "particles.h"
 #include "pfuclt_omni_dataset.h"
 
 namespace pfuclt
 {
-ReadRobotMessages::ReadRobotMessages() : loop_rate_(30)
+
+RobotFactory::RobotFactory(ros::NodeHandle& nh)
+  : nh_(nh), pfParticles(pfuclt_ptcls::particles(N_PARTICLES, N_DIMENSIONS))
 {
-  // read parameters from param server
-  using pfuclt_aux::readParam;
-  readParam<int>(nh_, "/MAX_ROBOTS", MAX_ROBOTS);
-  readParam<int>(nh_, "/NUM_ROBOTS", NUM_ROBOTS);
-  readParam<float>(nh_, "/ROB_HT", ROB_HT);
-  readParam<int>(nh_, "/MY_ID", MY_ID);
-  readParam<int>(nh_, "/N_PARTICLES", nParticles_);
-  readParam<int>(nh_, "/NUM_SENSORS_PER_ROBOT", NUM_SENSORS_PER_ROBOT);
-  readParam<int>(nh_, "/NUM_TARGETS", NUM_TARGETS);
-  readParam<float>(nh_, "/LANDMARK_COV/K1", K1);
-  readParam<float>(nh_, "/LANDMARK_COV/K2", K2);
-  readParam<float>(nh_, "/LANDMARK_COV/K3", K3);
-  readParam<float>(nh_, "/LANDMARK_COV/K4", K4);
-  readParam<float>(nh_, "/LANDMARK_COV/K5", K5);
-  readParam<bool>(nh_, "/PLAYING_ROBOTS", PLAYING_ROBOTS);
-  readParam<double>(nh_, "/POS_INIT", POS_INIT);
-
-  pfParticles.resize(nParticles_);
-  for (int i = 0; i < nParticles_; i++)
-    pfParticles[i].resize((MAX_ROBOTS + 1) * 3 + 1);
-
-  Eigen::Isometry2d initialRobotPose;
-
   for (uint rn = 0; rn < MAX_ROBOTS; rn++)
   {
     if (PLAYING_ROBOTS[rn])
     {
-      initialRobotPose = Eigen::Rotation2Dd(-M_PI).toRotationMatrix();
+      Eigen::Isometry2d initialRobotPose(
+            Eigen::Rotation2Dd(-M_PI).toRotationMatrix());
       initialRobotPose.translation() =
           Eigen::Vector2d(POS_INIT[2 * rn + 0], POS_INIT[2 * rn + 1]);
 
       if (rn + 1 == MY_ID)
       {
         robots_.push_back(
-            new SelfRobot(nh_, initialRobotPose, pfParticles, this, rn));
+              new SelfRobot(nh_, initialRobotPose, pfParticles, this, rn));
       }
       else
       {
         robots_.push_back(
-            new TeammateRobot(nh_, initialRobotPose, pfParticles, this, rn));
+              new TeammateRobot(nh_, initialRobotPose, pfParticles, this, rn));
       }
     }
   }
 }
 
-ReadRobotMessages::~ReadRobotMessages()
+RobotFactory::~RobotFactory()
 {
   // clean up - delete all variables in heap
   for (std::vector<Robot*>::iterator it = robots_.begin(); it != robots_.end();
@@ -63,7 +44,7 @@ ReadRobotMessages::~ReadRobotMessages()
   nh_.shutdown();
 }
 
-void ReadRobotMessages::initializeFixedLandmarks()
+void RobotFactory::initializeFixedLandmarks()
 {
   std::string filename;
   using namespace pfuclt_aux;
@@ -87,9 +68,8 @@ void ReadRobotMessages::initializeFixedLandmarks()
   }
 }
 
-bool ReadRobotMessages::areAllRobotsActive()
+bool RobotFactory::areAllRobotsActive()
 {
-  bool returnValue = true;
   for (std::vector<Robot*>::iterator it = robots_.begin(); it != robots_.end();
        ++it)
   {
@@ -100,34 +80,33 @@ bool ReadRobotMessages::areAllRobotsActive()
 }
 
 SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-                     particles_t& ptcls, ReadRobotMessages* caller,
-                     uint robotNumber)
-    : Robot(nh, caller, initPose, ptcls, robotNumber), seed_(time(0))
+                     particles& ptcls, RobotFactory* caller, uint robotNumber)
+  : Robot(nh, caller, initPose, ptcls, robotNumber), seed_(time(0))
 {
 
   // Subscribe to topics
   sOdom_ = nh.subscribe<nav_msgs::Odometry>(
-      "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) + "/odometry",
-      10,
-      boost::bind(&SelfRobot::selfOdometryCallback, this, _1, robotNumber + 1));
+        "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) + "/odometry",
+        10,
+        boost::bind(&SelfRobot::selfOdometryCallback, this, _1, robotNumber + 1));
 
   sBall_ = nh.subscribe<read_omni_dataset::BallData>(
-      "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
-          "/orangeball3Dposition",
-      10, boost::bind(&SelfRobot::selfTargetDataCallback, this, _1,
-                      robotNumber + 1));
+        "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
+        "/orangeball3Dposition",
+        10, boost::bind(&SelfRobot::selfTargetDataCallback, this, _1,
+                        robotNumber + 1));
 
   sLandmark_ = nh.subscribe<read_omni_dataset::LRMLandmarksData>(
-      "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
-          "/landmarkspositions",
-      10, boost::bind(&SelfRobot::selfLandmarkDataCallback, this, _1,
-                      robotNumber + 1));
+        "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
+        "/landmarkspositions",
+        10, boost::bind(&SelfRobot::selfLandmarkDataCallback, this, _1,
+                        robotNumber + 1));
 
   // The Graph Generator ans solver should also subscribe to the GT data and
   // publish it... This is important for time synchronization
   GT_sub_ = nh.subscribe<read_omni_dataset::LRMGTData>(
-      "gtData_4robotExp", 10,
-      boost::bind(&SelfRobot::gtDataCallback, this, _1));
+        "gtData_4robotExp", 10,
+        boost::bind(&SelfRobot::gtDataCallback, this, _1));
   // GT_sub_ = nh->subscribe("gtData_4robotExp", 1000, gtDataCallback);
 
   ROS_INFO(" constructing SelfRobot <<object>> and called sensor subscribers "
@@ -140,10 +119,10 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
       nh.advertise<read_omni_dataset::RobotState>("/pfuclt_omni_poses", 1000);
 
   targetStatePublisher = nh.advertise<read_omni_dataset::BallData>(
-      "/pfuclt_orangeBallState", 1000);
+        "/pfuclt_orangeBallState", 1000);
 
   virtualGTPublisher = nh.advertise<read_omni_dataset::LRMGTData>(
-      "/gtData_synced_pfuclt_estimate", 1000);
+        "/gtData_synced_pfuclt_estimate", 1000);
 
   particlePublisher =
       nh.advertise<pfuclt_omni_dataset::particles>("/pfuclt_particles", 10);
@@ -155,7 +134,7 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
   // Resize particle set to allow all subparticles
   for (int i = 0; i < 19; i++)
   {
-    particleSet_[i].resize(nParticles_);
+    particleSet_[i].resize(N_PARTICLES);
   }
 }
 
@@ -205,7 +184,7 @@ void SelfRobot::initPFset()
   for (int i = 0; i < 18; ++i)
   {
     boost::random::uniform_real_distribution<> dist(
-        particleSetRandomInitValues[i][0], particleSetRandomInitValues[i][1]);
+          particleSetRandomInitValues[i][0], particleSetRandomInitValues[i][1]);
     BOOST_FOREACH (float& f, particleSet_[i])
     {
       f = dist(seed_);
@@ -216,14 +195,14 @@ void SelfRobot::initPFset()
   }
 
   // Particle weights init with same weight
-  particleSet_[18].assign(particleSet_[18].size(), 1 / nParticles_);
+  particleSet_[18].assign(particleSet_[18].size(), 1 / N_PARTICLES);
 
   // Put into message
-  for (int i = 0; i < nParticles_; i++)
+  for (int i = 0; i < N_PARTICLES; i++)
   {
     for (int j = 0; j < 19; j++)
     {
-      msg_particles.particles[i].particle[j] = pfParticles_[i][j];
+      msg_particles.particles[i].particle[j] = pfParticles_[j][i];
     }
   }
 
@@ -311,7 +290,7 @@ void SelfRobot::PFresample()
       pfuclt_aux::order_index<float>(particleSet_[18]);
 
   // Re-arrange particles according to particle weight sorted indices
-  for (int i = 0; i < nParticles_; i++) // for each particle
+  for (int i = 0; i < N_PARTICLES; i++) // for each particle
   {
     size_t index = sortedIndex[i]; // get its new index
 
@@ -330,8 +309,9 @@ void SelfRobot::PFresample()
   if (weightSum == 0.0)
     ROS_WARN("WeightSum of Particles = %f\n", weightSum);
   else
-    ROS_DEBUG_THROTTLE(2, "(throttled 2Hz) WeightSum of Particles = %f\n",
-                       weightSum);
+  {
+    ROS_DEBUG("WeightSum of Particles = %f\n", weightSum);
+  }
 
   normalizedWeights = particleSet_[18];
   std::transform(normalizedWeights.begin(), normalizedWeights.end(),
@@ -346,9 +326,9 @@ void SelfRobot::PFresample()
 
   // Implementing a very basic resampler... a particle gets selected
   // proportional to its weight and 50% of the top particles are kept
-  float cumulativeWeights[nParticles_];
+  float cumulativeWeights[N_PARTICLES];
   cumulativeWeights[0] = normalizedWeights[0];
-  for (int par = 1; par < nParticles_; par++)
+  for (int par = 1; par < N_PARTICLES; par++)
   {
     cumulativeWeights[par] =
         cumulativeWeights[par - 1] + normalizedWeights[par];
@@ -359,7 +339,7 @@ void SelfRobot::PFresample()
     for (int k = 0; k < 19; k++)
     {
       particleSet_[k][par] = particlesDuplicate[k][par];
-      pfParticles_[par][k] = particleSet_[k][par];
+      pfParticles_[k][par] = particleSet_[k][par];
       msg_particles.particles[par].particle[k] = particleSet_[k][par];
     }
   }
@@ -367,14 +347,14 @@ void SelfRobot::PFresample()
   for (size_t r = 9; r < 12; r++)
   {
     boost::random::uniform_real_distribution<> dist(particleSet_[r][0] - 1.5,
-                                                    particleSet_[r][0] + 1.5);
+        particleSet_[r][0] + 1.5);
     BOOST_FOREACH (float& f, particleSet_[r])
     {
       f = dist(seed_);
     }
   }
 
-  for (int par = 100; par < nParticles_; par++)
+  for (int par = 100; par < N_PARTICLES; par++)
   {
 
     //     float randNo;
@@ -391,7 +371,7 @@ void SelfRobot::PFresample()
     for (int k = 0; k < 19; k++)
     {
       // particleSet_[k][par] = particlesDuplicate[k][m];
-      pfParticles_[par][k] = particleSet_[k][par];
+      pfParticles_[k][par] = particleSet_[k][par];
       msg_particles.particles[par].particle[k] = particleSet_[k][par];
     }
   }
@@ -427,7 +407,7 @@ void SelfRobot::PFresample()
   //   }
   // //   //cout<<"Max i is "<<i<<endl;
 
-  ///TODO change this to a much more stable way of finding the mean of the
+  /// TODO change this to a much more stable way of finding the mean of the
   /// cluster which will represent the ball position. Because it's not the
   /// highest weight particle which represent's the ball position
   //   for(int robNo = 0; robNo<5; robNo++)     // for 4 robots : OMNI4, OMNI3,
@@ -491,9 +471,8 @@ void SelfRobot::selfOdometryCallback(
   prevTime_ = curTime_;
   curTime_ = odometry->header.stamp;
 
-  ROS_DEBUG_THROTTLE(
-      1, "(throttled 1Hz) got odometry from self-robot (ID=%d) at time %d\n",
-      RobotNumber, odometry->header.stamp.sec);
+  ROS_DEBUG("Got odometry from self-robot (ID=%d) at time %d\n",
+            RobotNumber, odometry->header.stamp.sec);
 
   // Below is an example how to extract the odometry from the message and use it
   // to propagate the robot state by simply concatenating successive odometry
@@ -526,7 +505,7 @@ void SelfRobot::selfOdometryCallback(
   }
 
   // particle prediction step
-  for (int i = 0; i < nParticles_; i++)
+  for (int i = 0; i < N_PARTICLES; i++)
   {
     Eigen::Isometry2d prevParticle, curParticle;
 
@@ -534,10 +513,10 @@ void SelfRobot::selfOdometryCallback(
     {
       prevParticle =
           Eigen::Rotation2Dd(particleSet_[2 + (RobotNumber - 1) * 3][i])
-              .toRotationMatrix();
+          .toRotationMatrix();
       prevParticle.translation() =
           Eigen::Vector2d(particleSet_[0 + (RobotNumber - 1) * 3][i],
-                          particleSet_[1 + (RobotNumber - 1) * 3][i]);
+          particleSet_[1 + (RobotNumber - 1) * 3][i]);
       curParticle = prevParticle * odom;
       Eigen::Vector2d t = curParticle.translation();
       particleSet_[0 + (RobotNumber - 1) * 3][i] = t(0);
@@ -768,9 +747,9 @@ void SelfRobot::selfLandmarkDataCallback(
   // dataset.
 
   // float weight[nParticles_];
-  for (int p = 0; p < nParticles_; p++)
+  for (int p = 0; p < N_PARTICLES; p++)
   {
-    pfParticles_[p][(MAX_ROBOTS + 1) * 3] = 1.0;
+    pfParticles_[(MAX_ROBOTS + 1) * 3][p] = 1.0;
     particleSet_[(MAX_ROBOTS + 1) * 3][p] = 1.0;
   }
   // cout<<"Particle weights are = ";
@@ -789,7 +768,7 @@ void SelfRobot::selfLandmarkDataCallback(
           Eigen::Vector2d(landmarkData->x[i], landmarkData->y[i]);
 
       double d = tempLandmarkObsVec.norm(),
-             phi = atan2(landmarkData->y[i], landmarkData->x[i]);
+          phi = atan2(landmarkData->y[i], landmarkData->x[i]);
 
       double covDD =
           (K1 * fabs(1.0 - (landmarkData->AreaLandMarkActualinPixels[i] /
@@ -804,7 +783,7 @@ void SelfRobot::selfLandmarkDataCallback(
           pow(sin(phi), 2) * covDD +
           pow(cos(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
 
-      for (int p = 0; p < nParticles_; p++)
+      for (int p = 0; p < N_PARTICLES; p++)
       {
 
         // 	  float ObsWorldLM_X = particleSet_[0+(RobotNumber-1)*3][p] +
@@ -838,15 +817,15 @@ void SelfRobot::selfLandmarkDataCallback(
 
         Zcap[0] =
             (landmarks[i].x - particleSet_[0 + (RobotNumber - 1) * 3][p]) *
-                (cos(particleSet_[2 + (RobotNumber - 1) * 3][p])) +
+            (cos(particleSet_[2 + (RobotNumber - 1) * 3][p])) +
             (landmarks[i].y - particleSet_[1 + (RobotNumber - 1) * 3][p]) *
-                (sin(particleSet_[2 + (RobotNumber - 1) * 3][p]));
+            (sin(particleSet_[2 + (RobotNumber - 1) * 3][p]));
 
         Zcap[1] =
             -(landmarks[i].x - particleSet_[0 + (RobotNumber - 1) * 3][p]) *
-                (sin(particleSet_[2 + (RobotNumber - 1) * 3][p])) +
+            (sin(particleSet_[2 + (RobotNumber - 1) * 3][p])) +
             (landmarks[i].y - particleSet_[1 + (RobotNumber - 1) * 3][p]) *
-                (cos(particleSet_[2 + (RobotNumber - 1) * 3][p]));
+            (cos(particleSet_[2 + (RobotNumber - 1) * 3][p]));
 
         Z_Zcap[0] = Z[0] - Zcap[0];
         Z_Zcap[1] = Z[1] - Zcap[1];
@@ -861,7 +840,7 @@ void SelfRobot::selfLandmarkDataCallback(
         Q_inv[1][0] = 0.0;
         Q_inv[1][1] = 1 / covYY;
         float ExpArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] * Q_inv[0][0] +
-                               Z_Zcap[1] * Z_Zcap[1] * Q_inv[1][1]);
+            Z_Zcap[1] * Z_Zcap[1] * Q_inv[1][1]);
         float detValue = powf((2 * PI * Q[0][0] * Q[1][1]), -0.5);
 
         // cout<<"weight of particle at x =
@@ -905,27 +884,27 @@ void SelfRobot::gtDataCallback(
 /////////////////////////
 
 TeammateRobot::TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-                             particles_t& ptcls, ReadRobotMessages* caller,
+                             particles& ptcls, RobotFactory* caller,
                              uint robotNumber)
-    : Robot(nh, caller, initPose, ptcls, robotNumber)
+  : Robot(nh, caller, initPose, ptcls, robotNumber)
 {
 
   sOdom_ = nh.subscribe<nav_msgs::Odometry>(
-      "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) + "/odometry",
-      10, boost::bind(&TeammateRobot::teammateOdometryCallback, this, _1,
-                      robotNumber + 1));
+        "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) + "/odometry",
+        10, boost::bind(&TeammateRobot::teammateOdometryCallback, this, _1,
+                        robotNumber + 1));
 
   sBall_ = nh.subscribe<read_omni_dataset::BallData>(
-      "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
-          "/orangeball3Dposition",
-      10, boost::bind(&TeammateRobot::teammateTargetDataCallback, this, _1,
-                      robotNumber + 1));
+        "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
+        "/orangeball3Dposition",
+        10, boost::bind(&TeammateRobot::teammateTargetDataCallback, this, _1,
+                        robotNumber + 1));
 
   sLandmark_ = nh.subscribe<read_omni_dataset::LRMLandmarksData>(
-      "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
-          "/landmarkspositions",
-      10, boost::bind(&TeammateRobot::teammateLandmarkDataCallback, this, _1,
-                      robotNumber + 1));
+        "/omni" + boost::lexical_cast<std::string>(robotNumber + 1) +
+        "/landmarkspositions",
+        10, boost::bind(&TeammateRobot::teammateLandmarkDataCallback, this, _1,
+                        robotNumber + 1));
 
   ROS_INFO(" constructing TeammateRobot object and called sensor subscribers "
            "for robot %d",
@@ -976,24 +955,24 @@ void TeammateRobot::teammateOdometryCallback(
   double angle = acos(r(0, 0));
 
   // particle prediction step
-  for (int i = 0; i < nParticles_; i++)
+  for (int i = 0; i < N_PARTICLES; i++)
   {
     Eigen::Isometry2d prevParticle, curParticle;
 
     if (seq != 0)
     {
       prevParticle =
-          Eigen::Rotation2Dd(pfParticles_[i][2 + (RobotNumber - 1) * 3])
-              .toRotationMatrix();
+          Eigen::Rotation2Dd(pfParticles_[2 + (RobotNumber - 1) * 3][i])
+          .toRotationMatrix();
       prevParticle.translation() =
-          Eigen::Vector2d(pfParticles_[i][0 + (RobotNumber - 1) * 3],
-                          pfParticles_[i][1 + (RobotNumber - 1) * 3]);
+          Eigen::Vector2d(pfParticles_[0 + (RobotNumber - 1) * 3][i],
+          pfParticles_[1 + (RobotNumber - 1) * 3][i]);
       curParticle = prevParticle * odom;
-      pfParticles_[i][0 + (RobotNumber - 1) * 3] = curParticle.translation()[0];
-      pfParticles_[i][1 + (RobotNumber - 1) * 3] = curParticle.translation()[1];
+      pfParticles_[0 + (RobotNumber - 1) * 3][i] = curParticle.translation()[0];
+      pfParticles_[1 + (RobotNumber - 1) * 3][i] = curParticle.translation()[1];
       Eigen::Matrix<double, 2, 2> r_particle = curParticle.linear();
       double angle_particle = acos(r_particle(0, 0));
-      pfParticles_[i][2 + (RobotNumber - 1) * 3] = angle_particle;
+      pfParticles_[2 + (RobotNumber - 1) * 3][i] = angle_particle;
     }
   }
 
@@ -1059,7 +1038,7 @@ void TeammateRobot::teammateLandmarkDataCallback(
           Eigen::Vector2d(landmarkData->x[i], landmarkData->y[i]);
 
       double d = tempLandmarkObsVec.norm(),
-             phi = atan2(landmarkData->y[i], landmarkData->x[i]);
+          phi = atan2(landmarkData->y[i], landmarkData->x[i]);
 
       double covDD =
           (K1 * fabs(1.0 - (landmarkData->AreaLandMarkActualinPixels[i] /
@@ -1111,9 +1090,47 @@ void SelfRobot::publishState(float x, float y, float theta)
 
 int main(int argc, char* argv[])
 {
-  ros::init(argc, argv, "pfuclt_omni_dataset");
 
-  pfuclt::ReadRobotMessages node;
+  ros::init(argc, argv, "pfuclt_omni_dataset");
+  ros::NodeHandle nh;
+
+#ifdef DEBUG
+  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
+                                     ros::console::levels::Debug))
+  {
+    ros::console::notifyLoggerLevelsChanged();
+  }
+#endif
+
+  // read parameters from param server
+  using pfuclt_aux::readParam;
+  using namespace pfuclt;
+
+  readParam<int>(nh, "/MAX_ROBOTS", MAX_ROBOTS);
+  readParam<int>(nh, "/NUM_ROBOTS", NUM_ROBOTS);
+  readParam<float>(nh, "/ROB_HT", ROB_HT);
+  readParam<int>(nh, "/MY_ID", MY_ID);
+  readParam<int>(nh, "/N_PARTICLES", N_PARTICLES);
+  readParam<int>(nh, "/NUM_SENSORS_PER_ROBOT", NUM_SENSORS_PER_ROBOT);
+  readParam<int>(nh, "/NUM_TARGETS", NUM_TARGETS);
+  readParam<float>(nh, "/LANDMARK_COV/K1", K1);
+  readParam<float>(nh, "/LANDMARK_COV/K2", K2);
+  readParam<float>(nh, "/LANDMARK_COV/K3", K3);
+  readParam<float>(nh, "/LANDMARK_COV/K4", K4);
+  readParam<float>(nh, "/LANDMARK_COV/K5", K5);
+  readParam<bool>(nh, "/PLAYING_ROBOTS", PLAYING_ROBOTS);
+  readParam<double>(nh, "/POS_INIT", POS_INIT);
+
+  N_DIMENSIONS = (MAX_ROBOTS + NUM_TARGETS) * STATES_PER_ROBOT + NUM_WEIGHT;
+
+  if (N_PARTICLES < 0 || N_DIMENSIONS < 0)
+  {
+    ROS_ERROR("Unacceptable configuration for particles class");
+    nh.shutdown();
+    return 0;
+  }
+
+  pfuclt::RobotFactory Factory(nh);
 
   if (pfuclt::MY_ID == 2)
   {
@@ -1122,7 +1139,7 @@ int main(int argc, char* argv[])
     return 0;
   }
 
-  node.initializeFixedLandmarks();
+  Factory.initializeFixedLandmarks();
 
   ros::spin();
   return 0;

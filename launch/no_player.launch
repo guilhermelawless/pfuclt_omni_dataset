@@ -1,0 +1,22 @@
+<launch>
+    <param name="MAX_ROBOTS" value="5"/>
+    <param name="NUM_ROBOTS" value="1"/>
+    <param name="MY_ID" value="4"/>
+    <param name="ROB_HT" type="double" value="0.81"/>
+    <rosparam param="PLAYING_ROBOTS"> [0, 0, 0, 1, 0] </rosparam>
+    <param name="NUM_SENSORS_PER_ROBOT" value="3"/>
+    <param name="NUM_TARGETS" value="1"/>
+    <param name="LANDMARK_COV/K1" type="double" value="2.0"/>
+    <param name="LANDMARK_COV/K2" type="double" value="0.5"/>
+    <param name="LANDMARK_COV/K3" type="double" value="0.2"/>
+    <param name="LANDMARK_COV/K4" type="double" value="0.5"/>
+    <param name="LANDMARK_COV/K5" type="double" value="0.5"/>
+    <rosparam param="POS_INIT"> [5.086676, -2.648978, 0.0, 0.0, 1.688772, -2.095153, 3.26839, -3.574936, 4.058235, -0.127530] </rosparam>
+    <param name="N_PARTICLES" value="200"/>
+		<param name="LANDMARKS_CONFIG" value="$(find pfuclt_omni_dataset)/config/landmarks.csv"/>
+
+    <node name="performer" pkg="pfuclt_omni_dataset" type="pfuclt_omni_dataset" output="screen">
+    	<remap from="/pfuclt_orangeBallState" to="/estimatedOrangeBallState"/>
+		<remap from="/pfuclt_omni_poses" to="/estimated_omni_poses"/>
+    </node>
+</launch>

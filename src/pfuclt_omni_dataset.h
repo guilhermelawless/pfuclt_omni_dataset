@@ -29,10 +29,16 @@
 
 // Auxiliary libraries
 #include "pfuclt_aux.h"
+#include "particles.h"
 
 namespace pfuclt
 {
+using namespace pfuclt_ptcls;
 #define PI 3.14159
+#define NUM_WEIGHT 1
+#define STATES_PER_ROBOT 3
+
+#define DEBUG true
 
 int MAX_ROBOTS;
 int NUM_ROBOTS; // total number of playing robots in the team including self
@@ -74,7 +80,8 @@ int MY_ID; // Use this flag to set the ID of the robot expected to run a certain
 // odometry-only trajecory frame transformed to the origin.
 std::vector<double> POS_INIT;
 
-int nParticles_;
+int N_PARTICLES;
+int N_DIMENSIONS;
 
 // for ease of access
 std::vector<pfuclt_aux::Landmark> landmarks;
@@ -82,28 +89,25 @@ std::vector<pfuclt_aux::Landmark> landmarks;
 // This will be the generator use for randomizing
 typedef boost::random::mt19937 RNGType;
 
-// ReadRobotMessages needs a forward declaration of the robot class
+// RobotFactory needs a forward declaration of the robot class
 class Robot;
 
-typedef std::vector<std::vector<float> > particles_t;
-
 /**
- * @brief The ReadRobotMessages class - Creates and keeps information on the
+ * @brief The RobotFactory class - Creates and keeps information on the
  * robot running the algorithm and its teammates. Is used as a middle-man
  * between all robots
  */
-class ReadRobotMessages
+class RobotFactory
 {
 private:
-  ros::NodeHandle nh_;
-  ros::Rate loop_rate_;
+  ros::NodeHandle& nh_;
   std::vector<Robot*> robots_;
 
 public:
-  particles_t pfParticles;
+  particles pfParticles;
 
-  ReadRobotMessages();
-  ~ReadRobotMessages();
+  RobotFactory(ros::NodeHandle& nh);
+  ~RobotFactory();
 
   /**
    * @brief initializeFixedLandmarks - will get a filename from the parameter
@@ -128,7 +132,7 @@ class Robot
 {
 protected:
   ros::NodeHandle& nh_;
-  ReadRobotMessages* parent_;
+  RobotFactory* parent_;
   bool started_;
   ros::Subscriber sOdom_, sBall_, sLandmark_;
   uint robotNumber_;
@@ -137,13 +141,13 @@ protected:
   Eigen::Isometry2d curPose_;
   ros::Time curTime_;
   ros::Time prevTime_;
-  particles_t& pfParticles_;
+  particles& pfParticles_;
 
 public:
-  Robot(ros::NodeHandle& nh, ReadRobotMessages* parent,
-        Eigen::Isometry2d initPose, particles_t& pfParticles, uint robotNumber)
-      : nh_(nh), parent_(parent), initPose_(initPose), curPose_(initPose),
-        pfParticles_(pfParticles), started_(false), robotNumber_(robotNumber)
+  Robot(ros::NodeHandle& nh, RobotFactory* parent,
+        Eigen::Isometry2d initPose, particles& pfParticles, uint robotNumber)
+    : nh_(nh), parent_(parent), initPose_(initPose), curPose_(initPose),
+      pfParticles_(pfParticles), started_(false), robotNumber_(robotNumber)
   {
     // nothing, only initialize members above
   }
@@ -163,7 +167,7 @@ private:
   pfuclt_omni_dataset::particles msg_particles;
 
   ros::Publisher State_publisher, targetStatePublisher, virtualGTPublisher,
-      particlePublisher;
+  particlePublisher;
   read_omni_dataset::RobotState msg_state;
 
   RNGType seed_;
@@ -174,8 +178,8 @@ private:
   bool particlesInitialized;
 
 public:
-  SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose, particles_t& ptcls,
-            ReadRobotMessages* caller, uint robotNumber);
+  SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose, particles& ptcls,
+            RobotFactory* caller, uint robotNumber);
 
   /// Use this method to implement perception algorithms
   void selfOdometryCallback(const nav_msgs::Odometry::ConstPtr&,
@@ -215,7 +219,7 @@ class TeammateRobot : public Robot
 {
 public:
   TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-                particles_t& ptcls, ReadRobotMessages* caller,
+                particles& ptcls, RobotFactory* caller,
                 uint robotNumber);
 
   /// Use this method to implement perception algorithms

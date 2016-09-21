@@ -1,5 +1,5 @@
-#ifndef _PFUCLT_AUX_H_
-#define _PFUCLT_AUX_H_
+#ifndef PFUCLT_AUX_H
+#define PFUCLT_AUX_H
 
 #include <ros/ros.h>
 #include <vector>
@@ -155,4 +155,4 @@ bool readParam(ros::NodeHandle& nh, const std::string name,
 // end of namespace
 }
 
-#endif
+#endif  //PFUCLT_AUX_H
