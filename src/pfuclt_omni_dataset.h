@@ -36,8 +36,6 @@ using namespace pfuclt_ptcls;
 #define NUM_WEIGHT 1
 #define STATES_PER_ROBOT 3
 
-#define DEBUG true
-
 int MAX_ROBOTS;
 int NUM_ROBOTS; // total number of playing robots in the team including self
 int NUM_SENSORS_PER_ROBOT; // SENSORS include odometry, each feature sensor like
@@ -86,6 +84,7 @@ std::vector<double> CUSTOM_PARTICLE_INIT; // Used to set custom values when init
 
 // for ease of access
 std::vector<pfuclt_aux::Landmark> landmarks;
+ros::Time timeInit;
 
 // RobotFactory needs a forward declaration of the robot class
 class Robot;
@@ -102,7 +101,7 @@ private:
   std::vector<Robot*> robots_;
 
 public:
-  particle_filter pfParticles;
+  particle_filter pf;
 
   RobotFactory(ros::NodeHandle& nh);
   ~RobotFactory();
@@ -131,7 +130,9 @@ class Robot
 protected:
   ros::NodeHandle& nh_;
   RobotFactory* parent_;
+  particle_filter& pf_;
   bool started_;
+  ros::Time timeStarted_;
   ros::Subscriber sOdom_, sBall_, sLandmark_;
   uint robotNumber_;
   Eigen::Isometry2d initPose_; // x y theta;
@@ -139,18 +140,27 @@ protected:
   Eigen::Isometry2d curPose_;
   ros::Time curTime_;
   ros::Time prevTime_;
-  particle_filter& pfParticles_;
+
+  void startNow();
 
 public:
   Robot(ros::NodeHandle& nh, RobotFactory* parent,
-        Eigen::Isometry2d initPose, particle_filter& pfParticles, uint robotNumber)
+        Eigen::Isometry2d initPose, particle_filter& pf, uint robotNumber)
     : nh_(nh), parent_(parent), initPose_(initPose), curPose_(initPose),
-      pfParticles_(pfParticles), started_(false), robotNumber_(robotNumber)
+      pf_(pf), started_(false), robotNumber_(robotNumber)
   {
     // nothing, only initialize members above
   }
-  bool isStarted() { return started_; }
-  void setStarted(bool value) { started_ = value; }
+
+  // This has to be public since the SelfRobot will call it
+  void odometryCallback(const nav_msgs::Odometry::ConstPtr&);
+
+  bool hasStarted() { return started_; }
+
+  struct stateBuffer_s{
+    Eigen::Isometry2d pose;
+    Eigen::Isometry2d odometry;
+  } stateBuffer;
 };
 
 /**
@@ -172,24 +182,20 @@ private:
 
   std::vector<float> normalizedWeights;
 
-  bool particlesInitialized;
+  void tryInitializeParticles();
 
 public:
   SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose, particle_filter& ptcls,
             RobotFactory* caller, uint robotNumber);
 
   /// Use this method to implement perception algorithms
-  void selfOdometryCallback(const nav_msgs::Odometry::ConstPtr&,
-                            uint robotNumber);
+  void odometryCallback(const nav_msgs::Odometry::ConstPtr&);
 
   /// Use this method to implement perception algorithms
-  void selfTargetDataCallback(const read_omni_dataset::BallData::ConstPtr&,
-                              uint robotNumber);
+  void targetDataCallback(const read_omni_dataset::BallData::ConstPtr&);
 
   /// Use this method to implement perception algorithms
-  void
-  selfLandmarkDataCallback(const read_omni_dataset::LRMLandmarksData::ConstPtr&,
-                           uint robotNumber);
+  void landmarkDataCallback(const read_omni_dataset::LRMLandmarksData::ConstPtr&);
 
   void gtDataCallback(const read_omni_dataset::LRMGTData::ConstPtr&);
 
@@ -218,16 +224,14 @@ public:
                 uint robotNumber);
 
   /// Use this method to implement perception algorithms
-  void teammateOdometryCallback(const nav_msgs::Odometry::ConstPtr&,
-                                uint robotNumber);
+  void OdometryCallback(const nav_msgs::Odometry::ConstPtr&);
 
   /// Use this method to implement perception algorithms
-  void teammateTargetDataCallback(const read_omni_dataset::BallData::ConstPtr&,
-                                  uint robotNumber);
+  void TargetDataCallback(const read_omni_dataset::BallData::ConstPtr&);
 
   /// Use this method to implement perception algorithms
-  void teammateLandmarkDataCallback(
-      const read_omni_dataset::LRMLandmarksData::ConstPtr&, uint robotNumber);
+  void LandmarkDataCallback(
+      const read_omni_dataset::LRMLandmarksData::ConstPtr&);
 };
 
 // end of namespace

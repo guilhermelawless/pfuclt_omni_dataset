@@ -27,11 +27,11 @@ enum ORDER_TYPE
  * @brief The Landmark struct - used to store a landmark, defined by its serial
  * number, and its position {x,y}
  */
-struct Landmark
+typedef struct landmark_s
 {
   int serial;
   float x, y;
-};
+} Landmark;
 
 /**
  * @brief getLandmarks - read landmark configuration from CSV file
