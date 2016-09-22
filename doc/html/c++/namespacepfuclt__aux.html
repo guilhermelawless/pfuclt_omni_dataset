@@ -23,6 +23,7 @@
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
+<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
@@ -32,9 +33,16 @@
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__aux_1_1Landmark.html">Landmark</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__aux_1_1Landmark.html" title="The Landmark struct - used to store a landmark, defined by its serial number, and its position {x...">Landmark</a> struct - used to store a landmark, defined by its serial number, and its position {x,y}.  <a href="structpfuclt__aux_1_1Landmark.html#details">More...</a><br/></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__aux_1_1landmark__s.html">landmark_s</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Landmark struct - used to store a landmark, defined by its serial number, and its position {x,y}.  <a href="structpfuclt__aux_1_1landmark__s.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:a3030f9bc1952f850948000342f3dc114"><td class="memItemLeft" align="right" valign="top">typedef struct <br class="typebreak"/>
+<a class="el" href="structpfuclt__aux_1_1landmark__s.html">pfuclt_aux::landmark_s</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#a3030f9bc1952f850948000342f3dc114">Landmark</a></td></tr>
+<tr class="memdesc:a3030f9bc1952f850948000342f3dc114"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Landmark struct - used to store a landmark, defined by its serial number, and its position {x,y}.  <a href="#a3030f9bc1952f850948000342f3dc114">More...</a><br/></td></tr>
+<tr class="separator:a3030f9bc1952f850948000342f3dc114"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -50,7 +58,7 @@ Functions</h2></td></tr>
 <tr class="memitem:ac43a2745c72ffc6778bbd47ebe0208e9"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#ac43a2745c72ffc6778bbd47ebe0208e9">calc_stdDev</a> (std::vector&lt; T &gt; *vec)</td></tr>
 <tr class="memdesc:ac43a2745c72ffc6778bbd47ebe0208e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">calc_stdDev - Calculates standard deviation from a vector of type T  <a href="#ac43a2745c72ffc6778bbd47ebe0208e9">More...</a><br/></td></tr>
 <tr class="separator:ac43a2745c72ffc6778bbd47ebe0208e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4611b0d375e3e97111f5038a68a45e25"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structpfuclt__aux_1_1Landmark.html">Landmark</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#a4611b0d375e3e97111f5038a68a45e25">getLandmarks</a> (const char *filename)</td></tr>
+<tr class="memitem:a4611b0d375e3e97111f5038a68a45e25"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="namespacepfuclt__aux.html#a3030f9bc1952f850948000342f3dc114">Landmark</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#a4611b0d375e3e97111f5038a68a45e25">getLandmarks</a> (const char *filename)</td></tr>
 <tr class="memdesc:a4611b0d375e3e97111f5038a68a45e25"><td class="mdescLeft">&#160;</td><td class="mdescRight">getLandmarks - read landmark configuration from CSV file  <a href="#a4611b0d375e3e97111f5038a68a45e25">More...</a><br/></td></tr>
 <tr class="separator:a4611b0d375e3e97111f5038a68a45e25"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9c19f6daab1eef8552703e0766506235"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
@@ -65,6 +73,21 @@ Functions</h2></td></tr>
 <tr class="memitem:aeddd38527db75a680896b9750d158a7e"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#aeddd38527db75a680896b9750d158a7e">readParam</a> (ros::NodeHandle &amp;nh, const std::string name, std::vector&lt; T &gt; &amp;variable)</td></tr>
 <tr class="separator:aeddd38527db75a680896b9750d158a7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Typedef Documentation</h2>
+<a class="anchor" id="a3030f9bc1952f850948000342f3dc114"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="structpfuclt__aux_1_1landmark__s.html">pfuclt_aux::landmark_s</a>  <a class="el" href="namespacepfuclt__aux.html#a3030f9bc1952f850948000342f3dc114">pfuclt_aux::Landmark</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The Landmark struct - used to store a landmark, defined by its serial number, and its position {x,y}. </p>
+
+</div>
+</div>
 <h2 class="groupheader">Enumeration Type Documentation</h2>
 <a class="anchor" id="ab461bfff32a907a13f3f67e874c01ec1"></a>
 <div class="memitem">
@@ -123,7 +146,7 @@ template&lt;typename T &gt; </div>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; <a class="el" href="structpfuclt__aux_1_1Landmark.html">Landmark</a> &gt; pfuclt_aux::getLandmarks </td>
+          <td class="memname">std::vector&lt; <a class="el" href="namespacepfuclt__aux.html#a3030f9bc1952f850948000342f3dc114">Landmark</a> &gt; pfuclt_aux::getLandmarks </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>filename</em></td><td>)</td>
@@ -276,7 +299,7 @@ template&lt;typename T &gt; </div>
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Tue Sep 20 2016 14:33:12</small>
+<small>autogenerated on Thu Sep 22 2016 16:29:21</small>
 </div>
 </body>
 </html>
