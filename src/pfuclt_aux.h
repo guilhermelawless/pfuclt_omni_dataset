@@ -1,5 +1,5 @@
-#ifndef _PFUCLT_AUX_H_
-#define _PFUCLT_AUX_H_
+#ifndef PFUCLT_AUX_H
+#define PFUCLT_AUX_H
 
 #include <ros/ros.h>
 #include <vector>
@@ -27,11 +27,11 @@ enum ORDER_TYPE
  * @brief The Landmark struct - used to store a landmark, defined by its serial
  * number, and its position {x,y}
  */
-struct Landmark
+typedef struct landmark_s
 {
   int serial;
   float x, y;
-};
+} Landmark;
 
 /**
  * @brief getLandmarks - read landmark configuration from CSV file
@@ -155,4 +155,4 @@ bool readParam(ros::NodeHandle& nh, const std::string name,
 // end of namespace
 }
 
-#endif
+#endif  //PFUCLT_AUX_H

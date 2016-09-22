@@ -24,15 +24,17 @@
 // Boost libraries
 #include <boost/bind.hpp>
 #include <boost/ref.hpp>
-#include <boost/random.hpp>
-#include <boost/foreach.hpp>
 
 // Auxiliary libraries
 #include "pfuclt_aux.h"
+#include "particles.h"
 
 namespace pfuclt
 {
+using namespace pfuclt_ptcls;
 #define PI 3.14159
+#define NUM_WEIGHT 1
+#define STATES_PER_ROBOT 3
 
 int MAX_ROBOTS;
 int NUM_ROBOTS; // total number of playing robots in the team including self
@@ -74,36 +76,35 @@ int MY_ID; // Use this flag to set the ID of the robot expected to run a certain
 // odometry-only trajecory frame transformed to the origin.
 std::vector<double> POS_INIT;
 
-int nParticles_;
+int N_PARTICLES;
+int N_DIMENSIONS;
+
+bool USE_CUSTOM_VALUES = false; // If set to true via the parameter server, the custom values will be used
+std::vector<double> CUSTOM_PARTICLE_INIT; // Used to set custom values when initiating the particle filter set (will still be a uniform distribution)
 
 // for ease of access
 std::vector<pfuclt_aux::Landmark> landmarks;
+ros::Time timeInit;
 
-// This will be the generator use for randomizing
-typedef boost::random::mt19937 RNGType;
-
-// ReadRobotMessages needs a forward declaration of the robot class
+// RobotFactory needs a forward declaration of the robot class
 class Robot;
 
-typedef std::vector<std::vector<float> > particles_t;
-
 /**
- * @brief The ReadRobotMessages class - Creates and keeps information on the
+ * @brief The RobotFactory class - Creates and keeps information on the
  * robot running the algorithm and its teammates. Is used as a middle-man
  * between all robots
  */
-class ReadRobotMessages
+class RobotFactory
 {
 private:
-  ros::NodeHandle nh_;
-  ros::Rate loop_rate_;
+  ros::NodeHandle& nh_;
   std::vector<Robot*> robots_;
 
 public:
-  particles_t pfParticles;
+  particle_filter pf;
 
-  ReadRobotMessages();
-  ~ReadRobotMessages();
+  RobotFactory(ros::NodeHandle& nh);
+  ~RobotFactory();
 
   /**
    * @brief initializeFixedLandmarks - will get a filename from the parameter
@@ -128,8 +129,10 @@ class Robot
 {
 protected:
   ros::NodeHandle& nh_;
-  ReadRobotMessages* parent_;
+  RobotFactory* parent_;
+  particle_filter& pf_;
   bool started_;
+  ros::Time timeStarted_;
   ros::Subscriber sOdom_, sBall_, sLandmark_;
   uint robotNumber_;
   Eigen::Isometry2d initPose_; // x y theta;
@@ -137,18 +140,27 @@ protected:
   Eigen::Isometry2d curPose_;
   ros::Time curTime_;
   ros::Time prevTime_;
-  particles_t& pfParticles_;
+
+  void startNow();
 
 public:
-  Robot(ros::NodeHandle& nh, ReadRobotMessages* parent,
-        Eigen::Isometry2d initPose, particles_t& pfParticles, uint robotNumber)
-      : nh_(nh), parent_(parent), initPose_(initPose), curPose_(initPose),
-        pfParticles_(pfParticles), started_(false), robotNumber_(robotNumber)
+  Robot(ros::NodeHandle& nh, RobotFactory* parent,
+        Eigen::Isometry2d initPose, particle_filter& pf, uint robotNumber)
+    : nh_(nh), parent_(parent), initPose_(initPose), curPose_(initPose),
+      pf_(pf), started_(false), robotNumber_(robotNumber)
   {
     // nothing, only initialize members above
   }
-  bool isStarted() { return started_; }
-  void setStarted(bool value) { started_ = value; }
+
+  // This has to be public since the SelfRobot will call it
+  void odometryCallback(const nav_msgs::Odometry::ConstPtr&);
+
+  bool hasStarted() { return started_; }
+
+  struct stateBuffer_s{
+    Eigen::Isometry2d pose;
+    Eigen::Isometry2d odometry;
+  } stateBuffer;
 };
 
 /**
@@ -163,36 +175,29 @@ private:
   pfuclt_omni_dataset::particles msg_particles;
 
   ros::Publisher State_publisher, targetStatePublisher, virtualGTPublisher,
-      particlePublisher;
+  particlePublisher;
   read_omni_dataset::RobotState msg_state;
 
-  RNGType seed_;
   std::vector<float> particleSet_[19];
 
   std::vector<float> normalizedWeights;
 
-  bool particlesInitialized;
+  void tryInitializeParticles();
 
 public:
-  SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose, particles_t& ptcls,
-            ReadRobotMessages* caller, uint robotNumber);
+  SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose, particle_filter& ptcls,
+            RobotFactory* caller, uint robotNumber);
 
   /// Use this method to implement perception algorithms
-  void selfOdometryCallback(const nav_msgs::Odometry::ConstPtr&,
-                            uint robotNumber);
+  void odometryCallback(const nav_msgs::Odometry::ConstPtr&);
 
   /// Use this method to implement perception algorithms
-  void selfTargetDataCallback(const read_omni_dataset::BallData::ConstPtr&,
-                              uint robotNumber);
+  void targetDataCallback(const read_omni_dataset::BallData::ConstPtr&);
 
   /// Use this method to implement perception algorithms
-  void
-  selfLandmarkDataCallback(const read_omni_dataset::LRMLandmarksData::ConstPtr&,
-                           uint robotNumber);
+  void landmarkDataCallback(const read_omni_dataset::LRMLandmarksData::ConstPtr&);
 
   void gtDataCallback(const read_omni_dataset::LRMGTData::ConstPtr&);
-
-  void initPFset();
 
   void PFpredict();
 
@@ -215,20 +220,18 @@ class TeammateRobot : public Robot
 {
 public:
   TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-                particles_t& ptcls, ReadRobotMessages* caller,
+                particle_filter& ptcls, RobotFactory* caller,
                 uint robotNumber);
 
   /// Use this method to implement perception algorithms
-  void teammateOdometryCallback(const nav_msgs::Odometry::ConstPtr&,
-                                uint robotNumber);
+  void OdometryCallback(const nav_msgs::Odometry::ConstPtr&);
 
   /// Use this method to implement perception algorithms
-  void teammateTargetDataCallback(const read_omni_dataset::BallData::ConstPtr&,
-                                  uint robotNumber);
+  void TargetDataCallback(const read_omni_dataset::BallData::ConstPtr&);
 
   /// Use this method to implement perception algorithms
-  void teammateLandmarkDataCallback(
-      const read_omni_dataset::LRMLandmarksData::ConstPtr&, uint robotNumber);
+  void LandmarkDataCallback(
+      const read_omni_dataset::LRMLandmarksData::ConstPtr&);
 };
 
 // end of namespace
