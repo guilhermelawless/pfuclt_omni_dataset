@@ -35,6 +35,20 @@ private:
 public:
   ParticleFilter(int nParticles, int nDimensions, uint statesPerRobot,
                  uint nRobots);
+
+  /**
+   * @brief ParticleFilter - copy constructor. Will create and return a new ParticleFilter object identical to the one provided
+   * @param other - the ParticleFilter object to be copied
+   */
+  ParticleFilter(const ParticleFilter& other);
+
+  /**
+   * @brief operator = - copy assignment. Will copy other and return the new ParticleFilter object
+   * @param other
+   * @return the copied object
+   */
+  ParticleFilter& operator=(const ParticleFilter& other);
+
   /**
    * @brief init - initialize the particle filter set with the default
    * randomized values
@@ -72,9 +86,6 @@ public:
   {
     return particles_[index];
   }
-
-  // assignment operator
-  // particles operator=(const particles& copyThis) { copyThis.subparts_.; }
 };
 
 // end of namespace pfuclt_ptcls

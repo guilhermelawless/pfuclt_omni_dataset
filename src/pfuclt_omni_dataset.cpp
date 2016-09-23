@@ -102,7 +102,7 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   prevTime_ = curTime_;
   curTime_ = odometry->header.stamp;
 
-  ROS_DEBUG("OMNI%d odometry at time %d\n", robotNumber_ + 1,
+  ROS_DEBUG("OMNI%d odometry at time %d", robotNumber_ + 1,
             odometry->header.stamp.sec);
 
   // Below is an example how to extract the odometry from the message and use it
