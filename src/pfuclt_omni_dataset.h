@@ -101,7 +101,7 @@ private:
   std::vector<Robot*> robots_;
 
 public:
-  particle_filter pf;
+  ParticleFilter pf;
 
   RobotFactory(ros::NodeHandle& nh);
   ~RobotFactory();
@@ -130,7 +130,7 @@ class Robot
 protected:
   ros::NodeHandle& nh_;
   RobotFactory* parent_;
-  particle_filter& pf_;
+  ParticleFilter& pf_;
   bool started_;
   ros::Time timeStarted_;
   ros::Subscriber sOdom_, sBall_, sLandmark_;
@@ -145,7 +145,7 @@ protected:
 
 public:
   Robot(ros::NodeHandle& nh, RobotFactory* parent,
-        Eigen::Isometry2d initPose, particle_filter& pf, uint robotNumber)
+        Eigen::Isometry2d initPose, ParticleFilter& pf, uint robotNumber)
     : nh_(nh), parent_(parent), initPose_(initPose), curPose_(initPose),
       pf_(pf), started_(false), robotNumber_(robotNumber)
   {
@@ -185,7 +185,7 @@ private:
   void tryInitializeParticles();
 
 public:
-  SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose, particle_filter& ptcls,
+  SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose, ParticleFilter& ptcls,
             RobotFactory* caller, uint robotNumber);
 
   /// Use this method to implement perception algorithms
@@ -220,7 +220,7 @@ class TeammateRobot : public Robot
 {
 public:
   TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-                particle_filter& ptcls, RobotFactory* caller,
+                ParticleFilter& ptcls, RobotFactory* caller,
                 uint robotNumber);
 
   /// Use this method to implement perception algorithms

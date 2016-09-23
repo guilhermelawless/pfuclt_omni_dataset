@@ -17,10 +17,10 @@
 namespace pfuclt_ptcls
 {
 
-particle_filter::particle_filter(int nParticles, int nDimensions,
-                                 uint statesPerRobot)
+ParticleFilter::ParticleFilter(int nParticles, int nDimensions,
+                                 uint statesPerRobot, uint nRobots)
     : nParticles_(nParticles), nDimensions_(nDimensions),
-      statesPerRobot_(statesPerRobot),
+      statesPerRobot_(statesPerRobot), nRobots_(nRobots),
       particles_(nDimensions, subparticles_t(nParticles)), seed_(time(0)), initialized_(false)
 { 
   int size[2];
@@ -32,7 +32,7 @@ particle_filter::particle_filter(int nParticles, int nDimensions,
 
 //TODO set different values for position and orientation, targets, etc
 // Simple version, use default values - randomize all values between [-10,10]
-void particle_filter::init()
+void ParticleFilter::init()
 {
   if(initialized_)
     return ;
@@ -53,7 +53,7 @@ void particle_filter::init()
 }
 
 // Overloaded fucntion when using custom values
-void particle_filter::init(const std::vector<double> custom)
+void ParticleFilter::init(const std::vector<double> custom)
 {
   if(initialized_)
     return ;
@@ -84,7 +84,7 @@ void particle_filter::init(const std::vector<double> custom)
   ROS_INFO("Particle filter initialized");
 }
 
-void particle_filter::predict(uint robotNumber,
+void ParticleFilter::predict(uint robotNumber,
                               const Eigen::Isometry2d& odometry)
 {
   if(!initialized_)

@@ -8,8 +8,8 @@ namespace pfuclt
 {
 
 RobotFactory::RobotFactory(ros::NodeHandle& nh)
-    : nh_(nh), pf(pfuclt_ptcls::particle_filter(
-                   N_PARTICLES, N_DIMENSIONS + NUM_WEIGHT, STATES_PER_ROBOT))
+    : nh_(nh), pf(pfuclt_ptcls::ParticleFilter(
+                   N_PARTICLES, N_DIMENSIONS + NUM_WEIGHT, STATES_PER_ROBOT, MAX_ROBOTS))
 {
   for (uint rn = 0; rn < MAX_ROBOTS; rn++)
   {
@@ -137,7 +137,7 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
 }
 
 SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-                     particle_filter& ptcls, RobotFactory* caller,
+                     ParticleFilter& ptcls, RobotFactory* caller,
                      uint robotNumber)
     : Robot(nh, caller, initPose, ptcls, robotNumber)
 {
@@ -800,7 +800,7 @@ void SelfRobot::publishState(float x, float y, float theta)
 }
 
 TeammateRobot::TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-                             particle_filter& ptcls, RobotFactory* caller,
+                             ParticleFilter& ptcls, RobotFactory* caller,
                              uint robotNumber)
     : Robot(nh, caller, initPose, ptcls, robotNumber)
 {

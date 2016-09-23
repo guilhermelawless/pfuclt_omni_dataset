@@ -18,18 +18,19 @@ typedef std::vector<subparticles_t> particles_t;
 // This will be the generator use for randomizing
 typedef boost::random::mt19937 RNGType;
 
-class particle_filter
+class ParticleFilter
 {
 private:
   int nParticles_;
   int nDimensions_;
+  uint nRobots_;
   uint statesPerRobot_;
   particles_t particles_;
   RNGType seed_;
   bool initialized_;
 
 public:
-  particle_filter(int nParticles, int nDimensions, uint statesPerRobot);
+  ParticleFilter(int nParticles, int nDimensions, uint statesPerRobot, uint nRobots);
   /**
    * @brief init - initialize the particle filter set with the default randomized values
    */
