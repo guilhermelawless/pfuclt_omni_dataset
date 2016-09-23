@@ -8,8 +8,9 @@ namespace pfuclt
 {
 
 RobotFactory::RobotFactory(ros::NodeHandle& nh)
-    : nh_(nh), pf(pfuclt_ptcls::ParticleFilter(
-                   N_PARTICLES, N_DIMENSIONS + NUM_WEIGHT, STATES_PER_ROBOT, MAX_ROBOTS))
+    : nh_(nh),
+      pf(pfuclt_ptcls::ParticleFilter(N_PARTICLES, N_DIMENSIONS + NUM_WEIGHT,
+                                      STATES_PER_ROBOT, MAX_ROBOTS))
 {
   for (uint rn = 0; rn < MAX_ROBOTS; rn++)
   {
@@ -88,8 +89,8 @@ void Robot::startNow()
 {
   timeStarted_ = ros::Time::now();
   started_ = true;
-  ROS_INFO("OMNI%d has started %.2fs after the initial time",
-           robotNumber_ + 1, ROS_TDIFF(timeStarted_));
+  ROS_INFO("OMNI%d has started %.2fs after the initial time", robotNumber_ + 1,
+           ROS_TDIFF(timeStarted_));
 }
 
 void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
@@ -148,7 +149,8 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
     msg_particles.particles[part].particle.resize(N_DIMENSIONS + NUM_WEIGHT);
   }
 
-  std::string robotNamespace("/omni" + boost::lexical_cast<std::string>(robotNumber+1));
+  std::string robotNamespace("/omni" +
+                             boost::lexical_cast<std::string>(robotNumber + 1));
 
   // Subscribe to topics
   sOdom_ = nh.subscribe<nav_msgs::Odometry>(
@@ -162,7 +164,6 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
   sLandmark_ = nh.subscribe<read_omni_dataset::LRMLandmarksData>(
       robotNamespace + "/landmarkspositions", 10,
       boost::bind(&SelfRobot::landmarkDataCallback, this, _1));
-
 
   // The Graph Generator ans solver should also subscribe to the GT data and
   // publish it... This is important for time synchronization
@@ -184,7 +185,6 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
 
   particlePublisher =
       nh.advertise<pfuclt_omni_dataset::particles>("/pfuclt_particles", 10);
-
 
   ROS_INFO("Created main robot OMNI%d", robotNumber + 1);
 }
@@ -466,17 +466,19 @@ void SelfRobot::targetDataCallback(
   }
   else
   {
-    ROS_DEBUG("OMNI%d didn't find the ball at time %d", robotNumber_ + 1, curObservationTime.sec);
+    ROS_DEBUG("OMNI%d didn't find the ball at time %d", robotNumber_ + 1,
+              curObservationTime.sec);
   }
 }
 
 void SelfRobot::landmarkDataCallback(
     const read_omni_dataset::LRMLandmarksData::ConstPtr& landmarkData)
 {
-  ROS_DEBUG("OMNI%d landmark data at time %d",robotNumber_+1, landmarkData->header.stamp.sec);
+  ROS_DEBUG("OMNI%d landmark data at time %d", robotNumber_ + 1,
+            landmarkData->header.stamp.sec);
 
-  //TODO figure out a way
-  return ;
+  // TODO figure out a way
+  return;
 
   bool landmarkfound[10];
   float d_0 =
@@ -804,7 +806,8 @@ TeammateRobot::TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
                              uint robotNumber)
     : Robot(nh, caller, initPose, ptcls, robotNumber)
 {
-  std::string robotNamespace("/omni" + boost::lexical_cast<std::string>(robotNumber+1));
+  std::string robotNamespace("/omni" +
+                             boost::lexical_cast<std::string>(robotNumber + 1));
 
   sOdom_ = nh.subscribe<nav_msgs::Odometry>(
       robotNamespace + "/odometry", 10,
@@ -909,9 +912,9 @@ int main(int argc, char* argv[])
   ros::NodeHandle nh;
 
   // Set debug if asked
-  if(argc > 2)
+  if (argc > 2)
   {
-    if(!strcmp(argv[2], "true"))
+    if (!strcmp(argv[2], "true"))
     {
       if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
                                          ros::console::levels::Debug))

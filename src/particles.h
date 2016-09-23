@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iostream>
 #include <boost/random.hpp>
+#include <boost/thread/mutex.hpp>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -20,6 +21,8 @@ typedef boost::random::mt19937 RNGType;
 
 class ParticleFilter
 {
+  boost::mutex mutex();
+
 private:
   int nParticles_;
   int nDimensions_;
@@ -30,37 +33,45 @@ private:
   bool initialized_;
 
 public:
-  ParticleFilter(int nParticles, int nDimensions, uint statesPerRobot, uint nRobots);
+  ParticleFilter(int nParticles, int nDimensions, uint statesPerRobot,
+                 uint nRobots);
   /**
-   * @brief init - initialize the particle filter set with the default randomized values
+   * @brief init - initialize the particle filter set with the default
+   * randomized values
    */
   void init();
 
   /**
    * @brief init - initialize the particle filter set with custom values
-   * @param custom - vector of doubles with the following form: <lvalue, rvalue, lvalue, rvalue, ...>
+   * @param custom - vector of doubles with the following form: <lvalue, rvalue,
+   * lvalue, rvalue, ...>
    * which will be used as the limits of the uniform distribution.
    * This vector should have a size equal to twice the number of dimensions
    */
   void init(const std::vector<double> custom);
 
   /**
-   * @brief predict - prediction step in the particle filter set with the received odometry
+   * @brief predict - prediction step in the particle filter set with the
+   * received odometry
    * @param robotNumber - the robot number [0,N]
    * @param odometry - a structure containing the latest odometry readings
-   * @remark will not do anything if the particle filter has not been initialized
+   * @remark will not do anything if the particle filter has not been
+   * initialized
    * @warning only for the omni dataset configuration
    */
   void predict(const uint robotNumber, const Eigen::Isometry2d& odometry);
 
-  //method to get private initialized_
-  bool isInitialized(){ return initialized_; }
+  // method to get private initialized_
+  bool isInitialized() { return initialized_; }
 
   // array subscripting operator
   subparticles_t& operator[](int index) { return particles_[index]; }
 
   // implement const overloaded operator for a const object
-  const subparticles_t& operator[](int index) const { return particles_[index]; }
+  const subparticles_t& operator[](int index) const
+  {
+    return particles_[index];
+  }
 
   // assignment operator
   // particles operator=(const particles& copyThis) { copyThis.subparts_.; }
