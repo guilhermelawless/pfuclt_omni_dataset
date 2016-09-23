@@ -112,7 +112,7 @@ public:
    * @brief size - interface to the size of the particle filter
    * @return - the number of subparticle sets
    */
-  std::size_t size() { return particles_.size(); }
+  std::size_t size() { return nSubParticleSets_; }
 };
 
 // end of namespace pfuclt_ptcls
