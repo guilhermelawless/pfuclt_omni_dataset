@@ -8,11 +8,9 @@
 
 namespace pfuclt_ptcls
 {
-ParticleFilter::ParticleFilter(int nParticles, int nDimensions,
-                               uint statesPerRobot, uint nRobots)
-  : nParticles_(nParticles), nDimensions_(nDimensions),
-    statesPerRobot_(statesPerRobot), nRobots_(nRobots),
-    particles_(nDimensions, subparticles_t(nParticles)), seed_(time(0)),
+ParticleFilter::ParticleFilter(const uint nParticles, const uint nTargets, const uint statesPerRobot, const uint nRobots)
+  : nParticles_(nParticles), nTargets_(nTargets), nStatesPerRobot_(statesPerRobot), nRobots_(nRobots), nSubParticleSets_(nTargets*STATES_PER_TARGET + nRobots*statesPerRobot + 1),
+    particles_(nSubParticleSets_, subparticles_t(nParticles)), seed_(time(0)),
     initialized_(false)
 {
   int size[2];
@@ -23,9 +21,9 @@ ParticleFilter::ParticleFilter(int nParticles, int nDimensions,
 }
 
 ParticleFilter::ParticleFilter(const ParticleFilter& other)
-  : nParticles_(other.nParticles_), nDimensions_(other.nDimensions_),
-    statesPerRobot_(other.statesPerRobot_), nRobots_(other.nRobots_),
-    particles_(other.nDimensions_, subparticles_t(other.nParticles_)), seed_(time(0)),
+  : nParticles_(other.nParticles_), nSubParticleSets_(other.nSubParticleSets_),
+    nStatesPerRobot_(other.nStatesPerRobot_), nRobots_(other.nRobots_),
+    particles_(other.nSubParticleSets_, subparticles_t(other.nParticles_)), seed_(time(0)),
     initialized_(other.initialized_)
 {
   ROS_DEBUG("Creating copy of another pf");
@@ -41,9 +39,9 @@ ParticleFilter &ParticleFilter::operator=(const ParticleFilter &other)
   ROS_DEBUG("Copying a pf to another pf");
 
   nParticles_ = other.nParticles_;
-  nDimensions_ = other.nDimensions_;
+  nSubParticleSets_ = other.nSubParticleSets_;
   nRobots_ = other.nRobots_;
-  statesPerRobot_ = other.statesPerRobot_;
+  nStatesPerRobot_ = other.nStatesPerRobot_;
   initialized_ = other.initialized_;
   particles_ = other.particles_;
 }
@@ -58,7 +56,7 @@ void ParticleFilter::init()
   int lvalue = -10;
   int rvalue = 10;
 
-  std::vector<double> def((nDimensions_ - 1) * 2);
+  std::vector<double> def((nSubParticleSets_ - 1) * 2);
 
   for (int i = 0; i < def.size(); i += 2)
   {
@@ -95,7 +93,7 @@ void ParticleFilter::init(const std::vector<double> custom)
   }
 
   // Particle weights init with same weight (1/nParticles)
-  particles_[nDimensions_ - 1].assign(nParticles_, 1 / nParticles_);
+  particles_[nSubParticleSets_ - 1].assign(nParticles_, 1 / nParticles_);
 
   // Set flag
   initialized_ = true;

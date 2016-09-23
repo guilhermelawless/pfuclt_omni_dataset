@@ -9,8 +9,7 @@ namespace pfuclt
 
 RobotFactory::RobotFactory(ros::NodeHandle& nh)
     : nh_(nh),
-      pf(pfuclt_ptcls::ParticleFilter(N_PARTICLES, N_DIMENSIONS + NUM_WEIGHT,
-                                      STATES_PER_ROBOT, MAX_ROBOTS))
+      pf(pfuclt_ptcls::ParticleFilter(N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS))
 {
   for (uint rn = 0; rn < MAX_ROBOTS; rn++)
   {
@@ -146,7 +145,7 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
   msg_particles.particles.resize(N_PARTICLES);
   for (uint part = 0; part < N_PARTICLES; ++part)
   {
-    msg_particles.particles[part].particle.resize(N_DIMENSIONS + NUM_WEIGHT);
+    msg_particles.particles[part].particle.resize(ptcls.size());
   }
 
   std::string robotNamespace("/omni" +
@@ -945,20 +944,20 @@ int main(int argc, char* argv[])
   readParam<double>(nh, "/POS_INIT", POS_INIT);
   readParam<bool>(nh, "/USE_CUSTOM_VALUES", USE_CUSTOM_VALUES);
 
-  N_DIMENSIONS = (MAX_ROBOTS + NUM_TARGETS) * STATES_PER_ROBOT;
+  uint total_size = (MAX_ROBOTS + NUM_TARGETS) * STATES_PER_ROBOT;
 
   if (USE_CUSTOM_VALUES)
   {
     readParam<double>(nh, "/CUSTOM_PARTICLE_INIT", CUSTOM_PARTICLE_INIT);
-    if (CUSTOM_PARTICLE_INIT.size() != (N_DIMENSIONS * 2))
+    if (CUSTOM_PARTICLE_INIT.size() != (total_size * 2))
     {
       ROS_ERROR("/CUSTOM_PARTICLE_INIT given but not of correct size - should "
                 "have %d numbers and has %d",
-                N_DIMENSIONS * 2, (int)CUSTOM_PARTICLE_INIT.size());
+                total_size * 2, (int)CUSTOM_PARTICLE_INIT.size());
     }
   }
 
-  if (N_PARTICLES < 0 || N_DIMENSIONS < 0)
+  if (N_PARTICLES < 0 || total_size < 0)
   {
     ROS_ERROR("Unacceptable configuration for particles class");
     nh.shutdown();

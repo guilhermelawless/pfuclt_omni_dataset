@@ -9,6 +9,9 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+//ideally later this will be a parameter, when it makes sense to
+#define STATES_PER_TARGET 3
+
 namespace pfuclt_ptcls
 {
 // Apply concept of subparticles (the particle set for each dimension)
@@ -24,17 +27,24 @@ class ParticleFilter
   boost::mutex mutex();
 
 private:
-  int nParticles_;
-  int nDimensions_;
+  uint nParticles_;
+  uint nTargets_;
   uint nRobots_;
-  uint statesPerRobot_;
+  uint nStatesPerRobot_;
+  uint nSubParticleSets_;
   particles_t particles_;
   RNGType seed_;
   bool initialized_;
 
 public:
-  ParticleFilter(int nParticles, int nDimensions, uint statesPerRobot,
-                 uint nRobots);
+  /**
+   * @brief ParticleFilter - constructor
+   * @param nParticles - the number of particles to be in the particle filter
+   * @param nTargets - the number of targets to consider
+   * @param statesPerRobot - the state space dimension for each robot
+   * @param nRobots - number of robots
+   */
+  ParticleFilter(const uint nParticles, const uint nTargets, const uint statesPerRobot, const uint nRobots);
 
   /**
    * @brief ParticleFilter - copy constructor. Will create and return a new ParticleFilter object identical to the one provided
@@ -48,6 +58,23 @@ public:
    * @return the copied object
    */
   ParticleFilter& operator=(const ParticleFilter& other);
+
+  /**
+   * @brief operator [] - array subscripting access to the private particle set
+   * @param index - the subparticle set index number to access
+   * @return the subparticles_t object reference located at particles_[index]
+   */
+  subparticles_t& operator[](int index) { return particles_[index]; }
+
+  /**
+   * @brief operator [] - const version of the array subscripting access, when using it on const intantiations of the class
+   * @param index - the subparticle set index number to access
+   * @return a const subparticles_t object reference located at particles_[index]
+   */
+  const subparticles_t& operator[](int index) const
+  {
+    return particles_[index];
+  }
 
   /**
    * @brief init - initialize the particle filter set with the default
@@ -73,19 +100,19 @@ public:
    * initialized
    * @warning only for the omni dataset configuration
    */
-  void predict(const uint robotNumber, const Eigen::Isometry2d& odometry);
+  void predict(uint robotNumber, const Eigen::Isometry2d& odometry);
 
-  // method to get private initialized_
+  /**
+   * @brief isInitialized - simple interface to access private member initialized_
+   * @return true if particle filter has been initialized, false otherwise
+   */
   bool isInitialized() { return initialized_; }
 
-  // array subscripting operator
-  subparticles_t& operator[](int index) { return particles_[index]; }
-
-  // implement const overloaded operator for a const object
-  const subparticles_t& operator[](int index) const
-  {
-    return particles_[index];
-  }
+  /**
+   * @brief size - interface to the size of the particle filter
+   * @return - the number of subparticle sets
+   */
+  std::size_t size() { return particles_.size(); }
 };
 
 // end of namespace pfuclt_ptcls
