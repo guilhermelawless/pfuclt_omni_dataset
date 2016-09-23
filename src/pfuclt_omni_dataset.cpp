@@ -8,15 +8,15 @@ namespace pfuclt
 {
 
 RobotFactory::RobotFactory(ros::NodeHandle& nh)
-    : nh_(nh),
-      pf(pfuclt_ptcls::ParticleFilter(N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS))
+  : nh_(nh),
+    pf(pfuclt_ptcls::ParticleFilter(N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS))
 {
   for (uint rn = 0; rn < MAX_ROBOTS; rn++)
   {
     if (PLAYING_ROBOTS[rn])
     {
       Eigen::Isometry2d initialRobotPose(
-          Eigen::Rotation2Dd(-M_PI).toRotationMatrix());
+            Eigen::Rotation2Dd(-M_PI).toRotationMatrix());
       initialRobotPose.translation() =
           Eigen::Vector2d(POS_INIT[2 * rn + 0], POS_INIT[2 * rn + 1]);
 
@@ -30,7 +30,7 @@ RobotFactory::RobotFactory(ros::NodeHandle& nh)
       else
       {
         robots_.push_back(
-            new TeammateRobot(nh_, initialRobotPose, pf, this, rn));
+              new TeammateRobot(nh_, initialRobotPose, pf, this, rn));
       }
     }
   }
@@ -136,10 +136,49 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   pf_.predict(robotNumber_, odom);
 }
 
+void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
+{
+  if(!started_)
+    startNow();
+
+  ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
+            target->header.stamp.sec);
+
+  if (target->found)
+  {
+    /// Below is the procedure to calculate the observation covariance associate
+    /// with the ball measurement made by the robots. Caution: Make sure the
+    /// validity of the calculations below by crosschecking the obvious things,
+    /// e.g., covariance cannot be negative or very close to 0
+
+    Eigen::Vector2d tempBallObsVec = Eigen::Vector2d(target->x, target->y);
+
+    double d = tempBallObsVec.norm(), phi = atan2(target->y, target->x);
+
+    double covDD =
+        (double)(1 / target->mismatchFactor) * (K3 * d + K4 * (d * d));
+    double covPhiPhi = K5 * (1 / (d + 1));
+
+    double covXX =
+        pow(cos(phi), 2) * covDD +
+        pow(sin(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
+    double covYY =
+        pow(sin(phi), 2) * covDD +
+        pow(cos(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
+    // ROS_INFO("Ball found in the image, refer to the method to see how
+    // covariances are calculated");
+  }
+  else
+  {
+    ROS_DEBUG("OMNI%d didn't find the ball at time %d", robotNumber_ + 1,
+              target->header.stamp.sec);
+  }
+}
+
 SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
                      ParticleFilter& ptcls, RobotFactory* caller,
                      uint robotNumber)
-    : Robot(nh, caller, initPose, ptcls, robotNumber)
+  : Robot(nh, caller, initPose, ptcls, robotNumber)
 {
   // Prepare particle message
   msg_particles.particles.resize(N_PARTICLES);
@@ -153,22 +192,22 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
 
   // Subscribe to topics
   sOdom_ = nh.subscribe<nav_msgs::Odometry>(
-      robotNamespace + "/odometry", 10,
-      boost::bind(&SelfRobot::odometryCallback, this, _1));
+        robotNamespace + "/odometry", 10,
+        boost::bind(&SelfRobot::odometryCallback, this, _1));
 
   sBall_ = nh.subscribe<read_omni_dataset::BallData>(
-      robotNamespace + "/orangeball3Dposition", 10,
-      boost::bind(&SelfRobot::targetDataCallback, this, _1));
+        robotNamespace + "/orangeball3Dposition", 10,
+        boost::bind(&Robot::targetCallback, this, _1));
 
   sLandmark_ = nh.subscribe<read_omni_dataset::LRMLandmarksData>(
-      robotNamespace + "/landmarkspositions", 10,
-      boost::bind(&SelfRobot::landmarkDataCallback, this, _1));
+        robotNamespace + "/landmarkspositions", 10,
+        boost::bind(&SelfRobot::landmarkDataCallback, this, _1));
 
   // The Graph Generator ans solver should also subscribe to the GT data and
   // publish it... This is important for time synchronization
   GT_sub_ = nh.subscribe<read_omni_dataset::LRMGTData>(
-      "gtData_4robotExp", 10,
-      boost::bind(&SelfRobot::gtDataCallback, this, _1));
+        "gtData_4robotExp", 10,
+        boost::bind(&SelfRobot::gtDataCallback, this, _1));
   // GT_sub_ = nh->subscribe("gtData_4robotExp", 1000, gtDataCallback);
 
   // Advertise some topics; don't change the names, preferably remap in a
@@ -177,10 +216,10 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
       nh.advertise<read_omni_dataset::RobotState>("/pfuclt_omni_poses", 1000);
 
   targetStatePublisher = nh.advertise<read_omni_dataset::BallData>(
-      "/pfuclt_orangeBallState", 1000);
+        "/pfuclt_orangeBallState", 1000);
 
   virtualGTPublisher = nh.advertise<read_omni_dataset::LRMGTData>(
-      "/gtData_synced_pfuclt_estimate", 1000);
+        "/gtData_synced_pfuclt_estimate", 1000);
 
   particlePublisher =
       nh.advertise<pfuclt_omni_dataset::particles>("/pfuclt_particles", 10);
@@ -432,44 +471,6 @@ void SelfRobot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   Robot::odometryCallback(odometry);
 }
 
-void SelfRobot::targetDataCallback(
-    const read_omni_dataset::BallData::ConstPtr& ballData)
-{
-  ros::Time curObservationTime = ballData->header.stamp;
-  ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
-            curObservationTime.sec);
-
-  if (ballData->found)
-  {
-    /// Below is the procedure to calculate the observation covariance associate
-    /// with the ball measurement made by the robots. Caution: Make sure the
-    /// validity of the calculations below by crosschecking the obvious things,
-    /// e.g., covariance cannot be negative or very close to 0
-
-    Eigen::Vector2d tempBallObsVec = Eigen::Vector2d(ballData->x, ballData->y);
-
-    double d = tempBallObsVec.norm(), phi = atan2(ballData->y, ballData->x);
-
-    double covDD =
-        (double)(1 / ballData->mismatchFactor) * (K3 * d + K4 * (d * d));
-    double covPhiPhi = K5 * (1 / (d + 1));
-
-    double covXX =
-        pow(cos(phi), 2) * covDD +
-        pow(sin(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
-    double covYY =
-        pow(sin(phi), 2) * covDD +
-        pow(cos(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
-    // ROS_INFO("Ball found in the image, refer to the method to see how
-    // covariances are calculated");
-  }
-  else
-  {
-    ROS_DEBUG("OMNI%d didn't find the ball at time %d", robotNumber_ + 1,
-              curObservationTime.sec);
-  }
-}
-
 void SelfRobot::landmarkDataCallback(
     const read_omni_dataset::LRMLandmarksData::ConstPtr& landmarkData)
 {
@@ -662,7 +663,7 @@ void SelfRobot::landmarkDataCallback(
           Eigen::Vector2d(landmarkData->x[i], landmarkData->y[i]);
 
       double d = tempLandmarkObsVec.norm(),
-             phi = atan2(landmarkData->y[i], landmarkData->x[i]);
+          phi = atan2(landmarkData->y[i], landmarkData->x[i]);
 
       double covDD =
           (K1 * fabs(1.0 - (landmarkData->AreaLandMarkActualinPixels[i] /
@@ -711,15 +712,15 @@ void SelfRobot::landmarkDataCallback(
 
         Zcap[0] =
             (landmarks[i].x - particleSet_[0 + (robotNumber_ - 1) * 3][p]) *
-                (cos(particleSet_[2 + (robotNumber_ - 1) * 3][p])) +
+            (cos(particleSet_[2 + (robotNumber_ - 1) * 3][p])) +
             (landmarks[i].y - particleSet_[1 + (robotNumber_ - 1) * 3][p]) *
-                (sin(particleSet_[2 + (robotNumber_ - 1) * 3][p]));
+            (sin(particleSet_[2 + (robotNumber_ - 1) * 3][p]));
 
         Zcap[1] =
             -(landmarks[i].x - particleSet_[0 + (robotNumber_ - 1) * 3][p]) *
-                (sin(particleSet_[2 + (robotNumber_ - 1) * 3][p])) +
+            (sin(particleSet_[2 + (robotNumber_ - 1) * 3][p])) +
             (landmarks[i].y - particleSet_[1 + (robotNumber_ - 1) * 3][p]) *
-                (cos(particleSet_[2 + (robotNumber_ - 1) * 3][p]));
+            (cos(particleSet_[2 + (robotNumber_ - 1) * 3][p]));
 
         Z_Zcap[0] = Z[0] - Zcap[0];
         Z_Zcap[1] = Z[1] - Zcap[1];
@@ -734,7 +735,7 @@ void SelfRobot::landmarkDataCallback(
         Q_inv[1][0] = 0.0;
         Q_inv[1][1] = 1 / covYY;
         float ExpArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] * Q_inv[0][0] +
-                               Z_Zcap[1] * Z_Zcap[1] * Q_inv[1][1]);
+            Z_Zcap[1] * Z_Zcap[1] * Q_inv[1][1]);
         float detValue = powf((2 * PI * Q[0][0] * Q[1][1]), -0.5);
 
         // cout<<"weight of particle at x =
@@ -803,58 +804,24 @@ void SelfRobot::publishState(float x, float y, float theta)
 TeammateRobot::TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
                              ParticleFilter& ptcls, RobotFactory* caller,
                              uint robotNumber)
-    : Robot(nh, caller, initPose, ptcls, robotNumber)
+  : Robot(nh, caller, initPose, ptcls, robotNumber)
 {
   std::string robotNamespace("/omni" +
                              boost::lexical_cast<std::string>(robotNumber + 1));
 
   sOdom_ = nh.subscribe<nav_msgs::Odometry>(
-      robotNamespace + "/odometry", 10,
-      boost::bind(&Robot::odometryCallback, this, _1));
+        robotNamespace + "/odometry", 10,
+        boost::bind(&Robot::odometryCallback, this, _1));
 
   sBall_ = nh.subscribe<read_omni_dataset::BallData>(
-      robotNamespace + "/orangeball3Dposition", 10,
-      boost::bind(&TeammateRobot::TargetDataCallback, this, _1));
+        robotNamespace + "/orangeball3Dposition", 10,
+        boost::bind(&Robot::targetCallback, this, _1));
 
   sLandmark_ = nh.subscribe<read_omni_dataset::LRMLandmarksData>(
-      robotNamespace + "/landmarkspositions", 10,
-      boost::bind(&TeammateRobot::LandmarkDataCallback, this, _1));
+        robotNamespace + "/landmarkspositions", 10,
+        boost::bind(&TeammateRobot::LandmarkDataCallback, this, _1));
 
   ROS_INFO("Created teammate OMNI%d", robotNumber + 1);
-}
-
-void TeammateRobot::TargetDataCallback(
-    const read_omni_dataset::BallData::ConstPtr& ballData)
-{
-  // ROS_INFO("Got ball data from teammate robot %d",RobotNumber);
-  ros::Time curObservationTime = ballData->header.stamp;
-
-  if (ballData->found)
-  {
-    /// Below is the procedure to calculate the observation covariance associate
-    /// with the ball measurement made by the robots.
-
-    Eigen::Vector2d tempBallObsVec = Eigen::Vector2d(ballData->x, ballData->y);
-
-    double d = tempBallObsVec.norm(), phi = atan2(ballData->y, ballData->x);
-
-    double covDD =
-        (double)(1 / ballData->mismatchFactor) * (K3 * d + K4 * (d * d));
-    double covPhiPhi = K5 * (1 / (d + 1));
-
-    double covXX =
-        pow(cos(phi), 2) * covDD +
-        pow(sin(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
-    double covYY =
-        pow(sin(phi), 2) * covDD +
-        pow(cos(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
-    // ROS_INFO("Ball found in the image, refer to the method to see how
-    // covariances are calculated");
-  }
-  else
-  {
-    // ROS_WARN("Ball not found in the image");
-  }
 }
 
 void TeammateRobot::LandmarkDataCallback(
@@ -880,7 +847,7 @@ void TeammateRobot::LandmarkDataCallback(
           Eigen::Vector2d(landmarkData->x[i], landmarkData->y[i]);
 
       double d = tempLandmarkObsVec.norm(),
-             phi = atan2(landmarkData->y[i], landmarkData->x[i]);
+          phi = atan2(landmarkData->y[i], landmarkData->x[i]);
 
       double covDD =
           (K1 * fabs(1.0 - (landmarkData->AreaLandMarkActualinPixels[i] /
