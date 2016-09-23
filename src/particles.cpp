@@ -8,6 +8,17 @@
 
 namespace pfuclt_ptcls
 {
+void ParticleFilter::assign(const pdata_t value)
+{
+  for(int i=0; i<nSubParticleSets_; ++i)
+    assign(value, i);
+}
+
+void ParticleFilter::assign(const pdata_t value, const uint index)
+{
+  particles_[index].assign(nParticles_, value);
+}
+
 ParticleFilter::ParticleFilter(const uint nParticles, const uint nTargets, const uint statesPerRobot, const uint nRobots)
   : nParticles_(nParticles), nTargets_(nTargets), nStatesPerRobot_(statesPerRobot), nRobots_(nRobots), nSubParticleSets_(nTargets*STATES_PER_TARGET + nRobots*statesPerRobot + 1),
     particles_(nSubParticleSets_, subparticles_t(nParticles)), seed_(time(0)),

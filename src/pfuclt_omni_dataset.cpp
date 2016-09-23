@@ -645,7 +645,7 @@ void SelfRobot::landmarkDataCallback(
 
   for (int p = 0; p < N_PARTICLES; p++)
   {
-    pf_[(MAX_ROBOTS + 1) * STATES_PER_ROBOT][p] = 1.0;
+    pf_.resetWeights();
     particleSet_[(MAX_ROBOTS + 1) * STATES_PER_ROBOT][p] = 1.0;
   }
 

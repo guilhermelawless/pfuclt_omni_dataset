@@ -225,7 +225,13 @@ public:
   SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
             ParticleFilter& ptcls, RobotFactory* caller, uint robotNumber);
 
-  /// Use this method to implement perception algorithms
+  /**
+   * @brief odometryCallback - event-driven function which should be called when
+   * new odometry data is received
+   * @param odometry - the odometry data received, using the standard ROS
+   * odometry message type
+   * @remark calls the Robot::odometryCallback method and extends it
+   */
   void odometryCallback(const nav_msgs::Odometry::ConstPtr&);
 
   /// Use this method to implement perception algorithms

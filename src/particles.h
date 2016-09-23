@@ -12,6 +12,8 @@
 //ideally later this will be a parameter, when it makes sense to
 #define STATES_PER_TARGET 3
 
+#define WEIGHT_INDEX (nSubParticleSets_-1)
+
 namespace pfuclt_ptcls
 {
 // Apply concept of subparticles (the particle set for each dimension)
@@ -37,6 +39,19 @@ private:
   bool initialized_;
 
 public:
+  /**
+   * @brief assign - assign a value to every particle in all subsets
+   * @param value - the value to assign
+   */
+  void assign(const pdata_t value);
+
+  /**
+   * @brief assign - assign a value to every particle in one subset
+   * @param value - the value to assign
+   * @param index - the subset index [0,N]
+   */
+  void assign(const pdata_t value, const uint index);
+
   /**
    * @brief ParticleFilter - constructor
    * @param nParticles - the number of particles to be in the particle filter
@@ -113,6 +128,11 @@ public:
    * @return - the number of subparticle sets
    */
   std::size_t size() { return nSubParticleSets_; }
+
+  /**
+   * @brief resetWeights - assign the value 1.0 to all particle weights
+   */
+  void resetWeights() { assign((pdata_t)1.0, WEIGHT_INDEX); }
 };
 
 // end of namespace pfuclt_ptcls
