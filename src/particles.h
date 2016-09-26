@@ -26,6 +26,11 @@ typedef boost::random::mt19937 RNGType;
 
 class ParticleFilter
 {
+  /**
+   * @brief The State enum - auxiliary enumeration to allow robots to know the state of the particle filter concerning each robot
+   */
+  enum State{ Predict, FuseRobot, FuseTarget, Resample, CalcVel };
+
   boost::mutex mutex();
 
 private:
@@ -39,6 +44,8 @@ private:
   bool initialized_;
 
 public:
+  std::vector<State> states;
+
   /**
    * @brief assign - assign a value to every particle in all subsets
    * @param value - the value to assign

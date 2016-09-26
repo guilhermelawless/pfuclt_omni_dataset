@@ -90,6 +90,16 @@ std::vector<double> CUSTOM_PARTICLE_INIT; // Used to set custom values when
 std::vector<pfuclt_aux::Landmark> landmarks;
 ros::Time timeInit;
 
+// workaround for a scoped enum
+struct RobotType
+{
+  enum RobotType_e
+  {
+    Self,
+    Teammate
+  };
+};
+
 // RobotFactory needs a forward declaration of the robot class
 class Robot;
 
@@ -100,6 +110,7 @@ class Robot;
  */
 class RobotFactory
 {
+
 private:
   ros::NodeHandle& nh_;
   std::vector<Robot*> robots_;
@@ -126,11 +137,30 @@ public:
 };
 
 /**
- * @brief The Robot class - Has the common variables and methods of selfRobot
- * and TeammateRobot's
+ * @brief The Robot class - Has the common variables and methods of all robots,
+ * and is the base class of any specialized robots who may derive from it.
+ * Teammates should be instances of this class
  */
 class Robot
 {
+  struct observations_s
+  {
+    bool found;
+    float x, y;
+    double covXX, covYY;
+  };
+
+  /**
+   * @brief The stateBuffer_s struct - keeps information on the latest available
+   * data for pose, odometry, landmarks, targets
+   * @remark used for synchronizing robots, for instance
+   */
+  struct stateBuffer_s
+  {
+    Eigen::Isometry2d pose;
+    Eigen::Isometry2d odometry;
+  };
+
 protected:
   ros::NodeHandle& nh_;
   RobotFactory* parent_;
@@ -151,6 +181,8 @@ protected:
   void startNow();
 
 public:
+  struct stateBuffer_s stateBuffer;
+
   /**
    * @brief Robot - constructor, creates a new Robot instance
    * @param nh - reference to the node handler object
@@ -158,13 +190,10 @@ public:
    * @param initPose - initial (x,y) pose of the robot
    * @param pf - reference to the particle filter to be used for this robot
    * @param robotNumber - the assigned number in the team
+   * @param robotType - enumeration: is the robot a teammate or the self robot?
    */
   Robot(ros::NodeHandle& nh, RobotFactory* parent, Eigen::Isometry2d initPose,
-        ParticleFilter& pf, uint robotNumber)
-      : nh_(nh), parent_(parent), initPose_(initPose), curPose_(initPose),
-        pf_(pf), started_(false), robotNumber_(robotNumber)
-  {
-  }
+        ParticleFilter& pf, uint robotNumber, RobotType::RobotType_e robotType);
 
   /**
    * @brief odometryCallback - event-driven function which should be called when
@@ -175,7 +204,7 @@ public:
   void odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry);
 
   /**
-   * @brief targetCallBack - event-driven functino which should be called when
+   * @brief targetCallBack - event-driven function which should be called when
    * new target data is received
    * @param target - the target data received, using custom msg types defined in
    * the read_omni_dataset package
@@ -183,21 +212,19 @@ public:
   void targetCallback(const read_omni_dataset::BallData::ConstPtr& target);
 
   /**
+   * @brief landmarkDataCallback - event-driven function which should be called
+   * when new landmark data is received
+   * @param landmarkData - the landmark data received, using custom msg types
+   * defined in the read_omni_dataset package
+   */
+  void landmarkDataCallback(
+      const read_omni_dataset::LRMLandmarksData::ConstPtr& landmarkData);
+
+  /**
    * @brief hasStarted
    * @return
    */
   bool hasStarted() { return started_; }
-
-  /**
-   * @brief The stateBuffer_s struct - keeps information on the latest available
-   * data for pose, odometry, landmarks, targets
-   * @remark used for synchronizing robots, for instance
-   */
-  struct stateBuffer_s
-  {
-    Eigen::Isometry2d pose;
-    Eigen::Isometry2d odometry;
-  } stateBuffer;
 };
 
 /**
@@ -222,8 +249,8 @@ private:
   void tryInitializeParticles();
 
 public:
-  SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-            ParticleFilter& ptcls, RobotFactory* caller, uint robotNumber);
+  SelfRobot(ros::NodeHandle& nh, RobotFactory* caller, Eigen::Isometry2d initPose,
+            ParticleFilter& ptcls, uint robotNumber);
 
   /**
    * @brief odometryCallback - event-driven function which should be called when
@@ -232,11 +259,7 @@ public:
    * odometry message type
    * @remark calls the Robot::odometryCallback method and extends it
    */
-  void odometryCallback(const nav_msgs::Odometry::ConstPtr&);
-
-  /// Use this method to implement perception algorithms
-  void
-  landmarkDataCallback(const read_omni_dataset::LRMLandmarksData::ConstPtr&);
+  void odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry);
 
   void gtDataCallback(const read_omni_dataset::LRMGTData::ConstPtr&);
 
@@ -248,22 +271,6 @@ public:
 
   // publish the estimated state of all the teammate robot
   void publishState(float, float, float);
-};
-
-/**
- * @brief The TeammateRobot class - This class doesn't perform the PF-UCLT
- * algorithm. Instead, it is used for callbacks and storing information to be
- * used later by the SelfRobot class
- */
-class TeammateRobot : public Robot
-{
-public:
-  TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-                ParticleFilter& ptcls, RobotFactory* caller, uint robotNumber);
-
-  /// Use this method to implement perception algorithms
-  void
-  LandmarkDataCallback(const read_omni_dataset::LRMLandmarksData::ConstPtr&);
 };
 
 // end of namespace

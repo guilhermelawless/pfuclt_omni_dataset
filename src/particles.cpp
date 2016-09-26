@@ -22,13 +22,13 @@ void ParticleFilter::assign(const pdata_t value, const uint index)
 ParticleFilter::ParticleFilter(const uint nParticles, const uint nTargets, const uint statesPerRobot, const uint nRobots)
   : nParticles_(nParticles), nTargets_(nTargets), nStatesPerRobot_(statesPerRobot), nRobots_(nRobots), nSubParticleSets_(nTargets*STATES_PER_TARGET + nRobots*statesPerRobot + 1),
     particles_(nSubParticleSets_, subparticles_t(nParticles)), seed_(time(0)),
-    initialized_(false)
+    initialized_(false), states(nRobots)
 {
-  int size[2];
-  size[0] = (int)particles_.size();
-  size[1] = (int)particles_[0].size();
+  ROS_INFO("Created particle filter with dimensions %d, %d", (int)particles_.size(), (int)particles_[0].size());
 
-  ROS_INFO("Created particle filter with dimensions %d, %d", size[0], size[1]);
+  //Initiate states
+  for(std::vector<State>::iterator it = states.begin(); it != states.end(); ++it)
+    *it = Predict;
 }
 
 ParticleFilter::ParticleFilter(const ParticleFilter& other)
@@ -140,6 +140,9 @@ void ParticleFilter::predict(uint robotNumber,
     double angle_particle = acos(r_particle(0, 0));
     particles_[2 + (robotNumber - 1) * 3][i] = angle_particle;
   }
+
+  //Change the state from to FuseRobot
+  states[robotNumber] = FuseRobot;
 }
 
 // end of namespace pfuclt_ptcls

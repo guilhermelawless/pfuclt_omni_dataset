@@ -8,15 +8,15 @@ namespace pfuclt
 {
 
 RobotFactory::RobotFactory(ros::NodeHandle& nh)
-  : nh_(nh),
-    pf(pfuclt_ptcls::ParticleFilter(N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS))
+    : nh_(nh), pf(pfuclt_ptcls::ParticleFilter(N_PARTICLES, NUM_TARGETS,
+                                               STATES_PER_ROBOT, MAX_ROBOTS))
 {
   for (uint rn = 0; rn < MAX_ROBOTS; rn++)
   {
     if (PLAYING_ROBOTS[rn])
     {
       Eigen::Isometry2d initialRobotPose(
-            Eigen::Rotation2Dd(-M_PI).toRotationMatrix());
+          Eigen::Rotation2Dd(-M_PI).toRotationMatrix());
       initialRobotPose.translation() =
           Eigen::Vector2d(POS_INIT[2 * rn + 0], POS_INIT[2 * rn + 1]);
 
@@ -25,12 +25,12 @@ RobotFactory::RobotFactory(ros::NodeHandle& nh)
 
       if (rn + 1 == MY_ID)
       {
-        robots_.push_back(new SelfRobot(nh_, initialRobotPose, pf, this, rn));
+        robots_.push_back(new SelfRobot(nh_, this, initialRobotPose, pf, rn));
       }
       else
       {
-        robots_.push_back(
-              new TeammateRobot(nh_, initialRobotPose, pf, this, rn));
+        robots_.push_back(new Robot(nh_, this, initialRobotPose, pf, rn,
+                                    RobotType::Teammate));
       }
     }
   }
@@ -92,6 +92,37 @@ void Robot::startNow()
            ROS_TDIFF(timeStarted_));
 }
 
+Robot::Robot(ros::NodeHandle& nh, RobotFactory* parent,
+             Eigen::Isometry2d initPose, ParticleFilter& pf, uint robotNumber,
+             RobotType::RobotType_e robotType)
+    : nh_(nh), parent_(parent), initPose_(initPose), curPose_(initPose),
+      pf_(pf), started_(false), robotNumber_(robotNumber)
+{
+  std::string robotNamespace("/omni" +
+                             boost::lexical_cast<std::string>(robotNumber + 1));
+
+  // Subscribe to topics
+  // Don't subscribe odometry if SelfRobot, this will be done by the SelfRobot's
+  // constructor
+  if (robotType == RobotType::Teammate)
+  {
+    sOdom_ = nh.subscribe<nav_msgs::Odometry>(
+        robotNamespace + "/odometry", 10,
+        boost::bind(&Robot::odometryCallback, this, _1));
+  }
+
+  sBall_ = nh.subscribe<read_omni_dataset::BallData>(
+      robotNamespace + "/orangeball3Dposition", 10,
+      boost::bind(&Robot::targetCallback, this, _1));
+
+  sLandmark_ = nh.subscribe<read_omni_dataset::LRMLandmarksData>(
+      robotNamespace + "/landmarkspositions", 10,
+      boost::bind(&Robot::landmarkDataCallback, this, _1));
+
+  if (robotType == RobotType::Teammate)
+    ROS_INFO("Created teammate robot OMNI%d", robotNumber + 1);
+}
+
 void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
 {
   if (!started_)
@@ -138,7 +169,7 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
 
 void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
 {
-  if(!started_)
+  if (!started_)
     startNow();
 
   ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
@@ -175,10 +206,314 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
   }
 }
 
-SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-                     ParticleFilter& ptcls, RobotFactory* caller,
+void Robot::landmarkDataCallback(
+    const read_omni_dataset::LRMLandmarksData::ConstPtr& landmarkData)
+{
+  ROS_DEBUG("OMNI%d landmark data at time %d", robotNumber_ + 1,
+            landmarkData->header.stamp.sec);
+
+  // TODO figure out a way
+  return;
+
+  bool landmarkfound[10];
+  float d_0 =
+      pow((pow(landmarkData->x[0], 2) + pow(landmarkData->y[0], 2)), 0.5);
+  float d_1 =
+      pow((pow(landmarkData->x[1], 2) + pow(landmarkData->y[1], 2)), 0.5);
+  float d_2 =
+      pow((pow(landmarkData->x[2], 2) + pow(landmarkData->y[2], 2)), 0.5);
+  float d_3 =
+      pow((pow(landmarkData->x[3], 2) + pow(landmarkData->y[3], 2)), 0.5);
+  float d_4 =
+      pow((pow(landmarkData->x[4], 2) + pow(landmarkData->y[4], 2)), 0.5);
+  float d_5 =
+      pow((pow(landmarkData->x[5], 2) + pow(landmarkData->y[5], 2)), 0.5);
+  float d_6 =
+      pow((pow(landmarkData->x[6], 2) + pow(landmarkData->y[6], 2)), 0.5);
+  float d_7 =
+      pow((pow(landmarkData->x[7], 2) + pow(landmarkData->y[7], 2)), 0.5);
+  float d_8 =
+      pow((pow(landmarkData->x[8], 2) + pow(landmarkData->y[8], 2)), 0.5);
+  float d_9 =
+      pow((pow(landmarkData->x[9], 2) + pow(landmarkData->y[9], 2)), 0.5);
+
+  for (int i = 0; i < 10; i++)
+  {
+    landmarkfound[i] = landmarkData->found[i];
+  }
+
+  // Huristic 1. If I see only 8 and not 9.... then I cannot see 7
+  if (landmarkData->found[8] && !landmarkData->found[9])
+  {
+    landmarkfound[7] = false;
+  }
+
+  // Huristic 2. If I see only 9 and not 8.... then I cannot see 6
+  if (!landmarkData->found[8] && landmarkData->found[9])
+  {
+    landmarkfound[6] = false;
+  }
+
+  // Huristic 3. If I see both 8 and 9.... then there are 2 subcases
+  if (landmarkData->found[8] && landmarkData->found[9])
+  {
+    // Huristic 3.1. If I am closer to 9.... then I cannot see 6
+    if (d_9 < d_8)
+    {
+      landmarkfound[6] = false;
+    }
+    // Huristic 3.2 If I am closer to 8.... then I cannot see 7
+    if (d_8 < d_9)
+    {
+      landmarkfound[7] = false;
+    }
+  }
+
+  float lm_4_thresh, lm_5_thresh, lm_8_thresh, lm_9_thresh;
+
+  if (robotNumber_ == 4)
+  {
+    lm_4_thresh = 3.0;
+    lm_5_thresh = 3.0;
+    lm_8_thresh = 3.0;
+    lm_9_thresh = 3.0;
+  }
+
+  if (robotNumber_ == 3)
+  {
+    lm_4_thresh = 6.5;
+    lm_5_thresh = 6.5;
+    lm_8_thresh = 6.5;
+    lm_9_thresh = 6.5;
+  }
+
+  if (robotNumber_ == 1)
+  {
+    lm_4_thresh = 6.5;
+    lm_5_thresh = 6.5;
+    lm_8_thresh = 6.5;
+    lm_9_thresh = 6.5;
+  }
+
+  if (robotNumber_ == 5)
+  {
+    lm_4_thresh = 3.5;
+    lm_5_thresh = 3.5;
+    lm_8_thresh = 3.5;
+    lm_9_thresh = 3.5;
+  }
+
+  // Huristic 4. Additional huristic for landmark index 6.... if I observe it
+  // further than 4m then nullify it
+  if (d_6 > 3.5)
+  {
+    landmarkfound[6] = false;
+  }
+
+  // Huristic 5. Additional huristic for landmark index 7.... if I observe it
+  // further than 4m then nullify it
+  if (d_7 > 3.5)
+  {
+    landmarkfound[7] = false;
+  }
+
+  // Huristic 6. Additional huristic for landmark index 8.... if I observe it
+  // further than 4m then nullify it
+  if (d_8 > lm_8_thresh)
+  {
+    landmarkfound[8] = false;
+  }
+
+  // Huristic 7. Additional huristic for landmark index 9.... if I observe it
+  // further than 4m then nullify it
+  if (d_9 > lm_9_thresh)
+  {
+    landmarkfound[9] = false;
+  }
+
+  // Huristic 8. Additional huristic for landmark index 4.... if I observe it
+  // further than 4m then nullify it
+  if (d_4 > lm_4_thresh)
+  {
+    landmarkfound[4] = false;
+  }
+
+  // Huristic 9. Additional huristic for landmark index 5.... if I observe it
+  // further than 4m then nullify it
+  if (d_5 > lm_5_thresh)
+  {
+    landmarkfound[5] = false;
+  }
+
+  // Huristic 10. Additional huristic for landmark index 0.... if I observe it
+  // further than 4m then nullify it
+  if (d_0 > 2.5)
+  {
+    landmarkfound[0] = false;
+  }
+
+  // Huristic 11. Additional huristic for landmark index 1.... if I observe it
+  // further than 4m then nullify it
+  if (d_1 > 2.5)
+  {
+    landmarkfound[1] = false;
+  }
+
+  // Huristic 12. Additional huristic for landmark index 2.... if I observe it
+  // further than 4m then nullify it
+  if (d_2 > 2.5)
+  {
+    landmarkfound[2] = false;
+  }
+
+  // Huristic 13. Additional huristic for landmark index 3.... if I observe it
+  // further than 4m then nullify it
+  if (d_3 > 2.5)
+  {
+    landmarkfound[3] = false;
+  }
+
+  uint seq = landmarkData->header.seq;
+
+  // There are a total of 10 distinct, known and static landmarks in this
+  // dataset.
+
+  for (int p = 0; p < N_PARTICLES; p++)
+  {
+    pf_.resetWeights();
+    // TODO particleSet_[(MAX_ROBOTS + 1) * STATES_PER_ROBOT][p] = 1.0;
+  }
+
+  for (int i = 0; i < 10; i++)
+  {
+    if (landmarkfound[i])
+    {
+
+      /// Below is the procedure to calculate the observation covariance
+      /// associate with the ball measurement made by the robots. Caution: Make
+      /// sure the validity of the calculations below by crosschecking the
+      /// obvious things, e.g., covariance cannot be negative or very close to 0
+
+      Eigen::Vector2d tempLandmarkObsVec =
+          Eigen::Vector2d(landmarkData->x[i], landmarkData->y[i]);
+
+      double d = tempLandmarkObsVec.norm(),
+             phi = atan2(landmarkData->y[i], landmarkData->x[i]);
+
+      double covDD =
+          (K1 * fabs(1.0 - (landmarkData->AreaLandMarkActualinPixels[i] /
+                            landmarkData->AreaLandMarkExpectedinPixels[i]))) *
+          (d * d);
+      double covPhiPhi = 10 * K2 * (1 / (d + 1));
+
+      double covXX =
+          pow(cos(phi), 2) * covDD +
+          pow(sin(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
+      double covYY =
+          pow(sin(phi), 2) * covDD +
+          pow(cos(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
+
+      /*
+      for (int p = 0; p < N_PARTICLES; p++)
+      {
+
+        // 	  float ObsWorldLM_X = particleSet_[0+(robotNumber_-1)*3][p] +
+        // landmarkData->x[i]* cos(particleSet_[2+(robotNumber_-1)*3][p]) -
+        // landmarkData->y[i]*sin(particleSet_[2+(robotNumber_-1)*3][p]);
+        // 	  float ObsWorldLM_Y = particleSet_[1+(robotNumber_-1)*3][p] +
+        // landmarkData->x[i]* sin(particleSet_[2+(robotNumber_-1)*3][p]) +
+        // landmarkData->y[i]*cos(particleSet_[2+(robotNumber_-1)*3][p]);
+        //
+        //
+        // 	  float error = powf( (powf((landmarks[i][0] - ObsWorldLM_X),2)
+        // +
+        // powf((landmarks[i][1] - ObsWorldLM_Y),2)) , 0.5 );
+        //
+        // 	  if(error>1.0)
+        // 	  {
+        // 	    cout<<"Landmark "<<i+1<<" observation at timestep
+        // "<<landmarkData->header.stamp <<" is at X = "<<landmarkData->x[i]<<"
+        // at Y = "<<landmarkData->y[i]<<" covXX = "<<covXX<<" covYY =
+        // "<<covYY<<endl;
+        //
+        // 	    cout<<"Landmark "<<i+1<<" actuall is at X =
+        // "<<landmarks[i][0]<<" at Y = "<<landmarks[i][1]<<endl<<endl;
+        // 	  }
+
+        // More formal method is this
+        float Z[2], Zcap[2], Q[2][2], Q_inv[2][2], Z_Zcap[2];
+
+        Z[0] = landmarkData->x[i];
+        Z[1] = landmarkData->y[i];
+
+        Zcap[0] =
+            (landmarks[i].x - particleSet_[0 + (robotNumber_ - 1) * 3][p]) *
+            (cos(particleSet_[2 + (robotNumber_ - 1) * 3][p])) +
+            (landmarks[i].y - particleSet_[1 + (robotNumber_ - 1) * 3][p]) *
+            (sin(particleSet_[2 + (robotNumber_ - 1) * 3][p]));
+
+        Zcap[1] =
+            -(landmarks[i].x - particleSet_[0 + (robotNumber_ - 1) * 3][p]) *
+            (sin(particleSet_[2 + (robotNumber_ - 1) * 3][p])) +
+            (landmarks[i].y - particleSet_[1 + (robotNumber_ - 1) * 3][p]) *
+            (cos(particleSet_[2 + (robotNumber_ - 1) * 3][p]));
+
+        Z_Zcap[0] = Z[0] - Zcap[0];
+        Z_Zcap[1] = Z[1] - Zcap[1];
+
+        Q[0][0] = covXX;
+        Q[0][1] = 0.0;
+        Q[1][0] = 0.0;
+        Q[1][1] = covYY;
+
+        Q_inv[0][0] = 1 / covXX;
+        Q_inv[0][1] = 0.0;
+        Q_inv[1][0] = 0.0;
+        Q_inv[1][1] = 1 / covYY;
+        float ExpArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] * Q_inv[0][0] +
+            Z_Zcap[1] * Z_Zcap[1] * Q_inv[1][1]);
+        float detValue = powf((2 * PI * Q[0][0] * Q[1][1]), -0.5);
+
+        // cout<<"weight of particle at x =
+        // "<<particleSet_[0+(robotNumber_-1)*3][p]<<" , Y =
+        // "<<particleSet_[1+(robotNumber_-1)*3][p]<<" and orientation =
+        // "<<particleSet_[2+(robotNumber_-1)*3][p] <<" has ExpArg = "
+        // <<ExpArg<<endl;
+
+        particleSet_[(MAX_ROBOTS + 1) * 3][p] =
+            particleSet_[(MAX_ROBOTS + 1) * 3][p] + 1 * exp(ExpArg);
+        // particleSet_[(MAX_ROBOTS+1)*3][p] =
+        // pfParticlesSelf[p][(MAX_ROBOTS+1)*3];
+      }
+      */
+
+      // ROS_INFO("Landmark %d found in the image, refer to the method to see
+      // how covariances are calculated",i);
+    }
+  }
+
+  // if(seq%30==0)
+
+  // TODO PFresample();
+
+  //
+  //     for(int i=0; i<nParticles_; i++)
+  //     {
+  //       cout<<"weight of particle at x =
+  //       "<<particleSet_[0+(robotNumber_-1)*3][i]<<" , Y =
+  //       "<<particleSet_[1+(robotNumber_-1)*3][i]<<" and orientation =
+  //       "<<particleSet_[2+(robotNumber_-1)*3][i] <<" has weight = "
+  //       <<particleSet_[(MAX_ROBOTS+1)*3][i]<<endl;
+  //     }
+  // cout<<"just before publishing state"<<endl;
+
+  // publishState(0, 0, 0);
+}
+
+SelfRobot::SelfRobot(ros::NodeHandle& nh, RobotFactory* caller,
+                     Eigen::Isometry2d initPose, ParticleFilter& ptcls,
                      uint robotNumber)
-  : Robot(nh, caller, initPose, ptcls, robotNumber)
+    : Robot(nh, caller, initPose, ptcls, robotNumber, RobotType::Self)
 {
   // Prepare particle message
   msg_particles.particles.resize(N_PARTICLES);
@@ -190,24 +525,16 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
   std::string robotNamespace("/omni" +
                              boost::lexical_cast<std::string>(robotNumber + 1));
 
-  // Subscribe to topics
+  // Subscribe to odometry
   sOdom_ = nh.subscribe<nav_msgs::Odometry>(
-        robotNamespace + "/odometry", 10,
-        boost::bind(&SelfRobot::odometryCallback, this, _1));
-
-  sBall_ = nh.subscribe<read_omni_dataset::BallData>(
-        robotNamespace + "/orangeball3Dposition", 10,
-        boost::bind(&Robot::targetCallback, this, _1));
-
-  sLandmark_ = nh.subscribe<read_omni_dataset::LRMLandmarksData>(
-        robotNamespace + "/landmarkspositions", 10,
-        boost::bind(&SelfRobot::landmarkDataCallback, this, _1));
+      robotNamespace + "/odometry", 10,
+      boost::bind(&SelfRobot::odometryCallback, this, _1));
 
   // The Graph Generator ans solver should also subscribe to the GT data and
   // publish it... This is important for time synchronization
   GT_sub_ = nh.subscribe<read_omni_dataset::LRMGTData>(
-        "gtData_4robotExp", 10,
-        boost::bind(&SelfRobot::gtDataCallback, this, _1));
+      "gtData_4robotExp", 10,
+      boost::bind(&SelfRobot::gtDataCallback, this, _1));
   // GT_sub_ = nh->subscribe("gtData_4robotExp", 1000, gtDataCallback);
 
   // Advertise some topics; don't change the names, preferably remap in a
@@ -216,10 +543,10 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
       nh.advertise<read_omni_dataset::RobotState>("/pfuclt_omni_poses", 1000);
 
   targetStatePublisher = nh.advertise<read_omni_dataset::BallData>(
-        "/pfuclt_orangeBallState", 1000);
+      "/pfuclt_orangeBallState", 1000);
 
   virtualGTPublisher = nh.advertise<read_omni_dataset::LRMGTData>(
-        "/gtData_synced_pfuclt_estimate", 1000);
+      "/gtData_synced_pfuclt_estimate", 1000);
 
   particlePublisher =
       nh.advertise<pfuclt_omni_dataset::particles>("/pfuclt_particles", 10);
@@ -471,304 +798,6 @@ void SelfRobot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   Robot::odometryCallback(odometry);
 }
 
-void SelfRobot::landmarkDataCallback(
-    const read_omni_dataset::LRMLandmarksData::ConstPtr& landmarkData)
-{
-  ROS_DEBUG("OMNI%d landmark data at time %d", robotNumber_ + 1,
-            landmarkData->header.stamp.sec);
-
-  // TODO figure out a way
-  return;
-
-  bool landmarkfound[10];
-  float d_0 =
-      pow((pow(landmarkData->x[0], 2) + pow(landmarkData->y[0], 2)), 0.5);
-  float d_1 =
-      pow((pow(landmarkData->x[1], 2) + pow(landmarkData->y[1], 2)), 0.5);
-  float d_2 =
-      pow((pow(landmarkData->x[2], 2) + pow(landmarkData->y[2], 2)), 0.5);
-  float d_3 =
-      pow((pow(landmarkData->x[3], 2) + pow(landmarkData->y[3], 2)), 0.5);
-  float d_4 =
-      pow((pow(landmarkData->x[4], 2) + pow(landmarkData->y[4], 2)), 0.5);
-  float d_5 =
-      pow((pow(landmarkData->x[5], 2) + pow(landmarkData->y[5], 2)), 0.5);
-  float d_6 =
-      pow((pow(landmarkData->x[6], 2) + pow(landmarkData->y[6], 2)), 0.5);
-  float d_7 =
-      pow((pow(landmarkData->x[7], 2) + pow(landmarkData->y[7], 2)), 0.5);
-  float d_8 =
-      pow((pow(landmarkData->x[8], 2) + pow(landmarkData->y[8], 2)), 0.5);
-  float d_9 =
-      pow((pow(landmarkData->x[9], 2) + pow(landmarkData->y[9], 2)), 0.5);
-
-  for (int i = 0; i < 10; i++)
-  {
-    landmarkfound[i] = landmarkData->found[i];
-  }
-
-  // Huristic 1. If I see only 8 and not 9.... then I cannot see 7
-  if (landmarkData->found[8] && !landmarkData->found[9])
-  {
-    landmarkfound[7] = false;
-  }
-
-  // Huristic 2. If I see only 9 and not 8.... then I cannot see 6
-  if (!landmarkData->found[8] && landmarkData->found[9])
-  {
-    landmarkfound[6] = false;
-  }
-
-  // Huristic 3. If I see both 8 and 9.... then there are 2 subcases
-  if (landmarkData->found[8] && landmarkData->found[9])
-  {
-    // Huristic 3.1. If I am closer to 9.... then I cannot see 6
-    if (d_9 < d_8)
-    {
-      landmarkfound[6] = false;
-    }
-    // Huristic 3.2 If I am closer to 8.... then I cannot see 7
-    if (d_8 < d_9)
-    {
-      landmarkfound[7] = false;
-    }
-  }
-
-  float lm_4_thresh, lm_5_thresh, lm_8_thresh, lm_9_thresh;
-
-  if (robotNumber_ == 4)
-  {
-    lm_4_thresh = 3.0;
-    lm_5_thresh = 3.0;
-    lm_8_thresh = 3.0;
-    lm_9_thresh = 3.0;
-  }
-
-  if (robotNumber_ == 3)
-  {
-    lm_4_thresh = 6.5;
-    lm_5_thresh = 6.5;
-    lm_8_thresh = 6.5;
-    lm_9_thresh = 6.5;
-  }
-
-  if (robotNumber_ == 1)
-  {
-    lm_4_thresh = 6.5;
-    lm_5_thresh = 6.5;
-    lm_8_thresh = 6.5;
-    lm_9_thresh = 6.5;
-  }
-
-  if (robotNumber_ == 5)
-  {
-    lm_4_thresh = 3.5;
-    lm_5_thresh = 3.5;
-    lm_8_thresh = 3.5;
-    lm_9_thresh = 3.5;
-  }
-
-  // Huristic 4. Additional huristic for landmark index 6.... if I observe it
-  // further than 4m then nullify it
-  if (d_6 > 3.5)
-  {
-    landmarkfound[6] = false;
-  }
-
-  // Huristic 5. Additional huristic for landmark index 7.... if I observe it
-  // further than 4m then nullify it
-  if (d_7 > 3.5)
-  {
-    landmarkfound[7] = false;
-  }
-
-  // Huristic 6. Additional huristic for landmark index 8.... if I observe it
-  // further than 4m then nullify it
-  if (d_8 > lm_8_thresh)
-  {
-    landmarkfound[8] = false;
-  }
-
-  // Huristic 7. Additional huristic for landmark index 9.... if I observe it
-  // further than 4m then nullify it
-  if (d_9 > lm_9_thresh)
-  {
-    landmarkfound[9] = false;
-  }
-
-  // Huristic 8. Additional huristic for landmark index 4.... if I observe it
-  // further than 4m then nullify it
-  if (d_4 > lm_4_thresh)
-  {
-    landmarkfound[4] = false;
-  }
-
-  // Huristic 9. Additional huristic for landmark index 5.... if I observe it
-  // further than 4m then nullify it
-  if (d_5 > lm_5_thresh)
-  {
-    landmarkfound[5] = false;
-  }
-
-  // Huristic 10. Additional huristic for landmark index 0.... if I observe it
-  // further than 4m then nullify it
-  if (d_0 > 2.5)
-  {
-    landmarkfound[0] = false;
-  }
-
-  // Huristic 11. Additional huristic for landmark index 1.... if I observe it
-  // further than 4m then nullify it
-  if (d_1 > 2.5)
-  {
-    landmarkfound[1] = false;
-  }
-
-  // Huristic 12. Additional huristic for landmark index 2.... if I observe it
-  // further than 4m then nullify it
-  if (d_2 > 2.5)
-  {
-    landmarkfound[2] = false;
-  }
-
-  // Huristic 13. Additional huristic for landmark index 3.... if I observe it
-  // further than 4m then nullify it
-  if (d_3 > 2.5)
-  {
-    landmarkfound[3] = false;
-  }
-
-  uint seq = landmarkData->header.seq;
-
-  // There are a total of 10 distinct, known and static landmarks in this
-  // dataset.
-
-  for (int p = 0; p < N_PARTICLES; p++)
-  {
-    pf_.resetWeights();
-    particleSet_[(MAX_ROBOTS + 1) * STATES_PER_ROBOT][p] = 1.0;
-  }
-
-  for (int i = 0; i < 10; i++)
-  {
-    if (landmarkfound[i])
-    {
-
-      /// Below is the procedure to calculate the observation covariance
-      /// associate with the ball measurement made by the robots. Caution: Make
-      /// sure the validity of the calculations below by crosschecking the
-      /// obvious things, e.g., covariance cannot be negative or very close to 0
-
-      Eigen::Vector2d tempLandmarkObsVec =
-          Eigen::Vector2d(landmarkData->x[i], landmarkData->y[i]);
-
-      double d = tempLandmarkObsVec.norm(),
-          phi = atan2(landmarkData->y[i], landmarkData->x[i]);
-
-      double covDD =
-          (K1 * fabs(1.0 - (landmarkData->AreaLandMarkActualinPixels[i] /
-                            landmarkData->AreaLandMarkExpectedinPixels[i]))) *
-          (d * d);
-      double covPhiPhi = 10 * K2 * (1 / (d + 1));
-
-      double covXX =
-          pow(cos(phi), 2) * covDD +
-          pow(sin(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
-      double covYY =
-          pow(sin(phi), 2) * covDD +
-          pow(cos(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
-
-      for (int p = 0; p < N_PARTICLES; p++)
-      {
-
-        // 	  float ObsWorldLM_X = particleSet_[0+(robotNumber_-1)*3][p] +
-        // landmarkData->x[i]* cos(particleSet_[2+(robotNumber_-1)*3][p]) -
-        // landmarkData->y[i]*sin(particleSet_[2+(robotNumber_-1)*3][p]);
-        // 	  float ObsWorldLM_Y = particleSet_[1+(robotNumber_-1)*3][p] +
-        // landmarkData->x[i]* sin(particleSet_[2+(robotNumber_-1)*3][p]) +
-        // landmarkData->y[i]*cos(particleSet_[2+(robotNumber_-1)*3][p]);
-        //
-        //
-        // 	  float error = powf( (powf((landmarks[i][0] - ObsWorldLM_X),2)
-        // +
-        // powf((landmarks[i][1] - ObsWorldLM_Y),2)) , 0.5 );
-        //
-        // 	  if(error>1.0)
-        // 	  {
-        // 	    cout<<"Landmark "<<i+1<<" observation at timestep
-        // "<<landmarkData->header.stamp <<" is at X = "<<landmarkData->x[i]<<"
-        // at Y = "<<landmarkData->y[i]<<" covXX = "<<covXX<<" covYY =
-        // "<<covYY<<endl;
-        //
-        // 	    cout<<"Landmark "<<i+1<<" actuall is at X =
-        // "<<landmarks[i][0]<<" at Y = "<<landmarks[i][1]<<endl<<endl;
-        // 	  }
-
-        // More formal method is this
-        float Z[2], Zcap[2], Q[2][2], Q_inv[2][2], Z_Zcap[2];
-
-        Z[0] = landmarkData->x[i];
-        Z[1] = landmarkData->y[i];
-
-        Zcap[0] =
-            (landmarks[i].x - particleSet_[0 + (robotNumber_ - 1) * 3][p]) *
-            (cos(particleSet_[2 + (robotNumber_ - 1) * 3][p])) +
-            (landmarks[i].y - particleSet_[1 + (robotNumber_ - 1) * 3][p]) *
-            (sin(particleSet_[2 + (robotNumber_ - 1) * 3][p]));
-
-        Zcap[1] =
-            -(landmarks[i].x - particleSet_[0 + (robotNumber_ - 1) * 3][p]) *
-            (sin(particleSet_[2 + (robotNumber_ - 1) * 3][p])) +
-            (landmarks[i].y - particleSet_[1 + (robotNumber_ - 1) * 3][p]) *
-            (cos(particleSet_[2 + (robotNumber_ - 1) * 3][p]));
-
-        Z_Zcap[0] = Z[0] - Zcap[0];
-        Z_Zcap[1] = Z[1] - Zcap[1];
-
-        Q[0][0] = covXX;
-        Q[0][1] = 0.0;
-        Q[1][0] = 0.0;
-        Q[1][1] = covYY;
-
-        Q_inv[0][0] = 1 / covXX;
-        Q_inv[0][1] = 0.0;
-        Q_inv[1][0] = 0.0;
-        Q_inv[1][1] = 1 / covYY;
-        float ExpArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] * Q_inv[0][0] +
-            Z_Zcap[1] * Z_Zcap[1] * Q_inv[1][1]);
-        float detValue = powf((2 * PI * Q[0][0] * Q[1][1]), -0.5);
-
-        // cout<<"weight of particle at x =
-        // "<<particleSet_[0+(robotNumber_-1)*3][p]<<" , Y =
-        // "<<particleSet_[1+(robotNumber_-1)*3][p]<<" and orientation =
-        // "<<particleSet_[2+(robotNumber_-1)*3][p] <<" has ExpArg = "
-        // <<ExpArg<<endl;
-
-        particleSet_[(MAX_ROBOTS + 1) * 3][p] =
-            particleSet_[(MAX_ROBOTS + 1) * 3][p] + 1 * exp(ExpArg);
-        // particleSet_[(MAX_ROBOTS+1)*3][p] =
-        // pfParticlesSelf[p][(MAX_ROBOTS+1)*3];
-      }
-      // ROS_INFO("Landmark %d found in the image, refer to the method to see
-      // how covariances are calculated",i);
-    }
-  }
-
-  // if(seq%30==0)
-  PFresample();
-  //
-  //     for(int i=0; i<nParticles_; i++)
-  //     {
-  //       cout<<"weight of particle at x =
-  //       "<<particleSet_[0+(robotNumber_-1)*3][i]<<" , Y =
-  //       "<<particleSet_[1+(robotNumber_-1)*3][i]<<" and orientation =
-  //       "<<particleSet_[2+(robotNumber_-1)*3][i] <<" has weight = "
-  //       <<particleSet_[(MAX_ROBOTS+1)*3][i]<<endl;
-  //     }
-  // cout<<"just before publishing state"<<endl;
-  publishState(0, 0, 0);
-}
-
 void SelfRobot::gtDataCallback(
     const read_omni_dataset::LRMGTData::ConstPtr& gtMsgReceived)
 {
@@ -799,73 +828,6 @@ void SelfRobot::publishState(float x, float y, float theta)
 
   State_publisher.publish(msg_state);
   virtualGTPublisher.publish(receivedGTdata);
-}
-
-TeammateRobot::TeammateRobot(ros::NodeHandle& nh, Eigen::Isometry2d initPose,
-                             ParticleFilter& ptcls, RobotFactory* caller,
-                             uint robotNumber)
-  : Robot(nh, caller, initPose, ptcls, robotNumber)
-{
-  std::string robotNamespace("/omni" +
-                             boost::lexical_cast<std::string>(robotNumber + 1));
-
-  sOdom_ = nh.subscribe<nav_msgs::Odometry>(
-        robotNamespace + "/odometry", 10,
-        boost::bind(&Robot::odometryCallback, this, _1));
-
-  sBall_ = nh.subscribe<read_omni_dataset::BallData>(
-        robotNamespace + "/orangeball3Dposition", 10,
-        boost::bind(&Robot::targetCallback, this, _1));
-
-  sLandmark_ = nh.subscribe<read_omni_dataset::LRMLandmarksData>(
-        robotNamespace + "/landmarkspositions", 10,
-        boost::bind(&TeammateRobot::LandmarkDataCallback, this, _1));
-
-  ROS_INFO("Created teammate OMNI%d", robotNumber + 1);
-}
-
-void TeammateRobot::LandmarkDataCallback(
-    const read_omni_dataset::LRMLandmarksData::ConstPtr& landmarkData)
-{
-  // ROS_INFO(" got landmark data from teammate robot (ID=%d)",RobotNumber);
-
-  uint seq = landmarkData->header.seq;
-
-  // There are a total of 10 distinct, known and static landmarks in this
-  // dataset.
-  for (int i = 0; i < 10; i++)
-  {
-    if (landmarkData->found[i])
-    {
-
-      /// Below is the procedure to calculate the observation covariance
-      /// associate with the ball measurement made by the robots. Caution: Make
-      /// sure the validity of the calculations below by crosschecking the
-      /// obvious things, e.g., covariance cannot be negative or very close to 0
-
-      Eigen::Vector2d tempLandmarkObsVec =
-          Eigen::Vector2d(landmarkData->x[i], landmarkData->y[i]);
-
-      double d = tempLandmarkObsVec.norm(),
-          phi = atan2(landmarkData->y[i], landmarkData->x[i]);
-
-      double covDD =
-          (K1 * fabs(1.0 - (landmarkData->AreaLandMarkActualinPixels[i] /
-                            landmarkData->AreaLandMarkExpectedinPixels[i]))) *
-          (d * d);
-      double covPhiPhi = K2 * (1 / (d + 1));
-
-      double covXX =
-          pow(cos(phi), 2) * covDD +
-          pow(sin(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
-      double covYY =
-          pow(sin(phi), 2) * covDD +
-          pow(cos(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
-
-      // ROS_INFO("Landmark %d found in the image, refer to the method to see
-      // how covariances are calculated",i);
-    }
-  }
 }
 
 // end of namespace
