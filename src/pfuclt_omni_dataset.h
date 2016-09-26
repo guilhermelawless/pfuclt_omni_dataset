@@ -7,7 +7,6 @@
 
 // ROS message definitions
 #include <ros/ros.h>
-#include <std_msgs/String.h>
 #include <nav_msgs/Odometry.h>
 #include <tf/transform_broadcaster.h>
 #include <read_omni_dataset/BallData.h>
@@ -36,6 +35,11 @@ using namespace pfuclt_ptcls;
 #define PI 3.14159
 #define NUM_WEIGHT 1
 #define STATES_PER_ROBOT 3
+#define NUM_LANDMARKS 10
+#define HEURISTICS_THRESH_DEFAULT                                              \
+  {                                                                            \
+    2.5, 2.5, 2.5, 2.5, FLT_MAX, FLT_MAX, 3.5, 3.5, FLT_MAX, FLT_MAX           \
+  }
 
 int MAX_ROBOTS;
 int NUM_ROBOTS; // total number of playing robots in the team including self
@@ -83,9 +87,7 @@ int N_DIMENSIONS;
 bool USE_CUSTOM_VALUES = false; // If set to true via the parameter server, the
 // custom values will be used
 std::vector<double> CUSTOM_PARTICLE_INIT; // Used to set custom values when
-// initiating the particle filter set
-// (will still be a uniform
-// distribution)
+// initiating the particle filter set (will still be a uniform distribution)
 
 // for ease of access
 std::vector<pfuclt_aux::Landmark> landmarks;
@@ -198,7 +200,8 @@ public:
    * @param robotType - enumeration: is the robot a teammate or the self robot?
    */
   Robot(ros::NodeHandle& nh, RobotFactory* parent, Eigen::Isometry2d initPose,
-        ParticleFilter& pf, uint robotNumber, RobotType::RobotType_e robotType = RobotType::Teammate);
+        ParticleFilter& pf, uint robotNumber,
+        RobotType::RobotType_e robotType = RobotType::Teammate);
 
   /**
    * @brief odometryCallback - event-driven function which should be called when
@@ -254,8 +257,9 @@ private:
   void tryInitializeParticles();
 
 public:
-  SelfRobot(ros::NodeHandle& nh, RobotFactory* caller, Eigen::Isometry2d initPose,
-            ParticleFilter& ptcls, uint robotNumber);
+  SelfRobot(ros::NodeHandle& nh, RobotFactory* caller,
+            Eigen::Isometry2d initPose, ParticleFilter& ptcls,
+            uint robotNumber);
 
   /**
    * @brief odometryCallback - event-driven function which should be called when

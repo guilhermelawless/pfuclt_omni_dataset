@@ -25,11 +25,13 @@ RobotFactory::RobotFactory(ros::NodeHandle& nh)
 
       if (rn + 1 == MY_ID)
       {
-        robots_.push_back(SelfRobot_ptr(new SelfRobot(nh_, this, initialRobotPose, pf, rn)));
+        robots_.push_back(
+            SelfRobot_ptr(new SelfRobot(nh_, this, initialRobotPose, pf, rn)));
       }
       else
       {
-        robots_.push_back(Robot_ptr(new Robot(nh_, this, initialRobotPose, pf, rn)));
+        robots_.push_back(
+            Robot_ptr(new Robot(nh_, this, initialRobotPose, pf, rn)));
       }
     }
   }
@@ -201,162 +203,81 @@ void Robot::landmarkDataCallback(
   // TODO figure out a way
   return;
 
-  bool landmarkfound[10];
-  float d_0 =
-      pow((pow(landmarkData->x[0], 2) + pow(landmarkData->y[0], 2)), 0.5);
-  float d_1 =
-      pow((pow(landmarkData->x[1], 2) + pow(landmarkData->y[1], 2)), 0.5);
-  float d_2 =
-      pow((pow(landmarkData->x[2], 2) + pow(landmarkData->y[2], 2)), 0.5);
-  float d_3 =
-      pow((pow(landmarkData->x[3], 2) + pow(landmarkData->y[3], 2)), 0.5);
-  float d_4 =
-      pow((pow(landmarkData->x[4], 2) + pow(landmarkData->y[4], 2)), 0.5);
-  float d_5 =
-      pow((pow(landmarkData->x[5], 2) + pow(landmarkData->y[5], 2)), 0.5);
-  float d_6 =
-      pow((pow(landmarkData->x[6], 2) + pow(landmarkData->y[6], 2)), 0.5);
-  float d_7 =
-      pow((pow(landmarkData->x[7], 2) + pow(landmarkData->y[7], 2)), 0.5);
-  float d_8 =
-      pow((pow(landmarkData->x[8], 2) + pow(landmarkData->y[8], 2)), 0.5);
-  float d_9 =
-      pow((pow(landmarkData->x[9], 2) + pow(landmarkData->y[9], 2)), 0.5);
+  bool heuristicsFound[NUM_LANDMARKS];
+  for (int i = 0; i < NUM_LANDMARKS; i++)
+    heuristicsFound[i] = landmarkData->found[i];
 
-  for (int i = 0; i < 10; i++)
+  float distances[NUM_LANDMARKS];
+
+  for (int i = 0; i < NUM_LANDMARKS; i++)
   {
-    landmarkfound[i] = landmarkData->found[i];
+    distances[i] =
+        pow((pow(landmarkData->x[i], 2) + pow(landmarkData->y[i], 2)), 0.5);
   }
 
-  // Huristic 1. If I see only 8 and not 9.... then I cannot see 7
-  if (landmarkData->found[8] && !landmarkData->found[9])
+  // Define heuristics if using custom values
+  if (USE_CUSTOM_VALUES)
   {
-    landmarkfound[7] = false;
-  }
+    // Huristic 1. If I see only 8 and not 9.... then I cannot see 7
+    if (landmarkData->found[8] && !landmarkData->found[9])
+      heuristicsFound[7] = false;
 
-  // Huristic 2. If I see only 9 and not 8.... then I cannot see 6
-  if (!landmarkData->found[8] && landmarkData->found[9])
-  {
-    landmarkfound[6] = false;
-  }
+    // Huristic 2. If I see only 9 and not 8.... then I cannot see 6
+    if (!landmarkData->found[8] && landmarkData->found[9])
+      heuristicsFound[6] = false;
 
-  // Huristic 3. If I see both 8 and 9.... then there are 2 subcases
-  if (landmarkData->found[8] && landmarkData->found[9])
-  {
-    // Huristic 3.1. If I am closer to 9.... then I cannot see 6
-    if (d_9 < d_8)
+    // Huristic 3. If I see both 8 and 9.... then there are 2 subcases
+    if (landmarkData->found[8] && landmarkData->found[9])
     {
-      landmarkfound[6] = false;
+      // Huristic 3.1. If I am closer to 9.... then I cannot see 6
+      if (distances[9] < distances[8])
+        heuristicsFound[6] = false;
+
+      // Huristic 3.2 If I am closer to 8.... then I cannot see 7
+      if (distances[8] < distances[9])
+        heuristicsFound[7] = false;
     }
-    // Huristic 3.2 If I am closer to 8.... then I cannot see 7
-    if (d_8 < d_9)
+
+    float heuristicsThresh[NUM_LANDMARKS] = HEURISTICS_THRESH_DEFAULT;
+
+    if (robotNumber_ == 4)
     {
-      landmarkfound[7] = false;
+      heuristicsThresh[4] = 3.0;
+      heuristicsThresh[5] = 3.0;
+      heuristicsThresh[8] = 3.0;
+      heuristicsThresh[9] = 3.0;
     }
-  }
 
-  float lm_4_thresh, lm_5_thresh, lm_8_thresh, lm_9_thresh;
+    if (robotNumber_ == 3)
+    {
+      heuristicsThresh[4] = 6.5;
+      heuristicsThresh[5] = 6.5;
+      heuristicsThresh[8] = 6.5;
+      heuristicsThresh[9] = 6.5;
+    }
 
-  if (robotNumber_ == 4)
-  {
-    lm_4_thresh = 3.0;
-    lm_5_thresh = 3.0;
-    lm_8_thresh = 3.0;
-    lm_9_thresh = 3.0;
-  }
+    if (robotNumber_ == 1)
+    {
+      heuristicsThresh[4] = 6.5;
+      heuristicsThresh[5] = 6.5;
+      heuristicsThresh[8] = 6.5;
+      heuristicsThresh[9] = 6.5;
+    }
 
-  if (robotNumber_ == 3)
-  {
-    lm_4_thresh = 6.5;
-    lm_5_thresh = 6.5;
-    lm_8_thresh = 6.5;
-    lm_9_thresh = 6.5;
-  }
+    if (robotNumber_ == 5)
+    {
+      heuristicsThresh[4] = 3.5;
+      heuristicsThresh[5] = 3.5;
+      heuristicsThresh[8] = 3.5;
+      heuristicsThresh[9] = 3.5;
+    }
 
-  if (robotNumber_ == 1)
-  {
-    lm_4_thresh = 6.5;
-    lm_5_thresh = 6.5;
-    lm_8_thresh = 6.5;
-    lm_9_thresh = 6.5;
-  }
-
-  if (robotNumber_ == 5)
-  {
-    lm_4_thresh = 3.5;
-    lm_5_thresh = 3.5;
-    lm_8_thresh = 3.5;
-    lm_9_thresh = 3.5;
-  }
-
-  // Huristic 4. Additional huristic for landmark index 6.... if I observe it
-  // further than 4m then nullify it
-  if (d_6 > 3.5)
-  {
-    landmarkfound[6] = false;
-  }
-
-  // Huristic 5. Additional huristic for landmark index 7.... if I observe it
-  // further than 4m then nullify it
-  if (d_7 > 3.5)
-  {
-    landmarkfound[7] = false;
-  }
-
-  // Huristic 6. Additional huristic for landmark index 8.... if I observe it
-  // further than 4m then nullify it
-  if (d_8 > lm_8_thresh)
-  {
-    landmarkfound[8] = false;
-  }
-
-  // Huristic 7. Additional huristic for landmark index 9.... if I observe it
-  // further than 4m then nullify it
-  if (d_9 > lm_9_thresh)
-  {
-    landmarkfound[9] = false;
-  }
-
-  // Huristic 8. Additional huristic for landmark index 4.... if I observe it
-  // further than 4m then nullify it
-  if (d_4 > lm_4_thresh)
-  {
-    landmarkfound[4] = false;
-  }
-
-  // Huristic 9. Additional huristic for landmark index 5.... if I observe it
-  // further than 4m then nullify it
-  if (d_5 > lm_5_thresh)
-  {
-    landmarkfound[5] = false;
-  }
-
-  // Huristic 10. Additional huristic for landmark index 0.... if I observe it
-  // further than 4m then nullify it
-  if (d_0 > 2.5)
-  {
-    landmarkfound[0] = false;
-  }
-
-  // Huristic 11. Additional huristic for landmark index 1.... if I observe it
-  // further than 4m then nullify it
-  if (d_1 > 2.5)
-  {
-    landmarkfound[1] = false;
-  }
-
-  // Huristic 12. Additional huristic for landmark index 2.... if I observe it
-  // further than 4m then nullify it
-  if (d_2 > 2.5)
-  {
-    landmarkfound[2] = false;
-  }
-
-  // Huristic 13. Additional huristic for landmark index 3.... if I observe it
-  // further than 4m then nullify it
-  if (d_3 > 2.5)
-  {
-    landmarkfound[3] = false;
+    // Set landmark as not found if distance to it is above a certain threshold
+    for (int i = 0; i < NUM_LANDMARKS; i++)
+    {
+      if (distances[i] > heuristicsThresh[i])
+        heuristicsFound[i] = false;
+    }
   }
 
   uint seq = landmarkData->header.seq;
@@ -370,9 +291,9 @@ void Robot::landmarkDataCallback(
     // TODO particleSet_[(MAX_ROBOTS + 1) * STATES_PER_ROBOT][p] = 1.0;
   }
 
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < NUM_LANDMARKS; i++)
   {
-    if (landmarkfound[i])
+    if (heuristicsFound[i])
     {
 
       /// Below is the procedure to calculate the observation covariance
@@ -390,7 +311,7 @@ void Robot::landmarkDataCallback(
           (K1 * fabs(1.0 - (landmarkData->AreaLandMarkActualinPixels[i] /
                             landmarkData->AreaLandMarkExpectedinPixels[i]))) *
           (d * d);
-      double covPhiPhi = 10 * K2 * (1 / (d + 1));
+      double covPhiPhi = NUM_LANDMARKS * K2 * (1 / (d + 1));
 
       double covXX =
           pow(cos(phi), 2) * covDD +
