@@ -25,28 +25,14 @@ RobotFactory::RobotFactory(ros::NodeHandle& nh)
 
       if (rn + 1 == MY_ID)
       {
-        robots_.push_back(new SelfRobot(nh_, this, initialRobotPose, pf, rn));
+        robots_.push_back(SelfRobot_ptr(new SelfRobot(nh_, this, initialRobotPose, pf, rn)));
       }
       else
       {
-        robots_.push_back(new Robot(nh_, this, initialRobotPose, pf, rn,
-                                    RobotType::Teammate));
+        robots_.push_back(Robot_ptr(new Robot(nh_, this, initialRobotPose, pf, rn)));
       }
     }
   }
-}
-
-RobotFactory::~RobotFactory()
-{
-  // clean up - delete all variables in heap
-  for (std::vector<Robot*>::iterator it = robots_.begin(); it != robots_.end();
-       ++it)
-    delete *it;
-
-  robots_.empty();
-
-  // shutdown function will call SIGINT on this node
-  nh_.shutdown();
 }
 
 void RobotFactory::initializeFixedLandmarks()
@@ -75,8 +61,8 @@ void RobotFactory::initializeFixedLandmarks()
 
 bool RobotFactory::areAllRobotsActive()
 {
-  for (std::vector<Robot*>::iterator it = robots_.begin(); it != robots_.end();
-       ++it)
+  for (std::vector<Robot_ptr>::iterator it = robots_.begin();
+       it != robots_.end(); ++it)
   {
     if (false == (*it)->hasStarted())
       return false;

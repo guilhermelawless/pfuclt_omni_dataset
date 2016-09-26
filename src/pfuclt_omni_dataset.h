@@ -24,6 +24,7 @@
 // Boost libraries
 #include <boost/bind.hpp>
 #include <boost/ref.hpp>
+#include <boost/shared_ptr.hpp>
 
 // Auxiliary libraries
 #include "pfuclt_aux.h"
@@ -100,8 +101,13 @@ struct RobotType
   };
 };
 
-// RobotFactory needs a forward declaration of the robot class
+// Forward declaration of classes
 class Robot;
+class SelfRobot;
+
+// useful typedefs
+typedef boost::shared_ptr<Robot> Robot_ptr;
+typedef boost::shared_ptr<SelfRobot> SelfRobot_ptr;
 
 /**
  * @brief The RobotFactory class - Creates and keeps information on the
@@ -113,13 +119,12 @@ class RobotFactory
 
 private:
   ros::NodeHandle& nh_;
-  std::vector<Robot*> robots_;
+  std::vector<Robot_ptr> robots_;
 
 public:
   ParticleFilter pf;
 
   RobotFactory(ros::NodeHandle& nh);
-  ~RobotFactory();
 
   /**
    * @brief initializeFixedLandmarks - will get a filename from the parameter
@@ -193,7 +198,7 @@ public:
    * @param robotType - enumeration: is the robot a teammate or the self robot?
    */
   Robot(ros::NodeHandle& nh, RobotFactory* parent, Eigen::Isometry2d initPose,
-        ParticleFilter& pf, uint robotNumber, RobotType::RobotType_e robotType);
+        ParticleFilter& pf, uint robotNumber, RobotType::RobotType_e robotType = RobotType::Teammate);
 
   /**
    * @brief odometryCallback - event-driven function which should be called when
