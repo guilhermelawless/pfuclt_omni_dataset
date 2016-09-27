@@ -41,11 +41,19 @@
          0,6.0,
          -4.5,4.5,
          -3.14159,3.14159]
-     </rosparam>
+    </rosparam>
+
+	<rosparam param="CUSTOM_RANDOM_ALPHA">
+        [0.015, 0.1, 0.5, 0.001,
+         0.015, 0.1, 0.5, 0.001,
+         0.015, 0.1, 0.5, 0.001,
+         0.025, 0.4, 0.9, 0.003,
+         0.015, 0.4, 0.4, 0.001]
+    </rosparam>
 
     <node name="performer" pkg="pfuclt_omni_dataset" type="pfuclt_omni_dataset" output="screen" args="--debug $(arg debug)">
     	<remap from="/pfuclt_orangeBallState" to="/estimatedOrangeBallState"/>
-			<remap from="/pfuclt_omni_poses" to="/estimated_omni_poses"/>
+		<remap from="/pfuclt_omni_poses" to="/estimated_omni_poses"/>
     </node>
 
     

@@ -14,7 +14,7 @@ std::vector<Landmark> getLandmarks(const char* filename)
     Landmark lm;
     while (is.read_line())
     {
-      //order is serial,x,y\n
+      // order is serial,x,y\n
       is >> lm.serial >> lm.x >> lm.y;
       lm_vec.push_back(lm);
     }
@@ -24,5 +24,5 @@ std::vector<Landmark> getLandmarks(const char* filename)
   return lm_vec;
 }
 
-//end of namespace
+// end of namespace
 }

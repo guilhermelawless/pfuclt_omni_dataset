@@ -9,7 +9,8 @@ namespace pfuclt
 
 RobotFactory::RobotFactory(ros::NodeHandle& nh)
     : nh_(nh), pf(pfuclt_ptcls::ParticleFilter(N_PARTICLES, NUM_TARGETS,
-                                               STATES_PER_ROBOT, MAX_ROBOTS))
+                                               STATES_PER_ROBOT, MAX_ROBOTS,
+                                               CUSTOM_RANDOM_ALPHA))
 {
   for (uint rn = 0; rn < MAX_ROBOTS; rn++)
   {
@@ -116,43 +117,16 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   if (!started_)
     startNow();
 
-  uint seq = odometry->header.seq;
-  prevTime_ = curTime_;
-  curTime_ = odometry->header.stamp;
+  pfuclt_ptcls::Odometry odomStruct = {
+    odometry->pose.pose.position.x, odometry->pose.pose.position.y,
+    tf::getYaw(odometry->pose.pose.orientation)
+  };
 
   ROS_DEBUG("OMNI%d odometry at time %d", robotNumber_ + 1,
             odometry->header.stamp.sec);
 
-  // Below is an example how to extract the odometry from the message and use it
-  // to propagate the robot state by simply concatenating successive odometry
-  // readings-
-  double odomVector[3] = { odometry->pose.pose.position.x,
-                           odometry->pose.pose.position.y,
-                           tf::getYaw(odometry->pose.pose.orientation) };
-
-  Eigen::Isometry2d odom;
-  odom = Eigen::Rotation2Dd(odomVector[2]).toRotationMatrix();
-  odom.translation() = Eigen::Vector2d(odomVector[0], odomVector[1]);
-
-  if (seq == 0)
-    curPose_ = initPose_;
-  else
-  {
-    prevPose_ = curPose_;
-    curPose_ = prevPose_ * odom;
-  }
-
-  stateBuffer.pose = curPose_;
-  stateBuffer.odometry = odom;
-
-  /*
-  Eigen::Vector2d t;
-  t = curPose_.translation();
-  Eigen::Matrix<double, 2, 2> r = curPose_.linear();
-  double angle = acos(r(0, 0));
-  */
-
-  pf_.predict(robotNumber_, odom);
+  // Call the particle filter predict step for this robot
+  pf_.predict(robotNumber_, odomStruct);
 }
 
 void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
@@ -200,15 +174,13 @@ void Robot::landmarkDataCallback(
   ROS_DEBUG("OMNI%d landmark data at time %d", robotNumber_ + 1,
             landmarkData->header.stamp.sec);
 
-  // TODO figure out a way
-  return;
-
   bool heuristicsFound[NUM_LANDMARKS];
   for (int i = 0; i < NUM_LANDMARKS; i++)
     heuristicsFound[i] = landmarkData->found[i];
 
   float distances[NUM_LANDMARKS];
 
+  // d = sqrt(x^2+y^2)
   for (int i = 0; i < NUM_LANDMARKS; i++)
   {
     distances[i] =
@@ -280,16 +252,10 @@ void Robot::landmarkDataCallback(
     }
   }
 
-  uint seq = landmarkData->header.seq;
+  // End of heuristics, below uses the array but just for convenience
 
-  // There are a total of 10 distinct, known and static landmarks in this
-  // dataset.
-
-  for (int p = 0; p < N_PARTICLES; p++)
-  {
-    pf_.resetWeights();
-    // TODO particleSet_[(MAX_ROBOTS + 1) * STATES_PER_ROBOT][p] = 1.0;
-  }
+  // Reset particle filter weights
+  // pf_.resetWeights();
 
   for (int i = 0; i < NUM_LANDMARKS; i++)
   {
@@ -720,8 +686,8 @@ void SelfRobot::publishState(float x, float y, float theta)
   particlePublisher.publish(msg_particles);
 
   msg_state.header.stamp =
-      curTime_; // time of the self-robot must be in the full state
-  receivedGTdata.header.stamp = curTime_;
+      ros::Time::now(); // time of the self-robot must be in the full state
+  receivedGTdata.header.stamp = ros::Time::now();
 
   msg_state.robotPose[MY_ID - 1].pose.pose.position.x = x;
   msg_state.robotPose[MY_ID - 1].pose.pose.position.y = y;
@@ -778,6 +744,7 @@ int main(int argc, char* argv[])
   readParam<float>(nh, "/LANDMARK_COV/K5", K5);
   readParam<bool>(nh, "/PLAYING_ROBOTS", PLAYING_ROBOTS);
   readParam<double>(nh, "/POS_INIT", POS_INIT);
+  readParam<float>(nh, "/CUSTOM_RANDOM_ALPHA", CUSTOM_RANDOM_ALPHA);
   readParam<bool>(nh, "/USE_CUSTOM_VALUES", USE_CUSTOM_VALUES);
 
   uint total_size = (MAX_ROBOTS + NUM_TARGETS) * STATES_PER_ROBOT;

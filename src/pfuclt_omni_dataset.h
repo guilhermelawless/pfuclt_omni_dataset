@@ -89,6 +89,10 @@ bool USE_CUSTOM_VALUES = false; // If set to true via the parameter server, the
 std::vector<double> CUSTOM_PARTICLE_INIT; // Used to set custom values when
 // initiating the particle filter set (will still be a uniform distribution)
 
+std::vector<float> CUSTOM_RANDOM_ALPHA; // Used to set custom values for the
+// sampling models in the particle
+// filter
+
 // for ease of access
 std::vector<pfuclt_aux::Landmark> landmarks;
 ros::Time timeInit;

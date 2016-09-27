@@ -9,13 +9,22 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-//ideally later this will be a parameter, when it makes sense to
+// ideally later this will be a parameter, when it makes sense to
 #define STATES_PER_TARGET 3
+#define WEIGHT_INDEX (nSubParticleSets_ - 1)
 
-#define WEIGHT_INDEX (nSubParticleSets_-1)
+// offsets
+#define O_X (0)
+#define O_Y (1)
+#define O_THETA (2)
 
 namespace pfuclt_ptcls
 {
+typedef struct odometry_s
+{
+  float x, y, theta;
+} Odometry;
+
 // Apply concept of subparticles (the particle set for each dimension)
 typedef float pdata_t;
 typedef std::vector<float> subparticles_t;
@@ -27,11 +36,21 @@ typedef boost::random::mt19937 RNGType;
 class ParticleFilter
 {
   /**
-   * @brief The State enum - auxiliary enumeration to allow robots to know the state of the particle filter concerning each robot
+   * @brief The State enum - auxiliary enumeration to allow robots to know the
+   * state of the particle filter concerning each robot
    */
-  enum State{ Predict, FuseRobot, FuseTarget, Resample, CalcVel };
+  enum State
+  {
+    Predict,
+    FuseRobot,
+    FuseTarget,
+    Resample,
+    CalcVel
+  };
 
-  boost::mutex mutex();
+  // TODO find if mutex is necessary while using the simple implemented state
+  // machine
+  // boost::mutex mutex();
 
 private:
   uint nParticles_;
@@ -41,6 +60,7 @@ private:
   uint nSubParticleSets_;
   particles_t particles_;
   RNGType seed_;
+  std::vector<float> alpha_;
   bool initialized_;
 
 public:
@@ -65,17 +85,23 @@ public:
    * @param nTargets - the number of targets to consider
    * @param statesPerRobot - the state space dimension for each robot
    * @param nRobots - number of robots
+   * @param alpha - vector with values to be used in the RNG for the model
+   * sampling
    */
-  ParticleFilter(const uint nParticles, const uint nTargets, const uint statesPerRobot, const uint nRobots);
+  ParticleFilter(const uint nParticles, const uint nTargets,
+                 const uint statesPerRobot, const uint nRobots,
+                 const std::vector<float> alpha = std::vector<float>());
 
   /**
-   * @brief ParticleFilter - copy constructor. Will create and return a new ParticleFilter object identical to the one provided
+   * @brief ParticleFilter - copy constructor. Will create and return a new
+   * ParticleFilter object identical to the one provided
    * @param other - the ParticleFilter object to be copied
    */
   ParticleFilter(const ParticleFilter& other);
 
   /**
-   * @brief operator = - copy assignment. Will copy other and return the new ParticleFilter object
+   * @brief operator = - copy assignment. Will copy other and return the new
+   * ParticleFilter object
    * @param other
    * @return the copied object
    */
@@ -89,9 +115,11 @@ public:
   subparticles_t& operator[](int index) { return particles_[index]; }
 
   /**
-   * @brief operator [] - const version of the array subscripting access, when using it on const intantiations of the class
+   * @brief operator [] - const version of the array subscripting access, when
+   * using it on const intantiations of the class
    * @param index - the subparticle set index number to access
-   * @return a const subparticles_t object reference located at particles_[index]
+   * @return a const subparticles_t object reference located at
+   * particles_[index]
    */
   const subparticles_t& operator[](int index) const
   {
@@ -120,12 +148,15 @@ public:
    * @param odometry - a structure containing the latest odometry readings
    * @remark will not do anything if the particle filter has not been
    * initialized
+   * @remark will not do anything if the current state of the robot robotNumber
+   * is not Predict
    * @warning only for the omni dataset configuration
    */
-  void predict(uint robotNumber, const Eigen::Isometry2d& odometry);
+  void predict(const uint robotNumber, const Odometry odom);
 
   /**
-   * @brief isInitialized - simple interface to access private member initialized_
+   * @brief isInitialized - simple interface to access private member
+   * initialized_
    * @return true if particle filter has been initialized, false otherwise
    */
   bool isInitialized() { return initialized_; }
