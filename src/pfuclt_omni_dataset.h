@@ -37,65 +37,9 @@ using namespace pfuclt_ptcls;
 #define STATES_PER_ROBOT 3
 #define NUM_LANDMARKS 10
 #define HEURISTICS_THRESH_DEFAULT                                              \
-  {                                                                            \
-    2.5, 2.5, 2.5, 2.5, FLT_MAX, FLT_MAX, 3.5, 3.5, FLT_MAX, FLT_MAX           \
-  }
-
-int MAX_ROBOTS;
-int NUM_ROBOTS; // total number of playing robots in the team including self
-int NUM_SENSORS_PER_ROBOT; // SENSORS include odometry, each feature sensor like
-// a ball detector, each landmark-set detector and so
-// on. In this case for example the number of sensors
-// are 3, 1-odometry, 1-orange ball, 1-landmarkset.
-// Usually this must co-incide with the number of
-// topics to which each robot is publishing its
-// sensed information.
-int NUM_TARGETS; // Number of targets being tracked. In omni dataset, only one
-// target exists for now: the orange ball. This may be improved
-// in future by adding the blue ball which can be seen the raw
-// footage of the dataset experiment
-std::vector<bool> PLAYING_ROBOTS; // indicate which robot(s) is(are) playing
-
-// Empirically obtained coefficients in the covariance expression. See (add
-// publications here)
-
-// coefficients for landmark observation covariance
-float K1, K2;
-
-// coefficients for target observation covariance
-float K3, K4, K5;
-
-float ROB_HT; // Fixed height of the robots above ground in meters
-int MY_ID; // Use this flag to set the ID of the robot expected to run a certain
-// decentralized algorithm. Robot with MY_ID will be trated as the
-// self robot running the algorithm while the rest will be considered
-// teammates. Note that in the dataset there are 4 robots with IDs
-// 1,3,4 and 5. Robot with ID=2 is not present.
-
-// Initial 2D positons of the robot as obtained from the overhead ground truth
-// system. The order is OMNI1 OMNI2 OMNI3 OMNI4 and OMNI5. Notice OMNI2 is
-// initialized as 0,0 because the robot is absent from the dataset.
-// This initialization will work only if the node startes befoe the rosbag of
-// the dataset. Obviously, the initialization below is for the initial positions
-// at the begginning of the dataset. Otherwise, the initialization makes the
-// odometry-only trajecory frame transformed to the origin.
-std::vector<double> POS_INIT;
-
-int N_PARTICLES;
-int N_DIMENSIONS;
-
-bool USE_CUSTOM_VALUES = false; // If set to true via the parameter server, the
-// custom values will be used
-std::vector<double> CUSTOM_PARTICLE_INIT; // Used to set custom values when
-// initiating the particle filter set (will still be a uniform distribution)
-
-std::vector<float> CUSTOM_RANDOM_ALPHA; // Used to set custom values for the
-// sampling models in the particle
-// filter
-
-// for ease of access
-std::vector<pfuclt_aux::Landmark> landmarks;
-ros::Time timeInit;
+{                                                                            \
+  2.5, 2.5, 2.5, 2.5, FLT_MAX, FLT_MAX, 3.5, 3.5, FLT_MAX, FLT_MAX           \
+}
 
 // workaround for a scoped enum
 struct RobotType
@@ -251,7 +195,7 @@ private:
   pfuclt_omni_dataset::particles msg_particles;
 
   ros::Publisher State_publisher, targetStatePublisher, virtualGTPublisher,
-      particlePublisher;
+  particlePublisher;
   read_omni_dataset::RobotState msg_state;
 
   std::vector<float> particleSet_[19];
