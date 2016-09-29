@@ -92,6 +92,17 @@ RobotFactory::RobotFactory(ros::NodeHandle& nh)
   }
 }
 
+void RobotFactory::tryInitializeParticles()
+{
+  if (!areAllRobotsActive())
+    return;
+
+  if (USE_CUSTOM_VALUES)
+    pf.init(CUSTOM_PARTICLE_INIT);
+  else
+    pf.init();
+}
+
 void RobotFactory::initializeFixedLandmarks()
 {
   std::string filename;
@@ -145,14 +156,9 @@ Robot::Robot(ros::NodeHandle& nh, RobotFactory* parent,
                              boost::lexical_cast<std::string>(robotNumber + 1));
 
   // Subscribe to topics
-  // Don't subscribe odometry if SelfRobot, this will be done by the SelfRobot's
-  // constructor
-  if (robotType == RobotType::Teammate)
-  {
-    sOdom_ = nh.subscribe<nav_msgs::Odometry>(
-        robotNamespace + "/odometry", 10,
-        boost::bind(&Robot::odometryCallback, this, _1));
-  }
+  sOdom_ = nh.subscribe<nav_msgs::Odometry>(
+      robotNamespace + "/odometry", 10,
+      boost::bind(&Robot::odometryCallback, this, _1));
 
   sBall_ = nh.subscribe<read_omni_dataset::BallData>(
       robotNamespace + "/orangeball3Dposition", 10,
@@ -170,6 +176,9 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
 {
   if (!started_)
     startNow();
+
+  if (!pf_.isInitialized())
+    parent_->tryInitializeParticles();
 
   pfuclt_ptcls::Odometry odomStruct = {
     odometry->pose.pose.position.x, odometry->pose.pose.position.y,
@@ -449,14 +458,6 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, RobotFactory* caller,
     msg_particles.particles[part].particle.resize(ptcls.size());
   }
 
-  std::string robotNamespace("/omni" +
-                             boost::lexical_cast<std::string>(robotNumber + 1));
-
-  // Subscribe to odometry
-  sOdom_ = nh.subscribe<nav_msgs::Odometry>(
-      robotNamespace + "/odometry", 10,
-      boost::bind(&SelfRobot::odometryCallback, this, _1));
-
   // The Graph Generator ans solver should also subscribe to the GT data and
   // publish it... This is important for time synchronization
   GT_sub_ = nh.subscribe<read_omni_dataset::LRMGTData>(
@@ -691,38 +692,6 @@ void SelfRobot::PFresample()
   //
   //
   //     }
-}
-
-void SelfRobot::tryInitializeParticles()
-{
-  if (parent_->areAllRobotsActive())
-  {
-    if (USE_CUSTOM_VALUES)
-      pf_.init(CUSTOM_PARTICLE_INIT);
-    else
-      pf_.init();
-
-    /*
-    // Put into message
-    for (int i = 0; i < N_PARTICLES; i++)
-    {
-      for (int j = 0; j < 19; j++)
-      {
-        msg_particles.particles[i].particle[j] = pf_[j][i];
-      }
-    }
-    */
-  }
-}
-
-void SelfRobot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
-{
-  // Self robot initializes the particles
-  if (!pf_.isInitialized())
-    tryInitializeParticles();
-
-  // Call base class' method
-  Robot::odometryCallback(odometry);
 }
 
 void SelfRobot::gtDataCallback(

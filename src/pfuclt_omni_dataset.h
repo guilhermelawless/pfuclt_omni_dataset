@@ -71,10 +71,22 @@ private:
   ros::NodeHandle& nh_;
   std::vector<Robot_ptr> robots_;
 
+  /**
+   * @brief areAllTeammatesActive - uses each robot's public methods to check if
+   * they have started yet
+   * @return true if every robot is active, false otherwise
+   */
+  bool areAllRobotsActive();
+
 public:
   ParticleFilter pf;
 
   RobotFactory(ros::NodeHandle& nh);
+
+  /**
+   * @brief tryInitializeParticles - checks if every robot is started, and if so, will initiate the particle filter
+   */
+  void tryInitializeParticles();
 
   /**
    * @brief initializeFixedLandmarks - will get a filename from the parameter
@@ -82,13 +94,6 @@ public:
    * landmarks vector
    */
   void initializeFixedLandmarks();
-
-  /**
-   * @brief areAllTeammatesActive - uses each robot's public methods to check if
-   * they have started yet
-   * @return true if every robot is active, false otherwise
-   */
-  bool areAllRobotsActive();
 };
 
 /**
@@ -201,8 +206,6 @@ private:
   std::vector<float> particleSet_[19];
 
   std::vector<float> normalizedWeights;
-
-  void tryInitializeParticles();
 
 public:
   SelfRobot(ros::NodeHandle& nh, RobotFactory* caller,
