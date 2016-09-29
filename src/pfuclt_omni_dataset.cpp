@@ -20,6 +20,7 @@ int NUM_TARGETS; // Number of targets being tracked. In omni dataset, only one
 // target exists for now: the orange ball. This may be improved
 // in future by adding the blue ball which can be seen the raw
 // footage of the dataset experiment
+int NUM_LANDMARKS = 10;
 std::vector<bool> PLAYING_ROBOTS; // indicate which robot(s) is(are) playing
 
 // Empirically obtained coefficients in the covariance expression. See (add
@@ -62,9 +63,10 @@ ros::Time timeInit;
 // Method definitions
 
 RobotFactory::RobotFactory(ros::NodeHandle& nh)
-    : nh_(nh), pf(pfuclt_ptcls::ParticleFilter(N_PARTICLES, NUM_TARGETS,
-                                               STATES_PER_ROBOT, MAX_ROBOTS,
-                                               CUSTOM_RANDOM_ALPHA))
+    : nh_(nh),
+      pf(pfuclt_ptcls::ParticleFilter(N_PARTICLES, NUM_TARGETS,
+                                      STATES_PER_ROBOT, MAX_ROBOTS,
+                                      NUM_LANDMARKS, CUSTOM_RANDOM_ALPHA))
 {
   for (uint rn = 0; rn < MAX_ROBOTS; rn++)
   {
@@ -116,6 +118,10 @@ void RobotFactory::initializeFixedLandmarks()
   landmarks = getLandmarks(filename.c_str());
   ROS_ERROR_COND(landmarks.empty(), "Couldn't open file \"%s\"",
                  filename.c_str());
+
+  ROS_ERROR_COND(landmarks.size() != NUM_LANDMARKS,
+                 "Read a number of landmarks different from the specified in "
+                 "NUM_LANDMARKS");
 
   // iterate over the vector and print information
   for (std::vector<Landmark>::iterator it = landmarks.begin();
@@ -273,7 +279,7 @@ void Robot::landmarkDataCallback(
         heuristicsFound[7] = false;
     }
 
-    float heuristicsThresh[NUM_LANDMARKS] = HEURISTICS_THRESH_DEFAULT;
+    float heuristicsThresh[] = HEURISTICS_THRESH_DEFAULT;
 
     if (robotNumber_ == 4)
     {
@@ -317,37 +323,42 @@ void Robot::landmarkDataCallback(
 
   // End of heuristics, below uses the array but just for convenience
 
-  // Reset particle filter weights
-  // pf_.resetWeights();
-
   for (int i = 0; i < NUM_LANDMARKS; i++)
   {
+
     if (heuristicsFound[i])
     {
+      // ROS_DEBUG("I see landmark %d at R(x,y)=(%f,%f)", i, landmarkData->x[i],
+      // landmarkData->y[i]);
 
       /// Below is the procedure to calculate the observation covariance
       /// associate with the ball measurement made by the robots. Caution: Make
       /// sure the validity of the calculations below by crosschecking the
       /// obvious things, e.g., covariance cannot be negative or very close to 0
 
-      Eigen::Vector2d tempLandmarkObsVec =
-          Eigen::Vector2d(landmarkData->x[i], landmarkData->y[i]);
+      // TODO in the no-ROS version the y frame is inverted. Not here? Check
+      // later
 
-      double d = tempLandmarkObsVec.norm(),
-             phi = atan2(landmarkData->y[i], landmarkData->x[i]);
-
-      double covDD =
+      pfuclt_ptcls::Measurement obs;
+      obs.x = landmarkData->x[i];
+      obs.y = landmarkData->y[i];
+      obs.d = sqrt(obs.x * obs.x + obs.y * obs.y);
+      obs.phi = atan2(obs.y, obs.x);
+      obs.covDD =
           (K1 * fabs(1.0 - (landmarkData->AreaLandMarkActualinPixels[i] /
                             landmarkData->AreaLandMarkExpectedinPixels[i]))) *
-          (d * d);
-      double covPhiPhi = NUM_LANDMARKS * K2 * (1 / (d + 1));
+          (obs.d * obs.d);
+      obs.covPP = NUM_LANDMARKS * K2 * (1 / (obs.d + 1));
+      obs.covXX =
+          pow(cos(obs.phi), 2) * obs.covDD +
+          pow(sin(obs.phi), 2) * (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
+      obs.covYY =
+          pow(sin(obs.phi), 2) * obs.covDD +
+          pow(cos(obs.phi), 2) * (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
 
-      double covXX =
-          pow(cos(phi), 2) * covDD +
-          pow(sin(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
-      double covYY =
-          pow(sin(phi), 2) * covDD +
-          pow(cos(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
+      pf_.saveLandmarkObservation(robotNumber_, i, obs);
+
+      //TODO move this to the fusion step
 
       /*
       for (int p = 0; p < N_PARTICLES; p++)
@@ -760,6 +771,7 @@ int main(int argc, char* argv[])
   readParam<int>(nh, "/N_PARTICLES", N_PARTICLES);
   readParam<int>(nh, "/NUM_SENSORS_PER_ROBOT", NUM_SENSORS_PER_ROBOT);
   readParam<int>(nh, "/NUM_TARGETS", NUM_TARGETS);
+  readParam<int>(nh, "/NUM_LANDMARKS", NUM_LANDMARKS);
   readParam<float>(nh, "/LANDMARK_COV/K1", K1);
   readParam<float>(nh, "/LANDMARK_COV/K2", K2);
   readParam<float>(nh, "/LANDMARK_COV/K3", K3);

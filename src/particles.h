@@ -25,6 +25,12 @@ typedef struct odometry_s
   float x, y, theta;
 } Odometry;
 
+typedef struct measurement_s{
+  double x, y;
+  double d, phi;
+  double covDD, covPP, covXX, covYY;
+} Measurement;
+
 // Apply concept of subparticles (the particle set for each dimension)
 typedef float pdata_t;
 typedef std::vector<float> subparticles_t;
@@ -58,10 +64,12 @@ private:
   uint nRobots_;
   uint nStatesPerRobot_;
   uint nSubParticleSets_;
+  uint nLandmarks_;
   particles_t particles_;
   RNGType seed_;
   std::vector<float> alpha_;
   bool initialized_;
+  std::vector<std::vector<Measurement> > bufMeasurements_;
 
 public:
   std::vector<State> states;
@@ -90,6 +98,7 @@ public:
    */
   ParticleFilter(const uint nParticles, const uint nTargets,
                  const uint statesPerRobot, const uint nRobots,
+                 const uint nLandmarks,
                  const std::vector<float> alpha = std::vector<float>());
 
   /**
@@ -171,6 +180,14 @@ public:
    * @brief resetWeights - assign the value 1.0 to all particle weights
    */
   void resetWeights() { assign((pdata_t)1.0, WEIGHT_INDEX); }
+
+  /**
+   * @brief saveLandmarkObservation - saves the Measurement obs to a buffer of observations
+   * @param robotNumber - the robot number in the team
+   * @param landmarkNumber - the landmark serial id
+   * @param obs - the observation data as a structure defined in this file
+   */
+  void saveLandmarkObservation(const uint robotNumber, const uint landmarkNumber, const Measurement obs) { bufMeasurements_[robotNumber][landmarkNumber] = obs; }
 };
 
 // end of namespace pfuclt_ptcls

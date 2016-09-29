@@ -35,11 +35,10 @@ using namespace pfuclt_ptcls;
 #define PI 3.14159
 #define NUM_WEIGHT 1
 #define STATES_PER_ROBOT 3
-#define NUM_LANDMARKS 10
 #define HEURISTICS_THRESH_DEFAULT                                              \
-{                                                                            \
-  2.5, 2.5, 2.5, 2.5, FLT_MAX, FLT_MAX, 3.5, 3.5, FLT_MAX, FLT_MAX           \
-}
+  {                                                                            \
+    2.5, 2.5, 2.5, 2.5, FLT_MAX, FLT_MAX, 3.5, 3.5, FLT_MAX, FLT_MAX           \
+  }
 
 // workaround for a scoped enum
 struct RobotType
@@ -84,7 +83,8 @@ public:
   RobotFactory(ros::NodeHandle& nh);
 
   /**
-   * @brief tryInitializeParticles - checks if every robot is started, and if so, will initiate the particle filter
+   * @brief tryInitializeParticles - checks if every robot is started, and if
+   * so, will initiate the particle filter
    */
   void tryInitializeParticles();
 
@@ -200,7 +200,7 @@ private:
   pfuclt_omni_dataset::particles msg_particles;
 
   ros::Publisher State_publisher, targetStatePublisher, virtualGTPublisher,
-  particlePublisher;
+      particlePublisher;
   read_omni_dataset::RobotState msg_state;
 
   std::vector<float> particleSet_[19];

@@ -8,6 +8,7 @@
     <rosparam param="PLAYING_ROBOTS"> [0, 0, 0, 1, 0] </rosparam>
     <param name="NUM_SENSORS_PER_ROBOT" value="3"/>
     <param name="NUM_TARGETS" value="1"/>
+    <param name="NUM_LANDMARKS" value="10"/>
     <param name="LANDMARK_COV/K1" type="double" value="2.0"/>
     <param name="LANDMARK_COV/K2" type="double" value="0.5"/>
     <param name="LANDMARK_COV/K3" type="double" value="0.2"/>
