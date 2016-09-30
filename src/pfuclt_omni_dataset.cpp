@@ -66,7 +66,7 @@ RobotFactory::RobotFactory(ros::NodeHandle& nh)
     : nh_(nh),
       pf(pfuclt_ptcls::ParticleFilter(N_PARTICLES, NUM_TARGETS,
                                       STATES_PER_ROBOT, MAX_ROBOTS,
-                                      NUM_LANDMARKS, CUSTOM_RANDOM_ALPHA))
+                                      NUM_LANDMARKS, PLAYING_ROBOTS, landmarks, CUSTOM_RANDOM_ALPHA))
 {
   for (uint rn = 0; rn < MAX_ROBOTS; rn++)
   {
@@ -326,10 +326,13 @@ void Robot::landmarkDataCallback(
   for (int i = 0; i < NUM_LANDMARKS; i++)
   {
 
-    if (heuristicsFound[i])
+    if (false ==heuristicsFound[i])
+      pf_.saveLandmarkObservation(robotNumber_, i, false);
+
+    else
     {
-      ROS_DEBUG("I see landmark %d at (%f,%f), but in fact it's at (%f,%f).", i, landmarkData->x[i],
-                landmarkData->y[i], landmarks[i].x, landmarks[i].y);
+      //ROS_DEBUG("I see landmark %d at (%f,%f), but in fact it's at (%f,%f).", i, landmarkData->x[i],
+      //          landmarkData->y[i], landmarks[i].x, landmarks[i].y);
 
       /// Below is the procedure to calculate the observation covariance
       /// associate with the ball measurement made by the robots. Caution: Make
@@ -340,6 +343,7 @@ void Robot::landmarkDataCallback(
       // later
 
       pfuclt_ptcls::Measurement obs;
+      obs.found = true;
       obs.x = landmarkData->x[i];
       obs.y = landmarkData->y[i];
       obs.d = sqrt(obs.x * obs.x + obs.y * obs.y);
@@ -357,87 +361,10 @@ void Robot::landmarkDataCallback(
                       (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
 
       pf_.saveLandmarkObservation(robotNumber_, i, obs);
-
-      // TODO move this to the fusion step
-
-      /*
-      for (int p = 0; p < N_PARTICLES; p++)
-      {
-
-        // 	  float ObsWorldLM_X = particleSet_[0+(robotNumber_-1)*3][p] +
-        // landmarkData->x[i]* cos(particleSet_[2+(robotNumber_-1)*3][p]) -
-        // landmarkData->y[i]*sin(particleSet_[2+(robotNumber_-1)*3][p]);
-        // 	  float ObsWorldLM_Y = particleSet_[1+(robotNumber_-1)*3][p] +
-        // landmarkData->x[i]* sin(particleSet_[2+(robotNumber_-1)*3][p]) +
-        // landmarkData->y[i]*cos(particleSet_[2+(robotNumber_-1)*3][p]);
-        //
-        //
-        // 	  float error = powf( (powf((landmarks[i][0] - ObsWorldLM_X),2)
-        // +
-        // powf((landmarks[i][1] - ObsWorldLM_Y),2)) , 0.5 );
-        //
-        // 	  if(error>1.0)
-        // 	  {
-        // 	    cout<<"Landmark "<<i+1<<" observation at timestep
-        // "<<landmarkData->header.stamp <<" is at X = "<<landmarkData->x[i]<<"
-        // at Y = "<<landmarkData->y[i]<<" covXX = "<<covXX<<" covYY =
-        // "<<covYY<<endl;
-        //
-        // 	    cout<<"Landmark "<<i+1<<" actuall is at X =
-        // "<<landmarks[i][0]<<" at Y = "<<landmarks[i][1]<<endl<<endl;
-        // 	  }
-
-        // More formal method is this
-        float Z[2], Zcap[2], Q[2][2], Q_inv[2][2], Z_Zcap[2];
-
-        Z[0] = landmarkData->x[i];
-        Z[1] = landmarkData->y[i];
-
-        Zcap[0] =
-            (landmarks[i].x - particleSet_[0 + (robotNumber_ - 1) * 3][p]) *
-            (cos(particleSet_[2 + (robotNumber_ - 1) * 3][p])) +
-            (landmarks[i].y - particleSet_[1 + (robotNumber_ - 1) * 3][p]) *
-            (sin(particleSet_[2 + (robotNumber_ - 1) * 3][p]));
-
-        Zcap[1] =
-            -(landmarks[i].x - particleSet_[0 + (robotNumber_ - 1) * 3][p]) *
-            (sin(particleSet_[2 + (robotNumber_ - 1) * 3][p])) +
-            (landmarks[i].y - particleSet_[1 + (robotNumber_ - 1) * 3][p]) *
-            (cos(particleSet_[2 + (robotNumber_ - 1) * 3][p]));
-
-        Z_Zcap[0] = Z[0] - Zcap[0];
-        Z_Zcap[1] = Z[1] - Zcap[1];
-
-        Q[0][0] = covXX;
-        Q[0][1] = 0.0;
-        Q[1][0] = 0.0;
-        Q[1][1] = covYY;
-
-        Q_inv[0][0] = 1 / covXX;
-        Q_inv[0][1] = 0.0;
-        Q_inv[1][0] = 0.0;
-        Q_inv[1][1] = 1 / covYY;
-        float ExpArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] * Q_inv[0][0] +
-            Z_Zcap[1] * Z_Zcap[1] * Q_inv[1][1]);
-        float detValue = powf((2 * PI * Q[0][0] * Q[1][1]), -0.5);
-
-        // cout<<"weight of particle at x =
-        // "<<particleSet_[0+(robotNumber_-1)*3][p]<<" , Y =
-        // "<<particleSet_[1+(robotNumber_-1)*3][p]<<" and orientation =
-        // "<<particleSet_[2+(robotNumber_-1)*3][p] <<" has ExpArg = "
-        // <<ExpArg<<endl;
-
-        particleSet_[(MAX_ROBOTS + 1) * 3][p] =
-            particleSet_[(MAX_ROBOTS + 1) * 3][p] + 1 * exp(ExpArg);
-        // particleSet_[(MAX_ROBOTS+1)*3][p] =
-        // pfParticlesSelf[p][(MAX_ROBOTS+1)*3];
-      }
-      */
-
-      // ROS_INFO("Landmark %d found in the image, refer to the method to see
-      // how covariances are calculated",i);
     }
   }
+
+  pf_.allMeasurementsDone(robotNumber_);
 
   // if(seq%30==0)
 
@@ -492,8 +419,6 @@ SelfRobot::SelfRobot(ros::NodeHandle& nh, RobotFactory* caller,
 
   ROS_INFO("Created main robot OMNI%d", robotNumber + 1);
 }
-
-void SelfRobot::PFfuseRobotInfo() {}
 
 void SelfRobot::PFfuseTargetInfo() {}
 
@@ -586,7 +511,6 @@ void SelfRobot::PFresample()
 
   for (size_t r = 9; r < 12; r++)
   {
-    // TODO put this back, in a method of the particle filter class
     /*
     boost::random::uniform_real_distribution<> dist(particleSet_[r][0] - 1.5,
         particleSet_[r][0] + 1.5);

@@ -9,6 +9,8 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include "pfuclt_aux.h"
+
 // ideally later this will be a parameter, when it makes sense to
 #define STATES_PER_TARGET 3
 #define WEIGHT_INDEX (nSubParticleSets_ - 1)
@@ -31,6 +33,9 @@
 
 namespace pfuclt_ptcls
 {
+
+using namespace pfuclt_aux;
+
 typedef struct odometry_s
 {
   float x, y, theta;
@@ -38,6 +43,7 @@ typedef struct odometry_s
 
 typedef struct measurement_s
 {
+  bool found;
   double x, y;
   double d, phi;
   double covDD, covPP, covXX, covYY;
@@ -45,7 +51,6 @@ typedef struct measurement_s
 
 typedef struct targetMotion_s
 {
-
   bool started;
   double Vx, Vy, Vz;
 
@@ -58,7 +63,7 @@ typedef struct targetMotion_s
 
 // Apply concept of subparticles (the particle set for each dimension)
 typedef float pdata_t;
-typedef std::vector<float> subparticles_t;
+typedef std::vector<pdata_t> subparticles_t;
 typedef std::vector<subparticles_t> particles_t;
 
 // This will be the generator use for randomizing
@@ -67,16 +72,42 @@ typedef boost::random::mt19937 RNGType;
 class ParticleFilter
 {
   /**
-   * @brief The State enum - auxiliary enumeration to allow robots to know the
-   * state of the particle filter concerning each robot
+   * @brief The state_s struct - defines a structure to hold state information for the particle filter class
    */
-  enum State
+  struct State
   {
-    Predict,
-    FuseRobot,
-    FuseTarget,
-    Resample,
-    CalcVel
+    uint nRobots;
+    std::vector<bool> predicted;
+    std::vector<bool> measurementsDone;
+    bool robotsFused;
+    bool targetFused;
+    bool resampled;
+    bool calcVel;
+
+    State(const uint numberRobots)
+        : nRobots(numberRobots), predicted(nRobots, false),
+          measurementsDone(nRobots, false)
+    {
+      reset();
+    }
+
+    void reset()
+    {
+      predicted.assign(nRobots, false);
+      measurementsDone.assign(nRobots, false);
+      robotsFused = targetFused = resampled = calcVel = false;
+    }
+
+    bool allPredicted()
+    {
+      return (std::find(predicted.begin(), predicted.end(), true) != predicted.end());
+    }
+
+    bool allMeasurementsDone()
+    {
+      return (std::find(measurementsDone.begin(), measurementsDone.end(), true) != measurementsDone.end());
+    }
+
   };
 
   // TODO find if mutex is necessary while using the simple implemented state
@@ -84,22 +115,30 @@ class ParticleFilter
   // boost::mutex mutex();
 
 private:
-  uint nParticles_;
-  uint nTargets_;
-  uint nRobots_;
-  uint nStatesPerRobot_;
-  uint nSubParticleSets_;
-  uint nLandmarks_;
+  const std::vector<Landmark>& landmarksMap_;
+  const std::vector<bool>& robotsUsed_;
+  const uint nParticles_;
+  const uint nTargets_;
+  const uint nRobots_;
+  const uint nStatesPerRobot_;
+  const uint nSubParticleSets_;
+  const uint nLandmarks_;
   particles_t particles_;
+  particles_t weightComponents_;
   RNGType seed_;
   std::vector<float> alpha_;
   bool initialized_;
   std::vector<std::vector<Measurement> > bufMeasurements_;
   TargetMotion targetMotionState;
 
+  /**
+   * @brief fuseRobots - fuse robot states step
+   */
+  void fuseRobots();
+
 public:
   double iterationTimeS;
-  std::vector<State> states;
+  struct State state;
 
   /**
    * @brief assign - assign a value to every particle in all subsets
@@ -125,7 +164,8 @@ public:
    */
   ParticleFilter(const uint nParticles, const uint nTargets,
                  const uint statesPerRobot, const uint nRobots,
-                 const uint nLandmarks,
+                 const uint nLandmarks, const std::vector<bool>& robotsUsed,
+                 const std::vector<Landmark>& landmarksMap,
                  const std::vector<float> alpha = std::vector<float>());
 
   /**
@@ -134,14 +174,6 @@ public:
    * @param other - the ParticleFilter object to be copied
    */
   ParticleFilter(const ParticleFilter& other);
-
-  /**
-   * @brief operator = - copy assignment. Will copy other and return the new
-   * ParticleFilter object
-   * @param other
-   * @return the copied object
-   */
-  ParticleFilter& operator=(const ParticleFilter& other);
 
   /**
    * @brief operator [] - array subscripting access to the private particle set
@@ -222,10 +254,30 @@ public:
   }
 
   /**
+   * @brief saveLandmarkObservation - change the measurement buffer state
+   * @param robotNumber - the robot number in the team
+   * @param landmarkNumber - the landmark serial id
+   * @param _found - whether this landmark has been found
+   */
+  void saveLandmarkObservation(const uint robotNumber,
+                               const uint landmarkNumber, bool _found)
+  {
+    bufMeasurements_[robotNumber][landmarkNumber].found = _found;
+  }
+
+  /**
+   * @todo TODO define this function
    * @brief saveTargetMotionState - saves the new state of the target
    * @param vel - array with the 3 velocities (x,y,z)
    */
   void saveTargetMotionState(const double vel[3]);
+
+  /**
+   * @brief allMeasurementsDone - call this function when all measurements have
+   * been performed
+   * @param robotNumber - the robot number performing the measurements
+   */
+  void allMeasurementsDone(const uint robotNumber);
 };
 
 // end of namespace pfuclt_ptcls

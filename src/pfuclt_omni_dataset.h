@@ -203,8 +203,6 @@ public:
 
   void gtDataCallback(const read_omni_dataset::LRMGTData::ConstPtr&);
 
-  void PFfuseRobotInfo();
-
   void PFfuseTargetInfo();
 
   void PFresample();
