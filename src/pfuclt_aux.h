@@ -51,7 +51,8 @@ template <typename T> double calc_stdDev(std::vector<T>* vec)
   using namespace boost::accumulators;
 
   accumulator_set<T, stats<tag::variance> > acc;
-  std::for_each(vec->begin(), vec->end(), boost::bind<void>(boost::ref(acc), _1));
+  std::for_each(vec->begin(), vec->end(),
+                boost::bind<void>(boost::ref(acc), _1));
   return (double)sqrt(extract::variance(acc));
 }
 
@@ -117,7 +118,8 @@ bool readParam(ros::NodeHandle& nh, const std::string name, T& variable)
   return false;
 }
 
-/* @brief readParam (vectors) - reads and returns a parameter from the ROS parameter
+/* @brief readParam (vectors) - reads and returns a parameter from the ROS
+ * parameter
  * server
  * @param nh - reference to the ROS nodehandle that will perform the parameter
  * reading task
@@ -133,12 +135,12 @@ bool readParam(ros::NodeHandle& nh, const std::string name,
 {
   std::ostringstream oss;
   if (nh.getParam(name, variable))
-  { 
+  {
     oss << "Received parameter " << name << "=[ ";
-    for (typename std::vector<T>::iterator it = variable.begin(); it != variable.end();
-         ++it)
+    for (typename std::vector<T>::iterator it = variable.begin();
+         it != variable.end(); ++it)
     {
-      if(typeid(T) == typeid(bool))
+      if (typeid(T) == typeid(bool))
         oss << std::boolalpha << *it << " ";
       else
         oss << *it << " ";
@@ -155,4 +157,4 @@ bool readParam(ros::NodeHandle& nh, const std::string name,
 // end of namespace
 }
 
-#endif  //PFUCLT_AUX_H
+#endif // PFUCLT_AUX_H

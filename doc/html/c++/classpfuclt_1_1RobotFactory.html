@@ -8,6 +8,7 @@
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li class="current"><a href="annotated.html"><span>Classes</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
@@ -29,6 +30,7 @@
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
 <a href="#pri-attribs">Private Attributes</a> &#124;
 <a href="classpfuclt_1_1RobotFactory-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -43,33 +45,37 @@
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a03bae327be026feab5ae73447946b600"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1RobotFactory.html#a03bae327be026feab5ae73447946b600">areAllRobotsActive</a> ()</td></tr>
-<tr class="memdesc:a03bae327be026feab5ae73447946b600"><td class="mdescLeft">&#160;</td><td class="mdescRight">areAllTeammatesActive - uses each robot's public methods to check if they have started yet  <a href="#a03bae327be026feab5ae73447946b600">More...</a><br/></td></tr>
-<tr class="separator:a03bae327be026feab5ae73447946b600"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4b34349fae8972572e84e5755c3080e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1RobotFactory.html#ac4b34349fae8972572e84e5755c3080e">initializeFixedLandmarks</a> ()</td></tr>
 <tr class="memdesc:ac4b34349fae8972572e84e5755c3080e"><td class="mdescLeft">&#160;</td><td class="mdescRight">initializeFixedLandmarks - will get a filename from the parameter server, and use its information to store landmark positions in the landmarks vector  <a href="#ac4b34349fae8972572e84e5755c3080e">More...</a><br/></td></tr>
 <tr class="separator:ac4b34349fae8972572e84e5755c3080e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a91b2b96d67e9c445eb42469017231dc1"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1RobotFactory.html#a91b2b96d67e9c445eb42469017231dc1">RobotFactory</a> (ros::NodeHandle &amp;nh)</td></tr>
 <tr class="separator:a91b2b96d67e9c445eb42469017231dc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a52f4a97207c98dd6864ddb2276324468"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1RobotFactory.html#a52f4a97207c98dd6864ddb2276324468">~RobotFactory</a> ()</td></tr>
-<tr class="separator:a52f4a97207c98dd6864ddb2276324468"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca32860cd62594e248da9783f3ebe043"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1RobotFactory.html#aca32860cd62594e248da9783f3ebe043">tryInitializeParticles</a> ()</td></tr>
+<tr class="memdesc:aca32860cd62594e248da9783f3ebe043"><td class="mdescLeft">&#160;</td><td class="mdescRight">tryInitializeParticles - checks if every robot is started, and if so, will initiate the particle filter  <a href="#aca32860cd62594e248da9783f3ebe043">More...</a><br/></td></tr>
+<tr class="separator:aca32860cd62594e248da9783f3ebe043"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a72cc93a446b2ef0aed472fb6b2083945"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1RobotFactory.html#a72cc93a446b2ef0aed472fb6b2083945">pf</a></td></tr>
 <tr class="separator:a72cc93a446b2ef0aed472fb6b2083945"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr class="memitem:a03bae327be026feab5ae73447946b600"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1RobotFactory.html#a03bae327be026feab5ae73447946b600">areAllRobotsActive</a> ()</td></tr>
+<tr class="memdesc:a03bae327be026feab5ae73447946b600"><td class="mdescLeft">&#160;</td><td class="mdescRight">areAllTeammatesActive - uses each robot's public methods to check if they have started yet  <a href="#a03bae327be026feab5ae73447946b600">More...</a><br/></td></tr>
+<tr class="separator:a03bae327be026feab5ae73447946b600"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
 <tr class="memitem:aee5d2136b9db0e8c3a0c15cecbab945e"><td class="memItemLeft" align="right" valign="top">ros::NodeHandle &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1RobotFactory.html#aee5d2136b9db0e8c3a0c15cecbab945e">nh_</a></td></tr>
 <tr class="separator:aee5d2136b9db0e8c3a0c15cecbab945e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9aae03d2789e65c21cd1b2f274195c05"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classpfuclt_1_1Robot.html">Robot</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1RobotFactory.html#a9aae03d2789e65c21cd1b2f274195c05">robots_</a></td></tr>
-<tr class="separator:a9aae03d2789e65c21cd1b2f274195c05"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca2a3a9dd6836b3db0ecfed5ae3bd793"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="namespacepfuclt.html#aeec8861393a3165c6fc8d63f5062bc16">Robot_ptr</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1RobotFactory.html#aca2a3a9dd6836b3db0ecfed5ae3bd793">robots_</a></td></tr>
+<tr class="separator:aca2a3a9dd6836b3db0ecfed5ae3bd793"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The <a class="el" href="classpfuclt_1_1RobotFactory.html" title="The RobotFactory class - Creates and keeps information on the robot running the algorithm and its tea...">RobotFactory</a> class - Creates and keeps information on the robot running the algorithm and its teammates. Is used as a middle-man between all robots. </p>
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00101">101</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00066">66</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a91b2b96d67e9c445eb42469017231dc1"></a>
 <div class="memitem">
@@ -85,24 +91,7 @@ Private Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00010">10</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="a52f4a97207c98dd6864ddb2276324468"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">pfuclt::RobotFactory::~RobotFactory </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00039">39</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00065">65</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -110,6 +99,9 @@ Private Attributes</h2></td></tr>
 <a class="anchor" id="a03bae327be026feab5ae73447946b600"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">bool pfuclt::RobotFactory::areAllRobotsActive </td>
@@ -118,12 +110,17 @@ Private Attributes</h2></td></tr>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>areAllTeammatesActive - uses each robot's public methods to check if they have started yet </p>
 <dl class="section return"><dt>Returns</dt><dd>true if every robot is active, false otherwise </dd></dl>
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00076">76</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00136">136</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -142,7 +139,26 @@ Private Attributes</h2></td></tr>
 
 <p>initializeFixedLandmarks - will get a filename from the parameter server, and use its information to store landmark positions in the landmarks vector </p>
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00052">52</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00108">108</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="aca32860cd62594e248da9783f3ebe043"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void pfuclt::RobotFactory::tryInitializeParticles </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>tryInitializeParticles - checks if every robot is started, and if so, will initiate the particle filter </p>
+
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00097">97</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -165,7 +181,7 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00104">104</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00070">70</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -179,11 +195,11 @@ Private Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00108">108</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00081">81</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a9aae03d2789e65c21cd1b2f274195c05"></a>
+<a class="anchor" id="aca2a3a9dd6836b3db0ecfed5ae3bd793"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -191,7 +207,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;<a class="el" href="classpfuclt_1_1Robot.html">Robot</a>*&gt; pfuclt::RobotFactory::robots_</td>
+          <td class="memname">std::vector&lt;<a class="el" href="namespacepfuclt.html#aeec8861393a3165c6fc8d63f5062bc16">Robot_ptr</a>&gt; pfuclt::RobotFactory::robots_</td>
         </tr>
       </table>
   </td>
@@ -201,7 +217,7 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00105">105</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00071">71</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -215,7 +231,7 @@ Private Attributes</h2></td></tr>
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Fri Sep 23 2016 16:07:03</small>
+<small>autogenerated on Fri Sep 30 2016 16:10:40</small>
 </div>
 </body>
 </html>

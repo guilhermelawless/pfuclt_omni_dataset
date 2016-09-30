@@ -8,6 +8,7 @@
     <rosparam param="PLAYING_ROBOTS"> [0, 0, 0, 1, 0] </rosparam>
     <param name="NUM_SENSORS_PER_ROBOT" value="3"/>
     <param name="NUM_TARGETS" value="1"/>
+    <param name="NUM_LANDMARKS" value="10"/>
     <param name="LANDMARK_COV/K1" type="double" value="2.0"/>
     <param name="LANDMARK_COV/K2" type="double" value="0.5"/>
     <param name="LANDMARK_COV/K3" type="double" value="0.2"/>
@@ -41,11 +42,19 @@
          0,6.0,
          -4.5,4.5,
          -3.14159,3.14159]
-     </rosparam>
+    </rosparam>
+
+	<rosparam param="CUSTOM_RANDOM_ALPHA">
+        [0.015, 0.1, 0.5, 0.001,
+         0.015, 0.1, 0.5, 0.001,
+         0.015, 0.1, 0.5, 0.001,
+         0.025, 0.4, 0.9, 0.003,
+         0.015, 0.4, 0.4, 0.001]
+    </rosparam>
 
     <node name="performer" pkg="pfuclt_omni_dataset" type="pfuclt_omni_dataset" output="screen" args="--debug $(arg debug)">
     	<remap from="/pfuclt_orangeBallState" to="/estimatedOrangeBallState"/>
-			<remap from="/pfuclt_omni_poses" to="/estimated_omni_poses"/>
+		<remap from="/pfuclt_omni_poses" to="/estimated_omni_poses"/>
     </node>
 
     

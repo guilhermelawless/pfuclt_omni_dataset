@@ -8,6 +8,7 @@
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li class="current"><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li><a href="annotated.html"><span>Classes</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
@@ -23,6 +24,7 @@
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
+<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle">
 <div class="title">pfuclt Namespace Reference</div>  </div>
@@ -32,22 +34,31 @@
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html">Robot</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classpfuclt_1_1Robot.html" title="The Robot class - Has the common variables and methods of selfRobot and TeammateRobot&#39;s. ">Robot</a> class - Has the common variables and methods of selfRobot and <a class="el" href="classpfuclt_1_1TeammateRobot.html" title="The TeammateRobot class - This class doesn&#39;t perform the PF-UCLT algorithm. Instead, it is used for callbacks and storing information to be used later by the SelfRobot class. ">TeammateRobot</a>'s.  <a href="classpfuclt_1_1Robot.html#details">More...</a><br/></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classpfuclt_1_1Robot.html" title="The Robot class - Has the common variables and methods of all robots, and is the base class of any sp...">Robot</a> class - Has the common variables and methods of all robots, and is the base class of any specialized robots who may derive from it. Teammates should be instances of this class.  <a href="classpfuclt_1_1Robot.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1RobotFactory.html">RobotFactory</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classpfuclt_1_1RobotFactory.html" title="The RobotFactory class - Creates and keeps information on the robot running the algorithm and its tea...">RobotFactory</a> class - Creates and keeps information on the robot running the algorithm and its teammates. Is used as a middle-man between all robots.  <a href="classpfuclt_1_1RobotFactory.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt_1_1RobotType.html">RobotType</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1SelfRobot.html">SelfRobot</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classpfuclt_1_1SelfRobot.html" title="The SelfRobot class - This is the class that performs the PF-UCLT algorithm. ">SelfRobot</a> class - This is the class that performs the PF-UCLT algorithm.  <a href="classpfuclt_1_1SelfRobot.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1TeammateRobot.html">TeammateRobot</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classpfuclt_1_1TeammateRobot.html" title="The TeammateRobot class - This class doesn&#39;t perform the PF-UCLT algorithm. Instead, it is used for callbacks and storing information to be used later by the SelfRobot class. ">TeammateRobot</a> class - This class doesn't perform the PF-UCLT algorithm. Instead, it is used for callbacks and storing information to be used later by the <a class="el" href="classpfuclt_1_1SelfRobot.html" title="The SelfRobot class - This is the class that performs the PF-UCLT algorithm. ">SelfRobot</a> class.  <a href="classpfuclt_1_1TeammateRobot.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:aeec8861393a3165c6fc8d63f5062bc16"><td class="memItemLeft" align="right" valign="top">typedef boost::shared_ptr&lt; <a class="el" href="classpfuclt_1_1Robot.html">Robot</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt.html#aeec8861393a3165c6fc8d63f5062bc16">Robot_ptr</a></td></tr>
+<tr class="separator:aeec8861393a3165c6fc8d63f5062bc16"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f9fa09517e877c28520dbfa9bcfd2e6"><td class="memItemLeft" align="right" valign="top">typedef boost::shared_ptr<br class="typebreak"/>
+&lt; <a class="el" href="classpfuclt_1_1SelfRobot.html">SelfRobot</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt.html#a9f9fa09517e877c28520dbfa9bcfd2e6">SelfRobot_ptr</a></td></tr>
+<tr class="separator:a9f9fa09517e877c28520dbfa9bcfd2e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
 <tr class="memitem:a7cb13cf96d0acc64eeb5477e841f36f9"><td class="memItemLeft" align="right" valign="top">std::vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt.html#a7cb13cf96d0acc64eeb5477e841f36f9">CUSTOM_PARTICLE_INIT</a></td></tr>
 <tr class="separator:a7cb13cf96d0acc64eeb5477e841f36f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ad09170e8f8b0febb67cf4af279996d"><td class="memItemLeft" align="right" valign="top">std::vector&lt; float &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt.html#a5ad09170e8f8b0febb67cf4af279996d">CUSTOM_RANDOM_ALPHA</a></td></tr>
+<tr class="separator:a5ad09170e8f8b0febb67cf4af279996d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4f7c0bbd5c7256886f1e978665a0d60c"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt.html#a4f7c0bbd5c7256886f1e978665a0d60c">K1</a></td></tr>
 <tr class="separator:a4f7c0bbd5c7256886f1e978665a0d60c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa1919114a4a04df2d3d854041b513c68"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt.html#aa1919114a4a04df2d3d854041b513c68">K2</a></td></tr>
@@ -68,6 +79,8 @@ Variables</h2></td></tr>
 <tr class="separator:a047b685db1fa893cbe32ca275c2c6ab6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9f077ad25e77569d3a3131f9a308dd31"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt.html#a9f077ad25e77569d3a3131f9a308dd31">N_PARTICLES</a></td></tr>
 <tr class="separator:a9f077ad25e77569d3a3131f9a308dd31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48cecee760412633917a2470e44bed87"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt.html#a48cecee760412633917a2470e44bed87">NUM_LANDMARKS</a> = 10</td></tr>
+<tr class="separator:a48cecee760412633917a2470e44bed87"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa52ffc47e5ba32a0dfb84db63c189462"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt.html#aa52ffc47e5ba32a0dfb84db63c189462">NUM_ROBOTS</a></td></tr>
 <tr class="separator:aa52ffc47e5ba32a0dfb84db63c189462"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b2c77db0cf876700451903cff70c55c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt.html#a7b2c77db0cf876700451903cff70c55c">NUM_SENSORS_PER_ROBOT</a></td></tr>
@@ -85,6 +98,35 @@ Variables</h2></td></tr>
 <tr class="memitem:a814d8021bab07dc368b60a75031ef017"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt.html#a814d8021bab07dc368b60a75031ef017">USE_CUSTOM_VALUES</a> = false</td></tr>
 <tr class="separator:a814d8021bab07dc368b60a75031ef017"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Typedef Documentation</h2>
+<a class="anchor" id="aeec8861393a3165c6fc8d63f5062bc16"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef boost::shared_ptr&lt;<a class="el" href="classpfuclt_1_1Robot.html">Robot</a>&gt; <a class="el" href="namespacepfuclt.html#aeec8861393a3165c6fc8d63f5062bc16">pfuclt::Robot_ptr</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00055">55</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a9f9fa09517e877c28520dbfa9bcfd2e6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef boost::shared_ptr&lt;<a class="el" href="classpfuclt_1_1SelfRobot.html">SelfRobot</a>&gt; <a class="el" href="namespacepfuclt.html#a9f9fa09517e877c28520dbfa9bcfd2e6">pfuclt::SelfRobot_ptr</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00059">59</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+
+</div>
+</div>
 <h2 class="groupheader">Variable Documentation</h2>
 <a class="anchor" id="a7cb13cf96d0acc64eeb5477e841f36f9"></a>
 <div class="memitem">
@@ -96,7 +138,21 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00084">84</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00052">52</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a5ad09170e8f8b0febb67cf4af279996d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;float&gt; pfuclt::CUSTOM_RANDOM_ALPHA</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00055">55</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -110,7 +166,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00058">58</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00030">30</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -124,7 +180,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00058">58</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00030">30</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -138,7 +194,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00061">61</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00033">33</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -152,7 +208,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00061">61</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00033">33</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -166,7 +222,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00061">61</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00033">33</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -180,7 +236,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00090">90</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00060">60</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -194,7 +250,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00039">39</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00010">10</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -208,7 +264,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00064">64</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00036">36</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -222,7 +278,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00080">80</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00048">48</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -236,7 +292,21 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00079">79</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00047">47</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a48cecee760412633917a2470e44bed87"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pfuclt::NUM_LANDMARKS = 10</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00023">23</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -250,7 +320,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00040">40</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00011">11</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -264,7 +334,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00041">41</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00012">12</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -278,7 +348,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00048">48</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00019">19</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -292,7 +362,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00052">52</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00024">24</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -306,7 +376,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00077">77</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00045">45</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -320,7 +390,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00063">63</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00035">35</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -334,7 +404,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00091">91</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00061">61</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -348,7 +418,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00082">82</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00050">50</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -358,7 +428,7 @@ Variables</h2></td></tr>
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Fri Sep 23 2016 16:07:03</small>
+<small>autogenerated on Fri Sep 30 2016 16:10:40</small>
 </div>
 </body>
 </html>

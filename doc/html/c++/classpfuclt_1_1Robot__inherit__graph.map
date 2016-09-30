@@ -1,4 +1,3 @@
 <map id="pfuclt::Robot" name="pfuclt::Robot">
 <area shape="rect" id="node2" href="$classpfuclt_1_1SelfRobot.html" title="The SelfRobot class &#45; This is the class that performs the PF&#45;UCLT algorithm. " alt="" coords="5,80,123,107"/>
-<area shape="rect" id="node3" href="$classpfuclt_1_1TeammateRobot.html" title="The TeammateRobot class &#45; This class doesn&#39;t perform the PF&#45;UCLT algorithm. Instead, it is used for callbacks and storing information to be used later by the SelfRobot class. " alt="" coords="148,80,311,107"/>
 </map>
