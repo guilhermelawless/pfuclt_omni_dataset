@@ -328,8 +328,8 @@ void Robot::landmarkDataCallback(
 
     if (heuristicsFound[i])
     {
-      // ROS_DEBUG("I see landmark %d at R(x,y)=(%f,%f)", i, landmarkData->x[i],
-      // landmarkData->y[i]);
+      ROS_DEBUG("I see landmark %d at (%f,%f), but in fact it's at (%f,%f).", i, landmarkData->x[i],
+                landmarkData->y[i], landmarks[i].x, landmarks[i].y);
 
       /// Below is the procedure to calculate the observation covariance
       /// associate with the ball measurement made by the robots. Caution: Make
@@ -349,16 +349,16 @@ void Robot::landmarkDataCallback(
                             landmarkData->AreaLandMarkExpectedinPixels[i]))) *
           (obs.d * obs.d);
       obs.covPP = NUM_LANDMARKS * K2 * (1 / (obs.d + 1));
-      obs.covXX =
-          pow(cos(obs.phi), 2) * obs.covDD +
-          pow(sin(obs.phi), 2) * (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
-      obs.covYY =
-          pow(sin(obs.phi), 2) * obs.covDD +
-          pow(cos(obs.phi), 2) * (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
+      obs.covXX = pow(cos(obs.phi), 2) * obs.covDD +
+                  pow(sin(obs.phi), 2) *
+                      (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
+      obs.covYY = pow(sin(obs.phi), 2) * obs.covDD +
+                  pow(cos(obs.phi), 2) *
+                      (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
 
       pf_.saveLandmarkObservation(robotNumber_, i, obs);
 
-      //TODO move this to the fusion step
+      // TODO move this to the fusion step
 
       /*
       for (int p = 0; p < N_PARTICLES; p++)

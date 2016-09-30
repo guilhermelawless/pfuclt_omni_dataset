@@ -17,6 +17,17 @@
 #define O_X (0)
 #define O_Y (1)
 #define O_THETA (2)
+#define O_TARGET (nRobots_ * nStatesPerRobot_)
+#define O_TX (0)
+#define O_TY (1)
+#define O_TZ (2)
+
+// target motion model
+#define TARGET_RAND_MEAN 0
+#define TARGET_RAND_STDDEV 20.0
+
+// concerning time
+#define TIME_NOTAVAILABLE -1
 
 namespace pfuclt_ptcls
 {
@@ -25,11 +36,25 @@ typedef struct odometry_s
   float x, y, theta;
 } Odometry;
 
-typedef struct measurement_s{
+typedef struct measurement_s
+{
   double x, y;
   double d, phi;
   double covDD, covPP, covXX, covYY;
 } Measurement;
+
+typedef struct targetMotion_s
+{
+
+  bool started;
+  double Vx, Vy, Vz;
+
+  targetMotion_s()
+  {
+    started = false;
+    Vx = Vy = Vz = 0.0;
+  }
+} TargetMotion;
 
 // Apply concept of subparticles (the particle set for each dimension)
 typedef float pdata_t;
@@ -70,8 +95,10 @@ private:
   std::vector<float> alpha_;
   bool initialized_;
   std::vector<std::vector<Measurement> > bufMeasurements_;
+  TargetMotion targetMotionState;
 
 public:
+  double iterationTimeS;
   std::vector<State> states;
 
   /**
@@ -182,12 +209,23 @@ public:
   void resetWeights() { assign((pdata_t)1.0, WEIGHT_INDEX); }
 
   /**
-   * @brief saveLandmarkObservation - saves the Measurement obs to a buffer of observations
+   * @brief saveLandmarkObservation - saves the Measurement obs to a buffer of
+   * observations
    * @param robotNumber - the robot number in the team
    * @param landmarkNumber - the landmark serial id
    * @param obs - the observation data as a structure defined in this file
    */
-  void saveLandmarkObservation(const uint robotNumber, const uint landmarkNumber, const Measurement obs) { bufMeasurements_[robotNumber][landmarkNumber] = obs; }
+  void saveLandmarkObservation(const uint robotNumber,
+                               const uint landmarkNumber, const Measurement obs)
+  {
+    bufMeasurements_[robotNumber][landmarkNumber] = obs;
+  }
+
+  /**
+   * @brief saveTargetMotionState - saves the new state of the target
+   * @param vel - array with the 3 velocities (x,y,z)
+   */
+  void saveTargetMotionState(const double vel[3]);
 };
 
 // end of namespace pfuclt_ptcls

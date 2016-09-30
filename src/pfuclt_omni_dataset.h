@@ -103,24 +103,6 @@ public:
  */
 class Robot
 {
-  struct observations_s
-  {
-    bool found;
-    float x, y;
-    double covXX, covYY;
-  };
-
-  /**
-   * @brief The stateBuffer_s struct - keeps information on the latest available
-   * data for pose, odometry, landmarks, targets
-   * @remark used for synchronizing robots, for instance
-   */
-  struct stateBuffer_s
-  {
-    Eigen::Isometry2d pose;
-    Eigen::Isometry2d odometry;
-  };
-
 protected:
   ros::NodeHandle& nh_;
   RobotFactory* parent_;
@@ -141,8 +123,6 @@ protected:
   void startNow();
 
 public:
-  struct stateBuffer_s stateBuffer;
-
   /**
    * @brief Robot - constructor, creates a new Robot instance
    * @param nh - reference to the node handler object
