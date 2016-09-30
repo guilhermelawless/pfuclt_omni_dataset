@@ -13,55 +13,61 @@ void ParticleFilter::fuseRobots()
 {
   state.robotsFused = true;
 
-  for(uint p=0; p<nParticles_; ++p)
+  for (uint p = 0; p < nParticles_; ++p)
   {
     std::vector<float> probabilities(nRobots_, 1.0);
     std::vector<uint> landmarksUsed(nRobots_, 0);
 
-    for(uint l=0; l<nLandmarks_; ++l)
+    for (uint l = 0; l < nLandmarks_; ++l)
     {
-      for(uint r=0; r<nRobots_; ++r)
+      for (uint r = 0; r < nRobots_; ++r)
       {
-        if(false == robotsUsed_[r] || false == bufMeasurements_[r][l].found)
+        if (false == robotsUsed_[r] || false == bufMeasurements_[r][l].found)
           continue;
 
         uint o_robot = r * nStatesPerRobot_;
 
-        Measurement &m = bufMeasurements_[r][l];
+        Measurement& m = bufMeasurements_[r][l];
 
         // Observation in robot frame
         Eigen::Vector2f Zrobot(m.x, m.y);
 
         // Transformation to global frame
         Eigen::Rotation2Df Rrobot(particles_[o_robot + O_THETA][p]);
-        Eigen::Vector2f Srobot(particles_[o_robot + O_X][p], particles_[o_robot + O_Y][p]);
-        Eigen::Vector2f Zglobal = Srobot + Rrobot*Zrobot;
+        Eigen::Vector2f Srobot(particles_[o_robot + O_X][p],
+                               particles_[o_robot + O_Y][p]);
+        Eigen::Vector2f Zglobal = Srobot + Rrobot * Zrobot;
 
         // Error in observation
         Eigen::Vector2f LM(landmarksMap_[l].x, landmarksMap_[l].y);
         Eigen::Vector2f Zglobal_err = LM - Zglobal;
         Eigen::Vector2f Z_Zcap = Zrobot - Zglobal_err;
 
-        ROS_DEBUG_COND(p==0, "Error in seeing landmark %d = (%f , %f)", l, Zglobal_err[O_X], Zglobal_err[O_Y]);
-        ROS_DEBUG_COND(p==0, "Landmark %d is at (%f , %f) and I see it at (%f, %f)", l, LM[O_X], LM[O_Y], Zglobal[O_X], Zglobal[O_Y]);
+        ROS_DEBUG_COND(p == 0, "Error in seeing landmark %d = (%f , %f)", l,
+                       Zglobal_err[O_X], Zglobal_err[O_Y]);
+        ROS_DEBUG_COND(p == 0,
+                       "Landmark %d is at (%f , %f) and I see it at (%f, %f)",
+                       l, LM[O_X], LM[O_Y], Zglobal[O_X], Zglobal[O_Y]);
 
         // The values of interest to the particle weights
-        // Note: using Eigen wasn't of particular interest here since it does not
-        float expArg = -0.5 * (Z_Zcap[0]*Z_Zcap[0]/m.covXX + Z_Zcap[1]*Z_Zcap[1]/m.covYY);
-        float detValue = 1.0;//powf( (2*PI*Q[0][0]*Q[1][1]),-0.5);
+        // Note: using Eigen wasn't of particular interest here since it does
+        // not
+        float expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / m.covXX +
+                               Z_Zcap[1] * Z_Zcap[1] / m.covYY);
+        float detValue = 1.0; // powf( (2*PI*Q[0][0]*Q[1][1]),-0.5);
 
-        probabilities[r] *= detValue*exp(expArg);
-        landmarksUsed[r] ++;
+        probabilities[r] *= detValue * exp(expArg);
+        landmarksUsed[r]++;
       }
     }
 
     // Update mean error vector
-    for(uint r=0; r<nRobots_; ++r)
+    for (uint r = 0; r < nRobots_; ++r)
     {
-      if(false == robotsUsed_[r])
+      if (false == robotsUsed_[r])
         continue;
 
-      if(landmarksUsed[r] > 0)
+      if (landmarksUsed[r] > 0)
         weightComponents_[r][p] = probabilities[r];
     }
   }
@@ -72,32 +78,35 @@ void ParticleFilter::fuseRobots()
   // Duplicate particles
   particles_t dupParticles(particles_);
 
-  for(uint r=0; r<nRobots_; ++r)
+  for (uint r = 0; r < nRobots_; ++r)
   {
-    if(false == robotsUsed_[r])
+    if (false == robotsUsed_[r])
       continue;
 
     uint o_robot = r * nStatesPerRobot_;
 
-    // Create a vector of indexes according to a descending order of the weights components of robot r
+    // Create a vector of indexes according to a descending order of the weights
+    // components of robot r
     std::vector<uint> sorted = order_index<pdata_t>(weightComponents_[r], DESC);
 
     // For every particle
-    for(uint p=0; p<nParticles_; ++p)
+    for (uint p = 0; p < nParticles_; ++p)
     {
       // Re-order the particle subsets of this robot
       int sort_index = sorted[p];
       particles_[o_robot + O_X][p] = dupParticles[o_robot + O_X][sort_index];
       particles_[o_robot + O_Y][p] = dupParticles[o_robot + O_Y][sort_index];
-      particles_[o_robot + O_THETA][p] = dupParticles[o_robot + O_THETA][sort_index];
+      particles_[o_robot + O_THETA][p] =
+          dupParticles[o_robot + O_THETA][sort_index];
 
-      // Update the particle weight (will get multiplied nRobots times and get a lower value)
+      // Update the particle weight (will get multiplied nRobots times and get a
+      // lower value)
       particles_[WEIGHT_INDEX][p] *= weightComponents_[r][sort_index];
     }
   }
 
   // Debugging
-  //for(uint p=0; p<nParticles_/5; ++p)
+  // for(uint p=0; p<nParticles_/5; ++p)
   //  ROS_DEBUG("pWeight[%d] = %f", p, particles_[WEIGHT_INDEX][p]);
 
   state.robotsFused = true;
@@ -118,7 +127,7 @@ ParticleFilter::ParticleFilter(const uint nParticles, const uint nTargets,
                                const uint statesPerRobot, const uint nRobots,
                                const uint nLandmarks,
                                const std::vector<bool>& robotsUsed,
-                               const std::vector<Landmark> &landmarksMap,
+                               const std::vector<Landmark>& landmarksMap,
                                const std::vector<float> alpha)
     : nParticles_(nParticles), nTargets_(nTargets),
       nStatesPerRobot_(statesPerRobot), nRobots_(nRobots),
@@ -128,8 +137,7 @@ ParticleFilter::ParticleFilter(const uint nParticles, const uint nTargets,
       particles_(nSubParticleSets_, subparticles_t(nParticles)), seed_(time(0)),
       initialized_(false), state(nRobots), alpha_(alpha),
       bufMeasurements_(nRobots, std::vector<Measurement>(nLandmarks)),
-      iterationTimeS(TIME_NOTAVAILABLE),
-      robotsUsed_(robotsUsed),
+      iterationTimeS(TIME_NOTAVAILABLE), robotsUsed_(robotsUsed),
       landmarksMap_(landmarksMap),
       weightComponents_(nRobots, subparticles_t(nParticles, 0.0))
 {
@@ -160,8 +168,7 @@ ParticleFilter::ParticleFilter(const uint nParticles, const uint nTargets,
 }
 
 ParticleFilter::ParticleFilter(const ParticleFilter& other)
-    : nParticles_(other.nParticles_),
-      nTargets_(other.nTargets_),
+    : nParticles_(other.nParticles_), nTargets_(other.nTargets_),
       nLandmarks_(other.nLandmarks_),
       nSubParticleSets_(other.nSubParticleSets_),
       nStatesPerRobot_(other.nStatesPerRobot_), nRobots_(other.nRobots_),
@@ -169,10 +176,8 @@ ParticleFilter::ParticleFilter(const ParticleFilter& other)
       seed_(time(0)), initialized_(other.initialized_),
       bufMeasurements_(other.nRobots_,
                        std::vector<Measurement>(other.nLandmarks_)),
-      targetMotionState(other.targetMotionState),
-      state(other.state),
-      robotsUsed_(other.robotsUsed_),
-      landmarksMap_(other.landmarksMap_),
+      targetMotionState(other.targetMotionState), state(other.state),
+      robotsUsed_(other.robotsUsed_), landmarksMap_(other.landmarksMap_),
       weightComponents_(other.weightComponents_)
 {
   ROS_DEBUG("Creating copy of another pf");
@@ -328,7 +333,7 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
   }
 
   // Start fusing if all robots have done their measurements and predictions
-  if(!state.robotsFused && state.allMeasurementsDone() && state.allPredicted())
+  if (!state.robotsFused && state.allMeasurementsDone() && state.allPredicted())
     fuseRobots();
 }
 
@@ -338,7 +343,7 @@ void ParticleFilter::allMeasurementsDone(const uint robotNumber)
   state.measurementsDone[robotNumber] = true;
 
   // Start fusing if all robots have done their measurements and predictions
-  if(!state.robotsFused && state.allMeasurementsDone() && state.allPredicted())
+  if (!state.robotsFused && state.allMeasurementsDone() && state.allPredicted())
     fuseRobots();
 }
 

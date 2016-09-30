@@ -64,9 +64,9 @@ ros::Time timeInit;
 
 RobotFactory::RobotFactory(ros::NodeHandle& nh)
     : nh_(nh),
-      pf(pfuclt_ptcls::ParticleFilter(N_PARTICLES, NUM_TARGETS,
-                                      STATES_PER_ROBOT, MAX_ROBOTS,
-                                      NUM_LANDMARKS, PLAYING_ROBOTS, landmarks, CUSTOM_RANDOM_ALPHA))
+      pf(pfuclt_ptcls::ParticleFilter(
+          N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS, NUM_LANDMARKS,
+          PLAYING_ROBOTS, landmarks, CUSTOM_RANDOM_ALPHA))
 {
   for (uint rn = 0; rn < MAX_ROBOTS; rn++)
   {
@@ -326,12 +326,13 @@ void Robot::landmarkDataCallback(
   for (int i = 0; i < NUM_LANDMARKS; i++)
   {
 
-    if (false ==heuristicsFound[i])
+    if (false == heuristicsFound[i])
       pf_.saveLandmarkObservation(robotNumber_, i, false);
 
     else
     {
-      //ROS_DEBUG("I see landmark %d at (%f,%f), but in fact it's at (%f,%f).", i, landmarkData->x[i],
+      // ROS_DEBUG("I see landmark %d at (%f,%f), but in fact it's at (%f,%f).",
+      // i, landmarkData->x[i],
       //          landmarkData->y[i], landmarks[i].x, landmarks[i].y);
 
       /// Below is the procedure to calculate the observation covariance

@@ -72,7 +72,8 @@ typedef boost::random::mt19937 RNGType;
 class ParticleFilter
 {
   /**
-   * @brief The state_s struct - defines a structure to hold state information for the particle filter class
+   * @brief The state_s struct - defines a structure to hold state information
+   * for the particle filter class
    */
   struct State
   {
@@ -100,14 +101,15 @@ class ParticleFilter
 
     bool allPredicted()
     {
-      return (std::find(predicted.begin(), predicted.end(), true) != predicted.end());
+      return (std::find(predicted.begin(), predicted.end(), true) !=
+              predicted.end());
     }
 
     bool allMeasurementsDone()
     {
-      return (std::find(measurementsDone.begin(), measurementsDone.end(), true) != measurementsDone.end());
+      return (std::find(measurementsDone.begin(), measurementsDone.end(),
+                        true) != measurementsDone.end());
     }
-
   };
 
   // TODO find if mutex is necessary while using the simple implemented state
