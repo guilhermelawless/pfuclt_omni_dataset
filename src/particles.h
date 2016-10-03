@@ -20,6 +20,7 @@
 #define O_Y (1)
 #define O_THETA (2)
 #define O_TARGET (nRobots_ * nStatesPerRobot_)
+#define O_Z (2)
 #define O_TX (0)
 #define O_TY (1)
 #define O_TZ (2)
@@ -52,7 +53,7 @@ typedef struct landmarkObs_s
 typedef struct targetObs_s
 {
   bool found;
-  double x, y;
+  double x, y, z;
   double d, phi;
   double covDD, covPP, covXX, covYY;
 } TargetObservation;
@@ -118,13 +119,15 @@ class ParticleFilter
 
     bool allLandmarkMeasurementsDone()
     {
-      return (std::find(landmarkMeasurementsDone.begin(), landmarkMeasurementsDone.end(),
+      return (std::find(landmarkMeasurementsDone.begin(),
+                        landmarkMeasurementsDone.end(),
                         true) != landmarkMeasurementsDone.end());
     }
 
     bool allTargetMeasurementsDone()
     {
-      return (std::find(targetMeasurementsDone.begin(), targetMeasurementsDone.end(),
+      return (std::find(targetMeasurementsDone.begin(),
+                        targetMeasurementsDone.end(),
                         true) != targetMeasurementsDone.end());
     }
   };
@@ -165,6 +168,11 @@ private:
    * @brief fuseTarget - fuse target state step
    */
   void fuseTarget();
+
+  /**
+   * @brief resample - the resampling step
+   */
+  void resample() {}
 
 public:
   // TODO calc. iterationTime in sec
@@ -293,7 +301,8 @@ public:
   }
 
   /**
-   * @brief saveAllLandmarkMeasurementsDone - call this function when all landmark measurements have
+   * @brief saveAllLandmarkMeasurementsDone - call this function when all
+   * landmark measurements have
    * been performed by a certain robot
    * @param robotNumber - the robot number performing the measurements
    */
@@ -316,14 +325,14 @@ public:
    * @param robotNumber - the robot number in the team
    * @param _found - whether the target has been found
    */
-  void saveTargetObservation(const uint robotNumber,
-                             const bool _found)
+  void saveTargetObservation(const uint robotNumber, const bool _found)
   {
     bufTargetObservations_[robotNumber].found = _found;
   }
 
   /**
-   * @brief saveAllTargetMeasurementsDone - call this function when all target measurements have
+   * @brief saveAllTargetMeasurementsDone - call this function when all target
+   * measurements have
    * been performed by a certain robot
    * @param robotNumber - the robot number performing the measurements
    */

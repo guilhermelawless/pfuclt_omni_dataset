@@ -212,6 +212,9 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
     pfuclt_ptcls::TargetObservation obs;
 
     obs.found = true;
+    obs.x = target->x;
+    obs.y = target->y;
+    obs.z = target->z;
     obs.d = ballObsVec.norm();
     obs.phi = atan2(target->y, target->x);
 
@@ -221,10 +224,11 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
     obs.covPP = K5 * (1 / (obs.d + 1));
 
     obs.covXX = pow(cos(obs.phi), 2) * obs.covDD +
-                pow(sin(obs.phi), 2) * (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
-    obs.covYY =
-        pow(sin(obs.phi), 2) * obs.covDD +
-        pow(cos(obs.phi), 2) * (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
+                pow(sin(obs.phi), 2) *
+                    (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
+    obs.covYY = pow(sin(obs.phi), 2) * obs.covDD +
+                pow(cos(obs.phi), 2) *
+                    (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
 
     // Save this observation
     pf_.saveTargetObservation(robotNumber_, obs);
