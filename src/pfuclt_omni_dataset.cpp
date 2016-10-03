@@ -203,38 +203,41 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
   if (!started_)
     startNow();
 
-  ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
-            target->header.stamp.sec);
-
   if (target->found)
   {
-    /// Below is the procedure to calculate the observation covariance associate
-    /// with the ball measurement made by the robots. Caution: Make sure the
-    /// validity of the calculations below by crosschecking the obvious things,
-    /// e.g., covariance cannot be negative or very close to 0
+    ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
+              target->header.stamp.sec);
 
-    Eigen::Vector2d tempBallObsVec = Eigen::Vector2d(target->x, target->y);
+    Eigen::Vector2d ballObsVec = Eigen::Vector2d(target->x, target->y);
+    pfuclt_ptcls::TargetObservation obs;
 
-    double d = tempBallObsVec.norm(), phi = atan2(target->y, target->x);
+    obs.found = true;
+    obs.d = ballObsVec.norm();
+    obs.phi = atan2(target->y, target->x);
 
-    double covDD =
-        (double)(1 / target->mismatchFactor) * (K3 * d + K4 * (d * d));
-    double covPhiPhi = K5 * (1 / (d + 1));
+    obs.covDD = (double)(1 / target->mismatchFactor) *
+                (K3 * obs.d + K4 * (obs.d * obs.d));
 
-    double covXX =
-        pow(cos(phi), 2) * covDD +
-        pow(sin(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
-    double covYY =
-        pow(sin(phi), 2) * covDD +
-        pow(cos(phi), 2) * (pow(d, 2) * covPhiPhi + covDD * covPhiPhi);
-    // ROS_INFO("Ball found in the image, refer to the method to see how
-    // covariances are calculated");
+    obs.covPP = K5 * (1 / (obs.d + 1));
+
+    obs.covXX = pow(cos(obs.phi), 2) * obs.covDD +
+                pow(sin(obs.phi), 2) * (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
+    obs.covYY =
+        pow(sin(obs.phi), 2) * obs.covDD +
+        pow(cos(obs.phi), 2) * (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
+
+    // Save this observation
+    pf_.saveTargetObservation(robotNumber_, obs);
   }
   else
   {
     ROS_DEBUG("OMNI%d didn't find the ball at time %d", robotNumber_ + 1,
               target->header.stamp.sec);
+
+    pf_.saveTargetObservation(robotNumber_, false);
   }
+
+  pf_.saveAllTargetMeasurementsDone(robotNumber_);
 }
 
 void Robot::landmarkDataCallback(
@@ -331,19 +334,10 @@ void Robot::landmarkDataCallback(
 
     else
     {
-      // ROS_DEBUG("I see landmark %d at (%f,%f), but in fact it's at (%f,%f).",
-      // i, landmarkData->x[i],
-      //          landmarkData->y[i], landmarks[i].x, landmarks[i].y);
-
-      /// Below is the procedure to calculate the observation covariance
-      /// associate with the ball measurement made by the robots. Caution: Make
-      /// sure the validity of the calculations below by crosschecking the
-      /// obvious things, e.g., covariance cannot be negative or very close to 0
-
       // TODO in the no-ROS version the y frame is inverted. Not here? Check
       // later
 
-      pfuclt_ptcls::Measurement obs;
+      pfuclt_ptcls::LandmarkObservation obs;
       obs.found = true;
       obs.x = landmarkData->x[i];
       obs.y = landmarkData->y[i];
@@ -365,7 +359,7 @@ void Robot::landmarkDataCallback(
     }
   }
 
-  pf_.allMeasurementsDone(robotNumber_);
+  pf_.saveAllLandmarkMeasurementsDone(robotNumber_);
 
   // if(seq%30==0)
 

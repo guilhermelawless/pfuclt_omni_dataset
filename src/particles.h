@@ -41,13 +41,21 @@ typedef struct odometry_s
   float x, y, theta;
 } Odometry;
 
-typedef struct measurement_s
+typedef struct landmarkObs_s
 {
   bool found;
   double x, y;
   double d, phi;
   double covDD, covPP, covXX, covYY;
-} Measurement;
+} LandmarkObservation;
+
+typedef struct targetObs_s
+{
+  bool found;
+  double x, y;
+  double d, phi;
+  double covDD, covPP, covXX, covYY;
+} TargetObservation;
 
 typedef struct targetMotion_s
 {
@@ -79,7 +87,8 @@ class ParticleFilter
   {
     uint nRobots;
     std::vector<bool> predicted;
-    std::vector<bool> measurementsDone;
+    std::vector<bool> landmarkMeasurementsDone;
+    std::vector<bool> targetMeasurementsDone;
     bool robotsFused;
     bool targetFused;
     bool resampled;
@@ -87,7 +96,8 @@ class ParticleFilter
 
     State(const uint numberRobots)
         : nRobots(numberRobots), predicted(nRobots, false),
-          measurementsDone(nRobots, false)
+          landmarkMeasurementsDone(nRobots, false),
+          targetMeasurementsDone(nRobots, false)
     {
       reset();
     }
@@ -95,7 +105,8 @@ class ParticleFilter
     void reset()
     {
       predicted.assign(nRobots, false);
-      measurementsDone.assign(nRobots, false);
+      landmarkMeasurementsDone.assign(nRobots, false);
+      targetMeasurementsDone.assign(nRobots, false);
       robotsFused = targetFused = resampled = calcVel = false;
     }
 
@@ -105,10 +116,16 @@ class ParticleFilter
               predicted.end());
     }
 
-    bool allMeasurementsDone()
+    bool allLandmarkMeasurementsDone()
     {
-      return (std::find(measurementsDone.begin(), measurementsDone.end(),
-                        true) != measurementsDone.end());
+      return (std::find(landmarkMeasurementsDone.begin(), landmarkMeasurementsDone.end(),
+                        true) != landmarkMeasurementsDone.end());
+    }
+
+    bool allTargetMeasurementsDone()
+    {
+      return (std::find(targetMeasurementsDone.begin(), targetMeasurementsDone.end(),
+                        true) != targetMeasurementsDone.end());
     }
   };
 
@@ -130,15 +147,27 @@ private:
   RNGType seed_;
   std::vector<float> alpha_;
   bool initialized_;
-  std::vector<std::vector<Measurement> > bufMeasurements_;
+  std::vector<std::vector<LandmarkObservation> > bufLandmarkObservations_;
+  std::vector<TargetObservation> bufTargetObservations_;
   TargetMotion targetMotionState;
+
+  /**
+   * @brief resetWeights - assign the value 1.0 to all particle weights
+   */
+  void resetWeights() { assign((pdata_t)1.0, WEIGHT_INDEX); }
 
   /**
    * @brief fuseRobots - fuse robot states step
    */
   void fuseRobots();
 
+  /**
+   * @brief fuseTarget - fuse target state step
+   */
+  void fuseTarget();
+
 public:
+  // TODO calc. iterationTime in sec
   double iterationTimeS;
   struct State state;
 
@@ -238,34 +267,67 @@ public:
   std::size_t size() { return nSubParticleSets_; }
 
   /**
-   * @brief resetWeights - assign the value 1.0 to all particle weights
-   */
-  void resetWeights() { assign((pdata_t)1.0, WEIGHT_INDEX); }
-
-  /**
-   * @brief saveLandmarkObservation - saves the Measurement obs to a buffer of
+   * @brief saveLandmarkObservation - saves the landmark observation to a buffer
+   * of
    * observations
    * @param robotNumber - the robot number in the team
    * @param landmarkNumber - the landmark serial id
    * @param obs - the observation data as a structure defined in this file
    */
   void saveLandmarkObservation(const uint robotNumber,
-                               const uint landmarkNumber, const Measurement obs)
+                               const uint landmarkNumber,
+                               const LandmarkObservation obs)
   {
-    bufMeasurements_[robotNumber][landmarkNumber] = obs;
+    bufLandmarkObservations_[robotNumber][landmarkNumber] = obs;
   }
 
   /**
    * @brief saveLandmarkObservation - change the measurement buffer state
    * @param robotNumber - the robot number in the team
-   * @param landmarkNumber - the landmark serial id
    * @param _found - whether this landmark has been found
    */
   void saveLandmarkObservation(const uint robotNumber,
-                               const uint landmarkNumber, bool _found)
+                               const uint landmarkNumber, const bool _found)
   {
-    bufMeasurements_[robotNumber][landmarkNumber].found = _found;
+    bufLandmarkObservations_[robotNumber][landmarkNumber].found = _found;
   }
+
+  /**
+   * @brief saveAllLandmarkMeasurementsDone - call this function when all landmark measurements have
+   * been performed by a certain robot
+   * @param robotNumber - the robot number performing the measurements
+   */
+  void saveAllLandmarkMeasurementsDone(const uint robotNumber);
+
+  /**
+   * @brief saveTargetObservation - saves the target observation to a buffer of
+   * observations
+   * @param robotNumber - the robot number in the team
+   * @param obs - the observation data as a structure defined in this file
+   */
+  void saveTargetObservation(const uint robotNumber,
+                             const TargetObservation obs)
+  {
+    bufTargetObservations_[robotNumber] = obs;
+  }
+
+  /**
+   * @brief saveTargetObservation - change the measurement buffer state
+   * @param robotNumber - the robot number in the team
+   * @param _found - whether the target has been found
+   */
+  void saveTargetObservation(const uint robotNumber,
+                             const bool _found)
+  {
+    bufTargetObservations_[robotNumber].found = _found;
+  }
+
+  /**
+   * @brief saveAllTargetMeasurementsDone - call this function when all target measurements have
+   * been performed by a certain robot
+   * @param robotNumber - the robot number performing the measurements
+   */
+  void saveAllTargetMeasurementsDone(const uint robotNumber);
 
   /**
    * @todo TODO define this function
@@ -273,13 +335,6 @@ public:
    * @param vel - array with the 3 velocities (x,y,z)
    */
   void saveTargetMotionState(const double vel[3]);
-
-  /**
-   * @brief allMeasurementsDone - call this function when all measurements have
-   * been performed
-   * @param robotNumber - the robot number performing the measurements
-   */
-  void allMeasurementsDone(const uint robotNumber);
 };
 
 // end of namespace pfuclt_ptcls

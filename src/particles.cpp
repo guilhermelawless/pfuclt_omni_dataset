@@ -11,6 +11,8 @@ namespace pfuclt_ptcls
 {
 void ParticleFilter::fuseRobots()
 {
+  ROS_DEBUG("Fusing Robots");
+
   state.robotsFused = true;
 
   for (uint p = 0; p < nParticles_; ++p)
@@ -22,12 +24,12 @@ void ParticleFilter::fuseRobots()
     {
       for (uint r = 0; r < nRobots_; ++r)
       {
-        if (false == robotsUsed_[r] || false == bufMeasurements_[r][l].found)
+        if (false == robotsUsed_[r] || false == bufLandmarkObservations_[r][l].found)
           continue;
 
         uint o_robot = r * nStatesPerRobot_;
 
-        Measurement& m = bufMeasurements_[r][l];
+        LandmarkObservation& m = bufLandmarkObservations_[r][l];
 
         // Observation in robot frame
         Eigen::Vector2f Zrobot(m.x, m.y);
@@ -109,7 +111,31 @@ void ParticleFilter::fuseRobots()
   // for(uint p=0; p<nParticles_/5; ++p)
   //  ROS_DEBUG("pWeight[%d] = %f", p, particles_[WEIGHT_INDEX][p]);
 
+  // Change state
   state.robotsFused = true;
+
+  // If the target measurements were performed prior to this function ending, then we should call the target fusion step here
+  if (!state.targetFused && state.allTargetMeasurementsDone())
+    fuseTarget();
+}
+
+void ParticleFilter::fuseTarget()
+{
+  ROS_DEBUG("Fusing Target");
+
+  // For every particle m in the particle set [1:M]
+  for (uint m = 0; m < nParticles_; ++m)
+  {
+    // Find the particle m* in the set [m:M] for which the weight contribution by
+    // the target subparticle to the full weight is maximum
+    for (uint mStar = 0; mStar < nParticles_; ++mStar)
+    {
+
+    }
+
+  }
+  // Swap particle m with m* so that the most relevant (in terms of weight)
+  // target subparticle is at the lowest indexes
 }
 
 void ParticleFilter::assign(const pdata_t value)
@@ -136,7 +162,8 @@ ParticleFilter::ParticleFilter(const uint nParticles, const uint nTargets,
       nLandmarks_(nLandmarks),
       particles_(nSubParticleSets_, subparticles_t(nParticles)), seed_(time(0)),
       initialized_(false), state(nRobots), alpha_(alpha),
-      bufMeasurements_(nRobots, std::vector<Measurement>(nLandmarks)),
+      bufLandmarkObservations_(nRobots, std::vector<LandmarkObservation>(nLandmarks)),
+      bufTargetObservations_(nRobots),
       iterationTimeS(TIME_NOTAVAILABLE), robotsUsed_(robotsUsed),
       landmarksMap_(landmarksMap),
       weightComponents_(nRobots, subparticles_t(nParticles, 0.0))
@@ -174,8 +201,8 @@ ParticleFilter::ParticleFilter(const ParticleFilter& other)
       nStatesPerRobot_(other.nStatesPerRobot_), nRobots_(other.nRobots_),
       particles_(other.nSubParticleSets_, subparticles_t(other.nParticles_)),
       seed_(time(0)), initialized_(other.initialized_),
-      bufMeasurements_(other.nRobots_,
-                       std::vector<Measurement>(other.nLandmarks_)),
+      bufLandmarkObservations_(other.nRobots_,
+                       std::vector<LandmarkObservation>(other.nLandmarks_)),
       targetMotionState(other.targetMotionState), state(other.state),
       robotsUsed_(other.robotsUsed_), landmarksMap_(other.landmarksMap_),
       weightComponents_(other.weightComponents_)
@@ -333,18 +360,28 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
   }
 
   // Start fusing if all robots have done their measurements and predictions
-  if (!state.robotsFused && state.allMeasurementsDone() && state.allPredicted())
+  if (!state.robotsFused && state.allLandmarkMeasurementsDone() && state.allPredicted())
     fuseRobots();
 }
 
-void ParticleFilter::allMeasurementsDone(const uint robotNumber)
+void ParticleFilter::saveAllLandmarkMeasurementsDone(const uint robotNumber)
 {
-  // Change state of measurementsDone
-  state.measurementsDone[robotNumber] = true;
+  // Change state
+  state.landmarkMeasurementsDone[robotNumber] = true;
 
   // Start fusing if all robots have done their measurements and predictions
-  if (!state.robotsFused && state.allMeasurementsDone() && state.allPredicted())
+  if (!state.robotsFused && state.allLandmarkMeasurementsDone() && state.allPredicted())
     fuseRobots();
+}
+
+void ParticleFilter::saveAllTargetMeasurementsDone(const uint robotNumber)
+{
+  // Change state
+  state.targetMeasurementsDone[robotNumber] = true;
+
+  // Start fusing if all robots have done their target measurements and the robot fusion step has been performed
+  if (!state.targetFused && state.robotsFused && state.allTargetMeasurementsDone())
+    fuseTarget();
 }
 
 // end of namespace pfuclt_ptcls
