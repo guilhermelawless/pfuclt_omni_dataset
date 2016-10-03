@@ -8,7 +8,7 @@
 #include <boost/thread/mutex.hpp>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-
+#include <sstream>
 #include "pfuclt_aux.h"
 
 // ideally later this will be a parameter, when it makes sense to
@@ -34,7 +34,6 @@
 
 namespace pfuclt_ptcls
 {
-
 using namespace pfuclt_aux;
 
 typedef struct odometry_s
@@ -110,12 +109,51 @@ class ParticleFilter
      * @param numberRobots
      */
     State(const uint numberRobots, const std::vector<bool>& robotsBeingUsed)
-      : nRobots(numberRobots), predicted(nRobots, false),
-        landmarkMeasurementsDone(nRobots, false),
-        targetMeasurementsDone(nRobots, false), robots(nRobots),
-        robotsUsed(robotsBeingUsed)
+        : nRobots(numberRobots), predicted(nRobots, false),
+          landmarkMeasurementsDone(nRobots, false),
+          targetMeasurementsDone(nRobots, false), robots(nRobots),
+          robotsUsed(robotsBeingUsed)
     {
       reset();
+    }
+
+  private:
+    void print(std::ostringstream& oss, std::vector<bool>& vec)
+    {
+      oss << "[";
+
+      for (std::vector<bool>::iterator it = vec.begin(); it != vec.end(); ++it)
+        oss << *it;
+
+      oss << "]";
+      return;
+    }
+
+  public:
+    // TODO add state print
+    void print()
+    {
+      std::ostringstream oss;
+      oss << "PF State:";
+      oss << std::endl
+          << "-predicted = ";
+      print(oss, predicted);
+      oss << std::endl
+          << "-landmarkMeasurementsDone = ";
+      print(oss, landmarkMeasurementsDone);
+      oss << std::endl
+          << "-targetMeasurementsDone = ";
+      print(oss, targetMeasurementsDone);
+      oss << std::endl
+          << "-targetPredicted = " << targetPredicted;
+      oss << std::endl
+          << "-robotsFused = " << robotsFused;
+      oss << std::endl
+          << "-targetFused = " << targetFused;
+      oss << std::endl
+          << "-resampled = " << resampled;
+
+      ROS_DEBUG("%s", oss.str().c_str());
     }
 
     /**
@@ -148,8 +186,14 @@ class ParticleFilter
      */
     bool allPredicted()
     {
-      return (std::find(predicted.begin(), predicted.end(), true) !=
-          predicted.end());
+      for (std::vector<bool>::iterator it = predicted.begin();
+           it != predicted.end(); ++it)
+      {
+        if (false == *it)
+          return false;
+      }
+
+      return true;
     }
 
     /**
@@ -159,9 +203,14 @@ class ParticleFilter
      */
     bool allLandmarkMeasurementsDone()
     {
-      return (std::find(landmarkMeasurementsDone.begin(),
-                        landmarkMeasurementsDone.end(),
-                        true) != landmarkMeasurementsDone.end());
+      for (std::vector<bool>::iterator it = landmarkMeasurementsDone.begin();
+           it != landmarkMeasurementsDone.end(); ++it)
+      {
+        if (false == *it)
+          return false;
+      }
+
+      return true;
     }
 
     /**
@@ -171,9 +220,14 @@ class ParticleFilter
      */
     bool allTargetMeasurementsDone()
     {
-      return (std::find(targetMeasurementsDone.begin(),
-                        targetMeasurementsDone.end(),
-                        true) != targetMeasurementsDone.end());
+      for (std::vector<bool>::iterator it = targetMeasurementsDone.begin();
+           it != targetMeasurementsDone.end(); ++it)
+      {
+        if (false == *it)
+          return false;
+      }
+
+      return true;
     }
   };
 
@@ -201,7 +255,20 @@ private:
   /**
    * @brief resetWeights - assign the value 1.0 to all particle weights
    */
-  void resetWeights() { assign((pdata_t)1.0, WEIGHT_INDEX); }
+  void resetWeights()
+  {
+    assign((pdata_t)1.0, WEIGHT_INDEX);
+    /*
+    for(uint s=0; s < weightComponents_.size(); ++s)
+      weightComponents_[s].assign(nParticles_, 1.0);
+    */
+  }
+
+  /**
+   * @brief predictTarget - predict target state step
+   * @param robotNumber - the robot performing, for debugging purposes
+   */
+  void predictTarget(uint robotNumber);
 
   /**
    * @brief fuseRobots - fuse robot states step
@@ -221,6 +288,7 @@ private:
 public:
   double prevTime, iterationTime;
   struct State state;
+  boost::shared_ptr<std::ostringstream> iteration_oss;
 
   /**
    * @brief assign - assign a value to every particle in all subsets
