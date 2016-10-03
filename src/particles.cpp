@@ -38,7 +38,7 @@ void ParticleFilter::fuseRobots()
         // Transformation to global frame
         Eigen::Rotation2Df Rrobot(particles_[o_robot + O_THETA][p]);
         Eigen::Vector2f Srobot(particles_[o_robot + O_X][p],
-                               particles_[o_robot + O_Y][p]);
+            particles_[o_robot + O_Y][p]);
         Eigen::Vector2f Zglobal = Srobot + Rrobot * Zrobot;
 
         // Error in observation
@@ -58,7 +58,7 @@ void ParticleFilter::fuseRobots()
         // Note: using Eigen wasn't of particular interest here since it does
         // not allow for transposing a non-dynamic matrix
         float expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / m.covXX +
-                               Z_Zcap[1] * Z_Zcap[1] / m.covYY);
+            Z_Zcap[1] * Z_Zcap[1] / m.covYY);
         float detValue = 1.0; // powf( (2*PI*Q[0][0]*Q[1][1]),-0.5);
 
         probabilities[r] *= detValue * exp(expArg);
@@ -132,7 +132,7 @@ void ParticleFilter::fuseTarget()
   // If ball not seen by anyone, just skip all of this
   bool ballSeen = false;
   for (std::vector<TargetObservation>::iterator it =
-           bufTargetObservations_.begin();
+       bufTargetObservations_.begin();
        it != bufTargetObservations_.end(); ++it)
     ballSeen = ballSeen || it->found;
 
@@ -168,18 +168,18 @@ void ParticleFilter::fuseTarget()
         Eigen::Vector3f Zrobot(obs.x, obs.y, obs.z);
 
         // Transformation to global frame
-        Eigen::Transform<float, 2, Eigen::Affine> toGlobal(Eigen::Rotation2Df(
-            particles_[o_robot + O_THETA][m])); // Affine creates a (Dim+1) *
-        // (Dim+1) matrix and sets last
-        // row to [0 0 ... 1]
+        // Affine creates a (Dim+1) * (Dim+1) matrix and sets
+        // last row to [0 0 ... 1]
+        Eigen::Transform<float, 2, Eigen::Affine> toGlobal(
+              Eigen::Rotation2Df(particles_[o_robot + O_THETA][m]));
         Eigen::Vector3f Srobot(particles_[o_robot + O_X][m],
-                               particles_[o_robot + O_Y][m], 0);
+            particles_[o_robot + O_Y][m], 0.0);
         Eigen::Vector3f Zglobal = Srobot + toGlobal * Zrobot;
 
         // Error in observation
         Eigen::Vector3f Target(particles_[O_TARGET + O_X][p],
-                               particles_[O_TARGET + O_Y][p],
-                               particles_[O_TARGET + O_Z][p]);
+            particles_[O_TARGET + O_Y][p],
+            particles_[O_TARGET + O_Z][p]);
 
         // TODO should the Y frame be inverted?
         Eigen::Vector3f Z_Zcap = Zrobot - (Target - Zglobal);
@@ -193,8 +193,8 @@ void ParticleFilter::fuseTarget()
         // value in the diagonal
 
         float expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / obs.covXX +
-                               Z_Zcap[1] * Z_Zcap[1] / obs.covYY +
-                               Z_Zcap[2] * Z_Zcap[2] / 0.1);
+            Z_Zcap[1] * Z_Zcap[1] / obs.covYY +
+            Z_Zcap[2] * Z_Zcap[2] / 0.1);
 
         float detValue = 1.0;
 
@@ -225,8 +225,8 @@ void ParticleFilter::fuseTarget()
     particles_[WEIGHT_INDEX][m] *= maxTargetSubParticleWeight;
   }
 
-// The target subparticles are now reordered according to their weight
-// contribution
+  // The target subparticles are now reordered according to their weight
+  // contribution
 
 exitFuseTarget:
   // All that's missing is the resampling step
@@ -312,6 +312,9 @@ void ParticleFilter::resample()
   // loops
   std::vector<double> weightedMeans(nStatesPerRobot_, 1.0);
 
+  // Target weighted means
+  std::vector<double> targetWeightedMeans(STATES_PER_TARGET, 1.0);
+
   /// TODO change this to a much more stable way of finding the mean of the
   /// cluster which will represent the ball position. Because it's not the
   /// highest weight particle which represent's the ball position
@@ -326,18 +329,38 @@ void ParticleFilter::resample()
     {
       // Accumulate the state proportionally to the particle's weight
       for (uint g = 0; g < nStatesPerRobot_; ++g)
+      {
         weightedMeans[g] +=
             particles_[o_robot + g][p] * particles_[WEIGHT_INDEX][p];
+      }
+
+      for (uint t = 0; t < STATES_PER_TARGET; ++t)
+      {
+        targetWeightedMeans[t] +=
+            particles_[O_TARGET + t][p] * particles_[WEIGHT_INDEX][p];
+      }
     }
 
     // Normalize the means
     for (uint g = 0; g < nStatesPerRobot_; ++g)
       weightedMeans[g] /= weightSum;
 
+    for (uint t = 0; t < STATES_PER_TARGET; ++t)
+      weightedMeans[t] /= weightSum;
+
     // Save in the robot state
     state.robots[r].x = weightedMeans[O_X];
     state.robots[r].y = weightedMeans[O_Y];
     state.robots[r].theta = weightedMeans[O_THETA];
+
+    // Save in the target state
+    // First the velocity, then the position
+    state.target.vx = state.target.x - weightedMeans[O_X];
+    state.target.x = weightedMeans[O_X];
+    state.target.vy = state.target.y - weightedMeans[O_Y];
+    state.target.y = weightedMeans[O_Y];
+    state.target.vz = state.target.z - weightedMeans[O_Z];
+    state.target.z = weightedMeans[O_Z];
   }
 
   // Start next iteration
@@ -361,19 +384,19 @@ ParticleFilter::ParticleFilter(const uint nParticles, const uint nTargets,
                                const std::vector<bool>& robotsUsed,
                                const std::vector<Landmark>& landmarksMap,
                                const std::vector<float> alpha)
-    : nParticles_(nParticles), nTargets_(nTargets),
-      nStatesPerRobot_(statesPerRobot), nRobots_(nRobots),
-      nSubParticleSets_(nTargets * STATES_PER_TARGET +
-                        nRobots * statesPerRobot + 1),
-      nLandmarks_(nLandmarks),
-      particles_(nSubParticleSets_, subparticles_t(nParticles)), seed_(time(0)),
-      initialized_(false), alpha_(alpha),
-      bufLandmarkObservations_(nRobots,
-                               std::vector<LandmarkObservation>(nLandmarks)),
-      bufTargetObservations_(nRobots), iterationTimeS(TIME_NOTAVAILABLE),
-      robotsUsed_(robotsUsed), landmarksMap_(landmarksMap),
-      weightComponents_(nRobots, subparticles_t(nParticles, 0.0)),
-      state(nRobots, robotsUsed)
+  : nParticles_(nParticles), nTargets_(nTargets),
+    nStatesPerRobot_(statesPerRobot), nRobots_(nRobots),
+    nSubParticleSets_(nTargets * STATES_PER_TARGET +
+                      nRobots * statesPerRobot + 1),
+    nLandmarks_(nLandmarks),
+    particles_(nSubParticleSets_, subparticles_t(nParticles)), seed_(time(0)),
+    initialized_(false), alpha_(alpha),
+    bufLandmarkObservations_(nRobots,
+                             std::vector<LandmarkObservation>(nLandmarks)),
+    bufTargetObservations_(nRobots), prevTime(ROS_TIME_SEC),
+    robotsUsed_(robotsUsed), landmarksMap_(landmarksMap),
+    weightComponents_(nRobots, subparticles_t(nParticles, 0.0)),
+    state(nRobots, robotsUsed)
 {
 
   // If vector alpha is not provided, use a default one
@@ -399,25 +422,6 @@ ParticleFilter::ParticleFilter(const uint nParticles, const uint nTargets,
 
   ROS_INFO("Created particle filter with dimensions %d, %d",
            (int)particles_.size(), (int)particles_[0].size());
-}
-
-ParticleFilter::ParticleFilter(const ParticleFilter& other)
-    : nParticles_(other.nParticles_), nTargets_(other.nTargets_),
-      nLandmarks_(other.nLandmarks_),
-      nSubParticleSets_(other.nSubParticleSets_),
-      nStatesPerRobot_(other.nStatesPerRobot_), nRobots_(other.nRobots_),
-      particles_(other.nSubParticleSets_, subparticles_t(other.nParticles_)),
-      seed_(time(0)), initialized_(other.initialized_),
-      bufLandmarkObservations_(
-          other.nRobots_, std::vector<LandmarkObservation>(other.nLandmarks_)),
-      targetMotionState(other.targetMotionState), state(other.state),
-      robotsUsed_(other.robotsUsed_), landmarksMap_(other.landmarksMap_),
-      weightComponents_(other.weightComponents_)
-{
-  ROS_DEBUG("Creating copy of another pf");
-
-  // Only thing left is to copy particle values
-  particles_ = other.particles_; // std::vector assignment operator! yay C++
 }
 
 // TODO set different values for position and orientation, targets, etc
@@ -459,10 +463,10 @@ void ParticleFilter::init(const std::vector<double> custom)
   for (int i = 0; i < custom.size() / 2; ++i)
   {
     ROS_DEBUG("Values for distribution: %.4f %.4f", custom[2 * i],
-              custom[2 * i + 1]);
+        custom[2 * i + 1]);
 
     boost::random::uniform_real_distribution<> dist(custom[2 * i],
-                                                    custom[2 * i + 1]);
+        custom[2 * i + 1]);
 
     // Sample a value from the uniform distribution for each particle
     BOOST_FOREACH (pdata_t& val, particles_[i])
@@ -478,12 +482,18 @@ void ParticleFilter::init(const std::vector<double> custom)
   initialized_ = true;
 
   ROS_INFO("Particle filter initialized");
+
+  // Record the time
+  prevTime = ROS_TIME_SEC;
 }
 
 void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
 {
-  if (!initialized_)
+  if (!initialized_ || state.predicted[robotNumber])
     return;
+
+  // Change predicted state
+  state.predicted[robotNumber] = true;
 
   using namespace boost::random;
 
@@ -502,18 +512,18 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
 
   // Create an error model based on a gaussian distribution
   normal_distribution<> deltaRotEffective(deltaRot, alpha[0] * fabs(deltaRot) +
-                                                        alpha[1] * deltaTrans);
+      alpha[1] * deltaTrans);
   normal_distribution<> deltaTransEffective(
-      deltaTrans,
-      alpha[2] * deltaTrans + alpha[3] * fabs(deltaRot + deltaFinalRot));
+        deltaTrans,
+        alpha[2] * deltaTrans + alpha[3] * fabs(deltaRot + deltaFinalRot));
   normal_distribution<> deltaFinalRotEffective(
-      deltaFinalRot, alpha[0] * fabs(deltaFinalRot) + alpha[1] * deltaTrans);
+        deltaFinalRot, alpha[0] * fabs(deltaFinalRot) + alpha[1] * deltaTrans);
 
   // Debugging
   ROS_DEBUG("Before prediction: p[%d] = [%f %f %f]", nParticles_ / 2,
             particles_[O_X + robot_offset][nParticles_ / 2],
-            particles_[O_Y + robot_offset][nParticles_ / 2],
-            particles_[O_THETA + robot_offset][nParticles_ / 2]);
+      particles_[O_Y + robot_offset][nParticles_ / 2],
+      particles_[O_THETA + robot_offset][nParticles_ / 2]);
   ROS_DEBUG("Odometry = [%f %f %f]", odom.x, odom.y, odom.theta);
 
   for (int i = 0; i < nParticles_; i++)
@@ -529,21 +539,20 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
 
     // Rotate to final position and normalize angle
     particles_[O_THETA + robot_offset][i] = angles::normalize_angle(
-        particles_[O_THETA + robot_offset][i] + deltaFinalRotEffective(seed_));
+          particles_[O_THETA + robot_offset][i] + deltaFinalRotEffective(seed_));
   }
 
   // Debugging
   ROS_DEBUG("After prediction: p[%d] = [%f %f %f]", nParticles_ / 2,
             particles_[O_X + robot_offset][nParticles_ / 2],
-            particles_[O_Y + robot_offset][nParticles_ / 2],
-            particles_[O_THETA + robot_offset][nParticles_ / 2]);
-
-  // Change predicted state
-  state.predicted[robotNumber] = true;
+      particles_[O_Y + robot_offset][nParticles_ / 2],
+      particles_[O_THETA + robot_offset][nParticles_ / 2]);
 
   // If all robots have predicted, also predict the target state
-  if (targetMotionState.started && state.allPredicted())
+  if (state.allPredicted() && !state.targetPredicted)
   {
+    state.targetPredicted = true;
+
     ROS_DEBUG("Robot%d is predicting the target state.", robotNumber);
 
     // Random acceleration model
@@ -554,15 +563,16 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
     {
       // delta = v*dt + 0.5*a*dt^2 with a new random acceleration for each
       // component
-      particles_[O_TARGET + O_TX][i] += targetMotionState.Vx * iterationTimeS *
-                                        0.5 * targetAcceleration(seed_) *
-                                        pow(iterationTimeS, 2);
-      particles_[O_TARGET + O_TY][i] += targetMotionState.Vy * iterationTimeS *
-                                        0.5 * targetAcceleration(seed_) *
-                                        pow(iterationTimeS, 2);
-      particles_[O_TARGET + O_TZ][i] += targetMotionState.Vz * iterationTimeS *
-                                        0.5 * targetAcceleration(seed_) *
-                                        pow(iterationTimeS, 2);
+
+      particles_[O_TARGET + O_TX][i] +=
+          state.target.vx * iterationTime +
+          0.5 * targetAcceleration(seed_) * pow(iterationTime, 2);
+      particles_[O_TARGET + O_TY][i] +=
+          state.target.vy * iterationTime +
+          0.5 * targetAcceleration(seed_) * pow(iterationTime, 2);
+      particles_[O_TARGET + O_TZ][i] +=
+          state.target.vz * iterationTime +
+          0.5 * targetAcceleration(seed_) * pow(iterationTime, 2);
     }
   }
 
@@ -587,6 +597,13 @@ void ParticleFilter::saveAllTargetMeasurementsDone(const uint robotNumber)
 {
   // Change state
   state.targetMeasurementsDone[robotNumber] = true;
+
+  // Update iteration time if all robots have sent their target measurements
+  if(state.allTargetMeasurementsDone())
+  {
+    iterationTime = ROS_TIME_SEC - prevTime;
+    prevTime = ROS_TIME_SEC;
+  }
 
   // Start fusing if all robots have done their target measurements and the
   // robot fusion step has been performed

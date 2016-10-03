@@ -30,7 +30,7 @@
 #define TARGET_RAND_STDDEV 20.0
 
 // concerning time
-#define TIME_NOTAVAILABLE -1
+#define ROS_TIME_SEC (ros::Time::now().toSec())
 
 namespace pfuclt_ptcls
 {
@@ -58,18 +58,6 @@ typedef struct targetObs_s
   double covDD, covPP, covXX, covYY;
 } TargetObservation;
 
-typedef struct targetMotion_s
-{
-  bool started;
-  double Vx, Vy, Vz;
-
-  targetMotion_s()
-  {
-    started = false;
-    Vx = Vy = Vz = 0.0;
-  }
-} TargetMotion;
-
 // Apply concept of subparticles (the particle set for each dimension)
 typedef float pdata_t;
 typedef std::vector<pdata_t> subparticles_t;
@@ -91,10 +79,10 @@ class ParticleFilter
     std::vector<bool> predicted;
     std::vector<bool> landmarkMeasurementsDone;
     std::vector<bool> targetMeasurementsDone;
+    bool targetPredicted;
     bool robotsFused;
     bool targetFused;
     bool resampled;
-    bool calcVel;
 
     /**
      * @brief The robotState_s struct - saves information on the belief of a
@@ -122,10 +110,10 @@ class ParticleFilter
      * @param numberRobots
      */
     State(const uint numberRobots, const std::vector<bool>& robotsBeingUsed)
-        : nRobots(numberRobots), predicted(nRobots, false),
-          landmarkMeasurementsDone(nRobots, false),
-          targetMeasurementsDone(nRobots, false), robots(nRobots),
-          robotsUsed(robotsBeingUsed)
+      : nRobots(numberRobots), predicted(nRobots, false),
+        landmarkMeasurementsDone(nRobots, false),
+        targetMeasurementsDone(nRobots, false), robots(nRobots),
+        robotsUsed(robotsBeingUsed)
     {
       reset();
     }
@@ -139,7 +127,7 @@ class ParticleFilter
       predicted.assign(nRobots, false);
       landmarkMeasurementsDone.assign(nRobots, false);
       targetMeasurementsDone.assign(nRobots, false);
-      robotsFused = targetFused = resampled = calcVel = false;
+      robotsFused = targetFused = resampled = targetPredicted = false;
 
       for (uint r = 0; r < nRobots; ++r)
       {
@@ -161,7 +149,7 @@ class ParticleFilter
     bool allPredicted()
     {
       return (std::find(predicted.begin(), predicted.end(), true) !=
-              predicted.end());
+          predicted.end());
     }
 
     /**
@@ -209,7 +197,6 @@ private:
   bool initialized_;
   std::vector<std::vector<LandmarkObservation> > bufLandmarkObservations_;
   std::vector<TargetObservation> bufTargetObservations_;
-  TargetMotion targetMotionState;
 
   /**
    * @brief resetWeights - assign the value 1.0 to all particle weights
@@ -232,8 +219,7 @@ private:
   void resample();
 
 public:
-  // TODO calc. iterationTime in sec
-  double iterationTimeS;
+  double prevTime, iterationTime;
   struct State state;
 
   /**
@@ -263,13 +249,6 @@ public:
                  const uint nLandmarks, const std::vector<bool>& robotsUsed,
                  const std::vector<Landmark>& landmarksMap,
                  const std::vector<float> alpha = std::vector<float>());
-
-  /**
-   * @brief ParticleFilter - copy constructor. Will create and return a new
-   * ParticleFilter object identical to the one provided
-   * @param other - the ParticleFilter object to be copied
-   */
-  ParticleFilter(const ParticleFilter& other);
 
   /**
    * @brief operator [] - array subscripting access to the private particle set
@@ -394,13 +373,6 @@ public:
    * @param robotNumber - the robot number performing the measurements
    */
   void saveAllTargetMeasurementsDone(const uint robotNumber);
-
-  /**
-   * @todo TODO define this function
-   * @brief saveTargetMotionState - saves the new state of the target
-   * @param vel - array with the 3 velocities (x,y,z)
-   */
-  void saveTargetMotionState(const double vel[3]);
 };
 
 // end of namespace pfuclt_ptcls
