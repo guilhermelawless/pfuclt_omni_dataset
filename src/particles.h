@@ -87,6 +87,7 @@ class ParticleFilter
   struct State
   {
     uint nRobots;
+    const std::vector<bool>& robotsUsed;
     std::vector<bool> predicted;
     std::vector<bool> landmarkMeasurementsDone;
     std::vector<bool> targetMeasurementsDone;
@@ -95,28 +96,79 @@ class ParticleFilter
     bool resampled;
     bool calcVel;
 
-    State(const uint numberRobots)
+    /**
+     * @brief The robotState_s struct - saves information on the belief of a
+     * robot's state
+     */
+    struct robotState_s
+    {
+      float x, y, theta;
+      float conf;
+    };
+    std::vector<struct robotState_s> robots;
+
+    /**
+     * @brief The targetState_s struct - saves information on the belief of the
+     * target's state
+     */
+    struct targetState_s
+    {
+      float x, y, z;
+      float vx, vy, vz;
+    } target;
+
+    /**
+     * @brief State - constructor
+     * @param numberRobots
+     */
+    State(const uint numberRobots, const std::vector<bool>& robotsBeingUsed)
         : nRobots(numberRobots), predicted(nRobots, false),
           landmarkMeasurementsDone(nRobots, false),
-          targetMeasurementsDone(nRobots, false)
+          targetMeasurementsDone(nRobots, false), robots(nRobots),
+          robotsUsed(robotsBeingUsed)
     {
       reset();
     }
 
+    /**
+     * @brief reset - set the state's bools to false after the PF's last step.
+     * If any robot is not used, sets those variables to true
+     */
     void reset()
     {
       predicted.assign(nRobots, false);
       landmarkMeasurementsDone.assign(nRobots, false);
       targetMeasurementsDone.assign(nRobots, false);
       robotsFused = targetFused = resampled = calcVel = false;
+
+      for (uint r = 0; r < nRobots; ++r)
+      {
+        if (!robotsUsed[r])
+        {
+          predicted[r] = true;
+          landmarkMeasurementsDone[r] = true;
+          targetMeasurementsDone[r] = true;
+        }
+      }
     }
 
+    /**
+     * @brief allPredicted - call to find out if the PF has predicted each
+     * robot's state
+     * @return true if the PF has predicted all robots in this iteration, false
+     * otherwise
+     */
     bool allPredicted()
     {
       return (std::find(predicted.begin(), predicted.end(), true) !=
               predicted.end());
     }
 
+    /**
+     * @brief allLandmarkMeasurementsDone - call to find out if all the robots
+     * have sent their landmark measurements to the PF in this iteration
+     * @return true if all measurements are present, false otherwise
+     */
     bool allLandmarkMeasurementsDone()
     {
       return (std::find(landmarkMeasurementsDone.begin(),
@@ -124,6 +176,11 @@ class ParticleFilter
                         true) != landmarkMeasurementsDone.end());
     }
 
+    /**
+     * @brief allTargetMeasurementsDone - call to find out if all the robots
+     * have sent their target measurements to the PF in this iteration
+     * @return true if all measurements are present, false otherwise
+     */
     bool allTargetMeasurementsDone()
     {
       return (std::find(targetMeasurementsDone.begin(),
@@ -172,7 +229,7 @@ private:
   /**
    * @brief resample - the resampling step
    */
-  void resample() {}
+  void resample();
 
 public:
   // TODO calc. iterationTime in sec

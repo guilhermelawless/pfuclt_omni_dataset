@@ -183,29 +183,12 @@ private:
       particlePublisher;
   read_omni_dataset::RobotState msg_state;
 
-  std::vector<float> particleSet_[19];
-
-  std::vector<float> normalizedWeights;
-
 public:
   SelfRobot(ros::NodeHandle& nh, RobotFactory* caller,
             Eigen::Isometry2d initPose, ParticleFilter& ptcls,
             uint robotNumber);
 
-  /**
-   * @brief odometryCallback - event-driven function which should be called when
-   * new odometry data is received
-   * @param odometry - the odometry data received, using the standard ROS
-   * odometry message type
-   * @remark calls the Robot::odometryCallback method and extends it
-   */
-  void odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry);
-
   void gtDataCallback(const read_omni_dataset::LRMGTData::ConstPtr&);
-
-  void PFfuseTargetInfo();
-
-  void PFresample();
 
   // publish the estimated state of all the teammate robot
   void publishState(float, float, float);
