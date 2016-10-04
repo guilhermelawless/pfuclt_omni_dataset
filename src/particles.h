@@ -8,7 +8,7 @@
 #include <boost/thread/mutex.hpp>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-
+#include <sstream>
 #include "pfuclt_aux.h"
 
 // ideally later this will be a parameter, when it makes sense to
@@ -29,11 +29,10 @@
 #define TARGET_RAND_STDDEV 20.0
 
 // concerning time
-#define TIME_NOTAVAILABLE -1
+#define ROS_TIME_SEC (ros::Time::now().toSec())
 
 namespace pfuclt_ptcls
 {
-
 using namespace pfuclt_aux;
 
 typedef struct odometry_s
@@ -41,25 +40,21 @@ typedef struct odometry_s
   float x, y, theta;
 } Odometry;
 
-typedef struct measurement_s
+typedef struct landmarkObs_s
 {
   bool found;
   double x, y;
   double d, phi;
   double covDD, covPP, covXX, covYY;
-} Measurement;
+} LandmarkObservation;
 
-typedef struct targetMotion_s
+typedef struct targetObs_s
 {
-  bool started;
-  double Vx, Vy, Vz;
-
-  targetMotion_s()
-  {
-    started = false;
-    Vx = Vy = Vz = 0.0;
-  }
-} TargetMotion;
+  bool found;
+  double x, y, z;
+  double d, phi;
+  double covDD, covPP, covXX, covYY;
+} TargetObservation;
 
 // Apply concept of subparticles (the particle set for each dimension)
 typedef float pdata_t;
@@ -78,37 +73,160 @@ class ParticleFilter
   struct State
   {
     uint nRobots;
+    const std::vector<bool>& robotsUsed;
     std::vector<bool> predicted;
-    std::vector<bool> measurementsDone;
+    std::vector<bool> landmarkMeasurementsDone;
+    std::vector<bool> targetMeasurementsDone;
+    bool targetPredicted;
     bool robotsFused;
     bool targetFused;
     bool resampled;
-    bool calcVel;
 
-    State(const uint numberRobots)
-        : nRobots(numberRobots), predicted(nRobots, false),
-          measurementsDone(nRobots, false)
+    /**
+     * @brief The robotState_s struct - saves information on the belief of a
+     * robot's state
+     */
+    struct robotState_s
+    {
+      float x, y, theta;
+      float conf;
+    };
+    std::vector<struct robotState_s> robots;
+
+    /**
+     * @brief The targetState_s struct - saves information on the belief of the
+     * target's state
+     */
+    struct targetState_s
+    {
+      float x, y, z;
+      float vx, vy, vz;
+    } target;
+
+    /**
+     * @brief State - constructor
+     * @param numberRobots
+     */
+    State(const uint numberRobots, const std::vector<bool>& robotsBeingUsed)
+      : nRobots(numberRobots), predicted(nRobots, false),
+        landmarkMeasurementsDone(nRobots, false),
+        targetMeasurementsDone(nRobots, false), robots(nRobots),
+        robotsUsed(robotsBeingUsed)
     {
       reset();
     }
 
+  private:
+    void print(std::ostringstream& oss, std::vector<bool>& vec)
+    {
+      oss << "[";
+
+      for (std::vector<bool>::iterator it = vec.begin(); it != vec.end(); ++it)
+        oss << *it;
+
+      oss << "]";
+      return;
+    }
+
+  public:
+    // TODO add state print
+    void print()
+    {
+      std::ostringstream oss;
+      oss << "PF State:";
+      oss << std::endl
+          << "-predicted = ";
+      print(oss, predicted);
+      oss << std::endl
+          << "-landmarkMeasurementsDone = ";
+      print(oss, landmarkMeasurementsDone);
+      oss << std::endl
+          << "-targetMeasurementsDone = ";
+      print(oss, targetMeasurementsDone);
+      oss << std::endl
+          << "-targetPredicted = " << targetPredicted;
+      oss << std::endl
+          << "-robotsFused = " << robotsFused;
+      oss << std::endl
+          << "-targetFused = " << targetFused;
+      oss << std::endl
+          << "-resampled = " << resampled;
+
+      ROS_DEBUG("%s", oss.str().c_str());
+    }
+
+    /**
+     * @brief reset - set the state's bools to false after the PF's last step.
+     * If any robot is not used, sets those variables to true
+     */
     void reset()
     {
       predicted.assign(nRobots, false);
-      measurementsDone.assign(nRobots, false);
-      robotsFused = targetFused = resampled = calcVel = false;
+      landmarkMeasurementsDone.assign(nRobots, false);
+      targetMeasurementsDone.assign(nRobots, false);
+      robotsFused = targetFused = resampled = targetPredicted = false;
+
+      for (uint r = 0; r < nRobots; ++r)
+      {
+        if (!robotsUsed[r])
+        {
+          predicted[r] = true;
+          landmarkMeasurementsDone[r] = true;
+          targetMeasurementsDone[r] = true;
+        }
+      }
     }
 
+    /**
+     * @brief allPredicted - call to find out if the PF has predicted each
+     * robot's state
+     * @return true if the PF has predicted all robots in this iteration, false
+     * otherwise
+     */
     bool allPredicted()
     {
-      return (std::find(predicted.begin(), predicted.end(), true) !=
-              predicted.end());
+      for (std::vector<bool>::iterator it = predicted.begin();
+           it != predicted.end(); ++it)
+      {
+        if (false == *it)
+          return false;
+      }
+
+      return true;
     }
 
-    bool allMeasurementsDone()
+    /**
+     * @brief allLandmarkMeasurementsDone - call to find out if all the robots
+     * have sent their landmark measurements to the PF in this iteration
+     * @return true if all measurements are present, false otherwise
+     */
+    bool allLandmarkMeasurementsDone()
     {
-      return (std::find(measurementsDone.begin(), measurementsDone.end(),
-                        true) != measurementsDone.end());
+      for (std::vector<bool>::iterator it = landmarkMeasurementsDone.begin();
+           it != landmarkMeasurementsDone.end(); ++it)
+      {
+        if (false == *it)
+          return false;
+      }
+
+      return true;
+    }
+
+    /**
+     * @brief allTargetMeasurementsDone - call to find out if all the robots
+     * have sent their target measurements to the PF in this iteration
+     * @return true if all measurements are present, false otherwise
+     */
+    bool allTargetMeasurementsDone()
+    {
+      for (std::vector<bool>::iterator it = targetMeasurementsDone.begin();
+           it != targetMeasurementsDone.end(); ++it)
+      {
+        if (false == *it)
+          return false;
+      }
+
+      return true;
     }
   };
 
@@ -130,17 +248,61 @@ private:
   RNGType seed_;
   std::vector<float> alpha_;
   bool initialized_;
-  std::vector<std::vector<Measurement> > bufMeasurements_;
-  TargetMotion targetMotionState;
+  std::vector<std::vector<LandmarkObservation> > bufLandmarkObservations_;
+  std::vector<TargetObservation> bufTargetObservations_;
+
+  /**
+   * @brief resetWeights - assign the value 1.0 to all particle weights
+   */
+  void resetWeights()
+  {
+    assign((pdata_t)1.0, WEIGHT_INDEX);
+    /*
+    for(uint s=0; s < weightComponents_.size(); ++s)
+      weightComponents_[s].assign(nParticles_, 1.0);
+    */
+  }
+
+  /**
+   * @brief predictTarget - predict target state step
+   * @param robotNumber - the robot performing, for debugging purposes
+   */
+  void predictTarget(uint robotNumber);
 
   /**
    * @brief fuseRobots - fuse robot states step
    */
   void fuseRobots();
 
+  /**
+   * @brief fuseTarget - fuse target state step
+   */
+  void fuseTarget();
+
+  /**
+   * @brief low_variance_resampler - implementation of the resampler by Thrun and Burgard
+   */
+  void low_variance_resampler(const float weightSum);
+
+  /**
+   * @brief myResampler - a simpler resampler
+   */
+  void myResampler(const float weightSum);
+
+  /**
+   * @brief resample - the resampling step
+   */
+  void resample();
+
 public:
-  double iterationTimeS;
+  double prevTime, iterationTime;
   struct State state;
+  boost::shared_ptr<std::ostringstream> iteration_oss;
+
+  /**
+   * @brief printWeights
+   */
+  void printWeights(std::string pre);
 
   /**
    * @brief assign - assign a value to every particle in all subsets
@@ -169,13 +331,6 @@ public:
                  const uint nLandmarks, const std::vector<bool>& robotsUsed,
                  const std::vector<Landmark>& landmarksMap,
                  const std::vector<float> alpha = std::vector<float>());
-
-  /**
-   * @brief ParticleFilter - copy constructor. Will create and return a new
-   * ParticleFilter object identical to the one provided
-   * @param other - the ParticleFilter object to be copied
-   */
-  ParticleFilter(const ParticleFilter& other);
 
   /**
    * @brief operator [] - array subscripting access to the private particle set
@@ -238,48 +393,68 @@ public:
   std::size_t size() { return nSubParticleSets_; }
 
   /**
-   * @brief resetWeights - assign the value 1.0 to all particle weights
-   */
-  void resetWeights() { assign((pdata_t)1.0, WEIGHT_INDEX); }
-
-  /**
-   * @brief saveLandmarkObservation - saves the Measurement obs to a buffer of
+   * @brief saveLandmarkObservation - saves the landmark observation to a buffer
+   * of
    * observations
    * @param robotNumber - the robot number in the team
    * @param landmarkNumber - the landmark serial id
    * @param obs - the observation data as a structure defined in this file
    */
   void saveLandmarkObservation(const uint robotNumber,
-                               const uint landmarkNumber, const Measurement obs)
+                               const uint landmarkNumber,
+                               const LandmarkObservation obs)
   {
-    bufMeasurements_[robotNumber][landmarkNumber] = obs;
+    bufLandmarkObservations_[robotNumber][landmarkNumber] = obs;
   }
 
   /**
    * @brief saveLandmarkObservation - change the measurement buffer state
    * @param robotNumber - the robot number in the team
-   * @param landmarkNumber - the landmark serial id
    * @param _found - whether this landmark has been found
    */
   void saveLandmarkObservation(const uint robotNumber,
-                               const uint landmarkNumber, bool _found)
+                               const uint landmarkNumber, const bool _found)
   {
-    bufMeasurements_[robotNumber][landmarkNumber].found = _found;
+    bufLandmarkObservations_[robotNumber][landmarkNumber].found = _found;
   }
 
   /**
-   * @todo TODO define this function
-   * @brief saveTargetMotionState - saves the new state of the target
-   * @param vel - array with the 3 velocities (x,y,z)
-   */
-  void saveTargetMotionState(const double vel[3]);
-
-  /**
-   * @brief allMeasurementsDone - call this function when all measurements have
-   * been performed
+   * @brief saveAllLandmarkMeasurementsDone - call this function when all
+   * landmark measurements have
+   * been performed by a certain robot
    * @param robotNumber - the robot number performing the measurements
    */
-  void allMeasurementsDone(const uint robotNumber);
+  void saveAllLandmarkMeasurementsDone(const uint robotNumber);
+
+  /**
+   * @brief saveTargetObservation - saves the target observation to a buffer of
+   * observations
+   * @param robotNumber - the robot number in the team
+   * @param obs - the observation data as a structure defined in this file
+   */
+  void saveTargetObservation(const uint robotNumber,
+                             const TargetObservation obs)
+  {
+    bufTargetObservations_[robotNumber] = obs;
+  }
+
+  /**
+   * @brief saveTargetObservation - change the measurement buffer state
+   * @param robotNumber - the robot number in the team
+   * @param _found - whether the target has been found
+   */
+  void saveTargetObservation(const uint robotNumber, const bool _found)
+  {
+    bufTargetObservations_[robotNumber].found = _found;
+  }
+
+  /**
+   * @brief saveAllTargetMeasurementsDone - call this function when all target
+   * measurements have
+   * been performed by a certain robot
+   * @param robotNumber - the robot number performing the measurements
+   */
+  void saveAllTargetMeasurementsDone(const uint robotNumber);
 };
 
 // end of namespace pfuclt_ptcls

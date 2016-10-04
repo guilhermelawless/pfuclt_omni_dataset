@@ -46,13 +46,12 @@ std::vector<Landmark> getLandmarks(const char* filename);
   * @param vec - vector of type T with values to calculate std.dev
   * @return standard deviation as a double
   */
-template <typename T> double calc_stdDev(std::vector<T>* vec)
+template <typename T> double calc_stdDev(const std::vector<T>& vec)
 {
   using namespace boost::accumulators;
 
   accumulator_set<T, stats<tag::variance> > acc;
-  std::for_each(vec->begin(), vec->end(),
-                boost::bind<void>(boost::ref(acc), _1));
+  std::for_each(vec.begin(), vec.end(), boost::bind<void>(boost::ref(acc), _1));
   return (double)sqrt(extract::variance(acc));
 }
 
@@ -67,7 +66,7 @@ template <typename T> double calc_stdDev(std::vector<T>* vec)
  */
 template <typename T>
 std::vector<unsigned int> order_index(std::vector<T> const& values,
-                                      ORDER_TYPE order = pfuclt_aux::DESC)
+                                      const ORDER_TYPE order = pfuclt_aux::DESC)
 {
   // from http://stackoverflow.com/a/10585614 and modified
   // return sorted indices of vector values
