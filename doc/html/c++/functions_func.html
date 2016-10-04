@@ -8,7 +8,6 @@
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
-      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li class="current"><a href="annotated.html"><span>Classes</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
@@ -38,6 +37,7 @@
       <li><a href="#index_h"><span>h</span></a></li>
       <li><a href="#index_i"><span>i</span></a></li>
       <li><a href="#index_l"><span>l</span></a></li>
+      <li><a href="#index_m"><span>m</span></a></li>
       <li><a href="#index_o"><span>o</span></a></li>
       <li><a href="#index_p"><span>p</span></a></li>
       <li><a href="#index_r"><span>r</span></a></li>
@@ -50,12 +50,14 @@
 &#160;
 
 <h3><a class="anchor" id="index_a"></a>- a -</h3><ul>
-<li>allMeasurementsDone()
-: <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a436a4a9b1823a95748404cf25c07c237">pfuclt_ptcls::ParticleFilter</a>
-, <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#af618876806b3f961b43c08bb939cc6cc">pfuclt_ptcls::ParticleFilter::State</a>
+<li>allLandmarkMeasurementsDone()
+: <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#a948400b0a865a616baf87b1cea1bbd9b">pfuclt_ptcls::ParticleFilter::State</a>
 </li>
 <li>allPredicted()
 : <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#ac699de610335ac852596f5ae43b6f8e6">pfuclt_ptcls::ParticleFilter::State</a>
+</li>
+<li>allTargetMeasurementsDone()
+: <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#a248df52258e8ff2f0de3d420a383f379">pfuclt_ptcls::ParticleFilter::State</a>
 </li>
 <li>areAllRobotsActive()
 : <a class="el" href="classpfuclt_1_1RobotFactory.html#a03bae327be026feab5ae73447946b600">pfuclt::RobotFactory</a>
@@ -69,6 +71,9 @@
 <h3><a class="anchor" id="index_f"></a>- f -</h3><ul>
 <li>fuseRobots()
 : <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a8dc14870619f79617a3c3d05a4b9836d">pfuclt_ptcls::ParticleFilter</a>
+</li>
+<li>fuseTarget()
+: <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a98664ef8bbd5781c2f6387c6428bc941">pfuclt_ptcls::ParticleFilter</a>
 </li>
 </ul>
 
@@ -104,13 +109,22 @@
 <li>landmarkDataCallback()
 : <a class="el" href="classpfuclt_1_1Robot.html#a58e5f66b670be3e33204a352308242db">pfuclt::Robot</a>
 </li>
+<li>low_variance_resampler()
+: <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a3ef3bb623e88c6c66bcab66f4a03671d">pfuclt_ptcls::ParticleFilter</a>
+</li>
+</ul>
+
+
+<h3><a class="anchor" id="index_m"></a>- m -</h3><ul>
+<li>myResampler()
+: <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a15bd6282a12222357824b1a186f9668a">pfuclt_ptcls::ParticleFilter</a>
+</li>
 </ul>
 
 
 <h3><a class="anchor" id="index_o"></a>- o -</h3><ul>
 <li>odometryCallback()
 : <a class="el" href="classpfuclt_1_1Robot.html#a8c55f2dac3cd1ffef72a1414bb23fe4e">pfuclt::Robot</a>
-, <a class="el" href="classpfuclt_1_1SelfRobot.html#a47c673acdbfa908668724632386ebc42">pfuclt::SelfRobot</a>
 </li>
 <li>operator[]()
 : <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#afdf0dd83beaa496751397a5b63a7c371">pfuclt_ptcls::ParticleFilter</a>
@@ -122,14 +136,17 @@
 <li>ParticleFilter()
 : <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a0a74f5e861d5d3fe1350f425125f2eb4">pfuclt_ptcls::ParticleFilter</a>
 </li>
-<li>PFfuseTargetInfo()
-: <a class="el" href="classpfuclt_1_1SelfRobot.html#a4a70297967f4707ad56833d319c20076">pfuclt::SelfRobot</a>
-</li>
-<li>PFresample()
-: <a class="el" href="classpfuclt_1_1SelfRobot.html#ae6fcb49ce3723c4ff24d57234f3d9f9c">pfuclt::SelfRobot</a>
-</li>
 <li>predict()
 : <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a6c3cad0dc8c0e3d5d1cdef8cad804aa6">pfuclt_ptcls::ParticleFilter</a>
+</li>
+<li>predictTarget()
+: <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a451b458bd98079f26d7792d1c499704f">pfuclt_ptcls::ParticleFilter</a>
+</li>
+<li>print()
+: <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#af1f469ff3d3a90a06f7efb606cab1e53">pfuclt_ptcls::ParticleFilter::State</a>
+</li>
+<li>printWeights()
+: <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#af6db0c903c4373bba52c5331358be46d">pfuclt_ptcls::ParticleFilter</a>
 </li>
 <li>publishState()
 : <a class="el" href="classpfuclt_1_1SelfRobot.html#a638d05abaff7dcfefadf36b98af6a6c1">pfuclt::SelfRobot</a>
@@ -138,6 +155,9 @@
 
 
 <h3><a class="anchor" id="index_r"></a>- r -</h3><ul>
+<li>resample()
+: <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#afea2e2201761cc33ae2753ced474a9df">pfuclt_ptcls::ParticleFilter</a>
+</li>
 <li>reset()
 : <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#a950f52ffb885b20ca65b1a33649dc32b">pfuclt_ptcls::ParticleFilter::State</a>
 </li>
@@ -154,11 +174,17 @@
 
 
 <h3><a class="anchor" id="index_s"></a>- s -</h3><ul>
-<li>saveLandmarkObservation()
-: <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#aa6a3d771da2f81d847752b80a669bbf5">pfuclt_ptcls::ParticleFilter</a>
+<li>saveAllLandmarkMeasurementsDone()
+: <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#ab26017a5ea76dce24d11c2281a00df64">pfuclt_ptcls::ParticleFilter</a>
 </li>
-<li>saveTargetMotionState()
-: <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a23ea560ffcf115daf29d1b4db5fcc2f1">pfuclt_ptcls::ParticleFilter</a>
+<li>saveAllTargetMeasurementsDone()
+: <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a77022f57b64c76e9f03a52dbe7f0de6f">pfuclt_ptcls::ParticleFilter</a>
+</li>
+<li>saveLandmarkObservation()
+: <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a3be4d850394e14e08969c59ec115df8b">pfuclt_ptcls::ParticleFilter</a>
+</li>
+<li>saveTargetObservation()
+: <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a2639c66d323b9b2a6cd7ca4b76c6b503">pfuclt_ptcls::ParticleFilter</a>
 </li>
 <li>SelfRobot()
 : <a class="el" href="classpfuclt_1_1SelfRobot.html#a95aeee00373b2fa541710618ef8eff3d">pfuclt::SelfRobot</a>
@@ -170,7 +196,7 @@
 : <a class="el" href="classpfuclt_1_1Robot.html#a5d8624c893094c2d1f48d1040a5298f2">pfuclt::Robot</a>
 </li>
 <li>State()
-: <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#a4572ecb42ab635149f6608fd9c388b6b">pfuclt_ptcls::ParticleFilter::State</a>
+: <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#ac32f9332b465abd0abeed4c857b4cc16">pfuclt_ptcls::ParticleFilter::State</a>
 </li>
 </ul>
 
@@ -178,9 +204,6 @@
 <h3><a class="anchor" id="index_t"></a>- t -</h3><ul>
 <li>targetCallback()
 : <a class="el" href="classpfuclt_1_1Robot.html#afcc37f30e7ea2f7a6146edfc9ffdd750">pfuclt::Robot</a>
-</li>
-<li>targetMotion_s()
-: <a class="el" href="structpfuclt__ptcls_1_1targetMotion__s.html#af5a65605ec4f23ab194135ea0896c8e5">pfuclt_ptcls::targetMotion_s</a>
 </li>
 <li>tryInitializeParticles()
 : <a class="el" href="classpfuclt_1_1RobotFactory.html#aca32860cd62594e248da9783f3ebe043">pfuclt::RobotFactory</a>
@@ -192,7 +215,7 @@
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Fri Sep 30 2016 16:10:40</small>
+<small>autogenerated on Tue Oct 4 2016 14:34:17</small>
 </div>
 </body>
 </html>

@@ -8,7 +8,6 @@
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
-      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li class="current"><a href="annotated.html"><span>Classes</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
@@ -52,13 +51,6 @@ Inheritance diagram for pfuclt::SelfRobot:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a4aa2f9ce59bf4fd9d792c39222b063fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1SelfRobot.html#a4aa2f9ce59bf4fd9d792c39222b063fd">gtDataCallback</a> (const read_omni_dataset::LRMGTData::ConstPtr &amp;)</td></tr>
 <tr class="separator:a4aa2f9ce59bf4fd9d792c39222b063fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a47c673acdbfa908668724632386ebc42"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1SelfRobot.html#a47c673acdbfa908668724632386ebc42">odometryCallback</a> (const nav_msgs::Odometry::ConstPtr &amp;odometry)</td></tr>
-<tr class="memdesc:a47c673acdbfa908668724632386ebc42"><td class="mdescLeft">&#160;</td><td class="mdescRight">odometryCallback - event-driven function which should be called when new odometry data is received  <a href="#a47c673acdbfa908668724632386ebc42">More...</a><br/></td></tr>
-<tr class="separator:a47c673acdbfa908668724632386ebc42"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4a70297967f4707ad56833d319c20076"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1SelfRobot.html#a4a70297967f4707ad56833d319c20076">PFfuseTargetInfo</a> ()</td></tr>
-<tr class="separator:a4a70297967f4707ad56833d319c20076"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae6fcb49ce3723c4ff24d57234f3d9f9c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1SelfRobot.html#ae6fcb49ce3723c4ff24d57234f3d9f9c">PFresample</a> ()</td></tr>
-<tr class="separator:ae6fcb49ce3723c4ff24d57234f3d9f9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a638d05abaff7dcfefadf36b98af6a6c1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1SelfRobot.html#a638d05abaff7dcfefadf36b98af6a6c1">publishState</a> (float, float, float)</td></tr>
 <tr class="separator:a638d05abaff7dcfefadf36b98af6a6c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95aeee00373b2fa541710618ef8eff3d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1SelfRobot.html#a95aeee00373b2fa541710618ef8eff3d">SelfRobot</a> (ros::NodeHandle &amp;nh, <a class="el" href="classpfuclt_1_1RobotFactory.html">RobotFactory</a> *caller, Eigen::Isometry2d initPose, <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a> &amp;ptcls, uint robotNumber)</td></tr>
@@ -88,12 +80,8 @@ Private Attributes</h2></td></tr>
 <tr class="separator:a3a5f07da2c33ab3ba6e9c45e2594bc3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb72959a2b767211559f26efca7578dd"><td class="memItemLeft" align="right" valign="top">read_omni_dataset::RobotState&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1SelfRobot.html#abb72959a2b767211559f26efca7578dd">msg_state</a></td></tr>
 <tr class="separator:abb72959a2b767211559f26efca7578dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9cbefac136df36f4bd1343fee11092df"><td class="memItemLeft" align="right" valign="top">std::vector&lt; float &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1SelfRobot.html#a9cbefac136df36f4bd1343fee11092df">normalizedWeights</a></td></tr>
-<tr class="separator:a9cbefac136df36f4bd1343fee11092df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa04cf64df9321f20b7294a320ccb6714"><td class="memItemLeft" align="right" valign="top">ros::Publisher&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1SelfRobot.html#aa04cf64df9321f20b7294a320ccb6714">particlePublisher</a></td></tr>
 <tr class="separator:aa04cf64df9321f20b7294a320ccb6714"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae579543c9a6039aa3df1b119a5766023"><td class="memItemLeft" align="right" valign="top">std::vector&lt; float &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1SelfRobot.html#ae579543c9a6039aa3df1b119a5766023">particleSet_</a> [19]</td></tr>
-<tr class="separator:ae579543c9a6039aa3df1b119a5766023"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3a76f69fd108df26e49fb83b9b9bf19f"><td class="memItemLeft" align="right" valign="top">read_omni_dataset::LRMGTData&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1SelfRobot.html#a3a76f69fd108df26e49fb83b9b9bf19f">receivedGTdata</a></td></tr>
 <tr class="separator:a3a76f69fd108df26e49fb83b9b9bf19f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6187e058624f9e0513d3c7bb8489c5e3"><td class="memItemLeft" align="right" valign="top">ros::Publisher&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1SelfRobot.html#a6187e058624f9e0513d3c7bb8489c5e3">State_publisher</a></td></tr>
@@ -110,10 +98,6 @@ Additional Inherited Members</h2></td></tr>
 <tr class="memdesc:a5d8624c893094c2d1f48d1040a5298f2 inherit pro_methods_classpfuclt_1_1Robot"><td class="mdescLeft">&#160;</td><td class="mdescRight">startNow - starts the robot  <a href="#a5d8624c893094c2d1f48d1040a5298f2">More...</a><br/></td></tr>
 <tr class="separator:a5d8624c893094c2d1f48d1040a5298f2 inherit pro_methods_classpfuclt_1_1Robot"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classpfuclt_1_1Robot"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classpfuclt_1_1Robot')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classpfuclt_1_1Robot.html">pfuclt::Robot</a></td></tr>
-<tr class="memitem:a6fc8a2746aa48c97d3b4ad87adb51a04 inherit pro_attribs_classpfuclt_1_1Robot"><td class="memItemLeft" align="right" valign="top">Eigen::Isometry2d&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html#a6fc8a2746aa48c97d3b4ad87adb51a04">curPose_</a></td></tr>
-<tr class="separator:a6fc8a2746aa48c97d3b4ad87adb51a04 inherit pro_attribs_classpfuclt_1_1Robot"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abbc8d7b092d18e53c4d88cbe08d30710 inherit pro_attribs_classpfuclt_1_1Robot"><td class="memItemLeft" align="right" valign="top">ros::Time&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html#abbc8d7b092d18e53c4d88cbe08d30710">curTime_</a></td></tr>
-<tr class="separator:abbc8d7b092d18e53c4d88cbe08d30710 inherit pro_attribs_classpfuclt_1_1Robot"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aded1a27734663dbd0e1a31e7ae956382 inherit pro_attribs_classpfuclt_1_1Robot"><td class="memItemLeft" align="right" valign="top">Eigen::Isometry2d&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html#aded1a27734663dbd0e1a31e7ae956382">initPose_</a></td></tr>
 <tr class="separator:aded1a27734663dbd0e1a31e7ae956382 inherit pro_attribs_classpfuclt_1_1Robot"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0c0269adc4325c4cba49b018594f4739 inherit pro_attribs_classpfuclt_1_1Robot"><td class="memItemLeft" align="right" valign="top">ros::NodeHandle &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html#a0c0269adc4325c4cba49b018594f4739">nh_</a></td></tr>
@@ -122,10 +106,6 @@ Additional Inherited Members</h2></td></tr>
 <tr class="separator:a7fd63a97489c2bd7a4f58013f6819e95 inherit pro_attribs_classpfuclt_1_1Robot"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a76b815fadc63caf3fe0cc8089b7e41a2 inherit pro_attribs_classpfuclt_1_1Robot"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html#a76b815fadc63caf3fe0cc8089b7e41a2">pf_</a></td></tr>
 <tr class="separator:a76b815fadc63caf3fe0cc8089b7e41a2 inherit pro_attribs_classpfuclt_1_1Robot"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac527f77bdfb4c5f39361c36897b204f inherit pro_attribs_classpfuclt_1_1Robot"><td class="memItemLeft" align="right" valign="top">Eigen::Isometry2d&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html#aac527f77bdfb4c5f39361c36897b204f">prevPose_</a></td></tr>
-<tr class="separator:aac527f77bdfb4c5f39361c36897b204f inherit pro_attribs_classpfuclt_1_1Robot"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39b1740af21398b555dcf989ed72f4fe inherit pro_attribs_classpfuclt_1_1Robot"><td class="memItemLeft" align="right" valign="top">ros::Time&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html#a39b1740af21398b555dcf989ed72f4fe">prevTime_</a></td></tr>
-<tr class="separator:a39b1740af21398b555dcf989ed72f4fe inherit pro_attribs_classpfuclt_1_1Robot"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6dc3c0222b16b981bfd7ddbfd5fbcabd inherit pro_attribs_classpfuclt_1_1Robot"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html#a6dc3c0222b16b981bfd7ddbfd5fbcabd">robotNumber_</a></td></tr>
 <tr class="separator:a6dc3c0222b16b981bfd7ddbfd5fbcabd inherit pro_attribs_classpfuclt_1_1Robot"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a09042cb0525fd0f58e1fa598e2949601 inherit pro_attribs_classpfuclt_1_1Robot"><td class="memItemLeft" align="right" valign="top">ros::Subscriber&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html#a09042cb0525fd0f58e1fa598e2949601">sBall_</a></td></tr>
@@ -142,7 +122,7 @@ Additional Inherited Members</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The <a class="el" href="classpfuclt_1_1SelfRobot.html" title="The SelfRobot class - This is the class that performs the PF-UCLT algorithm. ">SelfRobot</a> class - This is the class that performs the PF-UCLT algorithm. </p>
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00175">175</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00171">171</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a95aeee00373b2fa541710618ef8eff3d"></a>
 <div class="memitem">
@@ -186,7 +166,7 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00388">388</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00369">369</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -205,67 +185,7 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00633">633</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="a47c673acdbfa908668724632386ebc42"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void pfuclt::SelfRobot::odometryCallback </td>
-          <td>(</td>
-          <td class="paramtype">const nav_msgs::Odometry::ConstPtr &amp;&#160;</td>
-          <td class="paramname"><em>odometry</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>odometryCallback - event-driven function which should be called when new odometry data is received </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">odometry</td><td>- the odometry data received, using the standard ROS odometry message type </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section remark"><dt>Remarks</dt><dd>calls the <a class="el" href="classpfuclt_1_1Robot.html#a8c55f2dac3cd1ffef72a1414bb23fe4e" title="odometryCallback - event-driven function which should be called when new odometry data is received ...">Robot::odometryCallback</a> method and extends it </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="a4a70297967f4707ad56833d319c20076"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void pfuclt::SelfRobot::PFfuseTargetInfo </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00424">424</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="ae6fcb49ce3723c4ff24d57234f3d9f9c"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void pfuclt::SelfRobot::PFresample </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>TODO change this to a much more stable way of finding the mean of the cluster which will represent the ball position. Because it's not the highest weight particle which represent's the ball position </p>
-
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00426">426</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00405">405</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -299,7 +219,7 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00639">639</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00411">411</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -322,7 +242,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00178">178</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00174">174</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -344,7 +264,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00180">180</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00176">176</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -366,29 +286,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00184">184</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="a9cbefac136df36f4bd1343fee11092df"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;float&gt; pfuclt::SelfRobot::normalizedWeights</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00188">188</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00180">180</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -410,29 +308,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00182">182</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="ae579543c9a6039aa3df1b119a5766023"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;float&gt; pfuclt::SelfRobot::particleSet_[19]</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00186">186</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00178">178</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -454,7 +330,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00179">179</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00175">175</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -476,7 +352,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00182">182</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00178">178</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -498,7 +374,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00182">182</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00178">178</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -520,7 +396,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00182">182</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00178">178</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -534,7 +410,7 @@ Additional Inherited Members</h2></td></tr>
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Fri Sep 30 2016 16:10:40</small>
+<small>autogenerated on Tue Oct 4 2016 14:34:17</small>
 </div>
 </body>
 </html>
