@@ -406,6 +406,8 @@ void SelfRobot::gtDataCallback(
     const read_omni_dataset::LRMGTData::ConstPtr& gtMsgReceived)
 {
   receivedGTdata = *gtMsgReceived;
+  geometry_msgs::Pose& pose = receivedGTdata.poseOMNI1.pose;
+  ROS_INFO("OMNI4 is at [x,y] = [ %f, %f]", pose.position.x, pose.position.y);
 }
 
 void SelfRobot::publishState(float x, float y, float theta)

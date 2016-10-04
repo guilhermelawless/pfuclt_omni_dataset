@@ -46,6 +46,7 @@ typedef struct landmarkObs_s
   double x, y;
   double d, phi;
   double covDD, covPP, covXX, covYY;
+  landmarkObs_s(){ found = false; }
 } LandmarkObservation;
 
 typedef struct targetObs_s
@@ -54,6 +55,8 @@ typedef struct targetObs_s
   double x, y, z;
   double d, phi;
   double covDD, covPP, covXX, covYY;
+
+  targetObs_s(){ found = false; }
 } TargetObservation;
 
 // Apply concept of subparticles (the particle set for each dimension)

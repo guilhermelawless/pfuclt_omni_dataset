@@ -54,7 +54,7 @@ void ParticleFilter::predictTarget(uint robotNumber)
 
 void ParticleFilter::fuseRobots()
 {
-  if (!initialized_)
+  if (!initialized_ || state.robotsFused)
     return;
 
   *iteration_oss << "fuseRobots() -> ";
@@ -173,7 +173,7 @@ void ParticleFilter::fuseRobots()
 
 void ParticleFilter::fuseTarget()
 {
-  if (!initialized_)
+  if (!initialized_ || state.targetFused)
     return;
 
   *iteration_oss << "fuseTarget() -> ";
@@ -182,15 +182,20 @@ void ParticleFilter::fuseTarget()
 
   state.targetFused = true;
 
-  // If ball not seen by anyone, just skip all of this
+  // If ball not seen by any robot, just skip all of this
   bool ballSeen = false;
   for (std::vector<TargetObservation>::iterator it =
            bufTargetObservations_.begin();
        it != bufTargetObservations_.end(); ++it)
-    ballSeen = ballSeen || it->found;
+    if(it->found)
+    {
+      ballSeen = true;
+      break;
+    }
 
+  // resample and exit if ball not seen by any robot
   if (!ballSeen)
-    goto exitFuseTarget;
+    return resample();
 
   // If program is here, at least one robot saw the ball
 
@@ -278,10 +283,9 @@ void ParticleFilter::fuseTarget()
     particles_[WEIGHT_INDEX][m] *= maxTargetSubParticleWeight;
   }
 
-// The target subparticles are now reordered according to their weight
-// contribution
+  // The target subparticles are now reordered according to their weight
+  // contribution
 
-exitFuseTarget:
   // All that's missing is the resampling step
   resample();
 }
@@ -294,7 +298,7 @@ void ParticleFilter::low_variance_resampler(const float weightSum)
   subparticles_t normalizedWeights(particles_[WEIGHT_INDEX]);
   // Normalize the weights
   for(uint i=0; i<nParticles_; ++i)
-    normalizedWeights[i] /= weightSum;
+    normalizedWeights[i] = normalizedWeights[i] / weightSum;
 
   // Duplicate the particle set
   particles_t duplicate(particles_);
@@ -331,7 +335,7 @@ void ParticleFilter::low_variance_resampler(const float weightSum)
 
   ROS_DEBUG("End of low_variance_resampler()");
 
-  ROS_ERROR_COND(m != nParticles_, "The variance resampler didn't add the "
+  ROS_WARN_COND(m != nParticles_, "The resampler didn't add the "
                                    "required number of particles, from %d to "
                                    "%d the set was left unchanged!",
                  m, nParticles_ - 1);
@@ -345,7 +349,7 @@ void ParticleFilter::myResampler(const float weightSum)
   subparticles_t normalizedWeights(particles_[WEIGHT_INDEX]);
   // Normalize the weights
   for(uint i=0; i<nParticles_; ++i)
-    normalizedWeights[i] /= weightSum;
+    normalizedWeights[i] = normalizedWeights[i] / weightSum;
 
   particles_t duplicate(particles_);
 
@@ -384,7 +388,7 @@ void ParticleFilter::myResampler(const float weightSum)
 
 void ParticleFilter::resample()
 {
-  if (!initialized_)
+  if (!initialized_ || state.resampled)
     return;
 
   state.resampled = true;
@@ -417,7 +421,7 @@ void ParticleFilter::resample()
     ROS_ERROR("Zero weightsum - returning without resampling");
 
     // Print iteration and state information
-    *iteration_oss << "DONE!";
+    *iteration_oss << "FAIL!";
     ROS_DEBUG("Iteration: %s", iteration_oss->str().c_str());
 
     state.print();
@@ -434,7 +438,7 @@ void ParticleFilter::resample()
   }
 
   low_variance_resampler(weightSum);
-  // myResampler(weightSum);
+  //myResampler(weightSum);
 
   printWeights("after resampling: ");
 
@@ -446,10 +450,10 @@ void ParticleFilter::resample()
 
   // A vector of weighted means that will be calculated in the following nested
   // loops
-  std::vector<double> weightedMeans(nStatesPerRobot_, 1.0);
+  std::vector<double> weightedMeans(nStatesPerRobot_, 0);
 
   // Target weighted means
-  std::vector<double> targetWeightedMeans(STATES_PER_TARGET, 1.0);
+  std::vector<double> targetWeightedMeans(STATES_PER_TARGET, 0);
 
   /// TODO change this to a much more stable way of finding the mean of the
   /// cluster which will represent the ball position. Because it's not the
@@ -479,10 +483,10 @@ void ParticleFilter::resample()
 
     // Normalize the means
     for (uint g = 0; g < nStatesPerRobot_; ++g)
-      weightedMeans[g] /= weightSum;
+      weightedMeans[g] = weightedMeans[g] / weightSum;
 
     for (uint t = 0; t < STATES_PER_TARGET; ++t)
-      weightedMeans[t] /= weightSum;
+      targetWeightedMeans[t] = targetWeightedMeans[t] / weightSum;
 
     // Save in the robot state
     state.robots[r].x = weightedMeans[O_X];
@@ -501,6 +505,9 @@ void ParticleFilter::resample()
         state.target.z - targetWeightedMeans[O_TZ] / iterationTime;
     state.target.z = targetWeightedMeans[O_TZ];
   }
+
+  // Debug
+  ROS_DEBUG("PF says OMNI4 at (x,y) = [ %f, %f ]", state.robots[3].x, state.robots[3].y);
 
   // Print iteration and state information
   *iteration_oss << "DONE!";
@@ -631,10 +638,8 @@ void ParticleFilter::init(const std::vector<double> custom)
                                                     custom[2 * i + 1]);
 
     // Sample a value from the uniform distribution for each particle
-    BOOST_FOREACH (pdata_t& val, particles_[i])
-    {
-      val = dist(seed_);
-    }
+    for(uint p=0; p<nParticles_; ++p)
+      particles_[i][p] = dist(seed_);
   }
 
   // Particle weights init with same weight (1/nParticles)
@@ -683,13 +688,6 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
   normal_distribution<> deltaFinalRotEffective(
       deltaFinalRot, alpha[0] * fabs(deltaFinalRot) + alpha[1] * deltaTrans);
 
-  // Debugging
-  ROS_DEBUG("Before prediction: p[%d] = [%f %f %f]", nParticles_ / 2,
-            particles_[O_X + robot_offset][nParticles_ / 2],
-            particles_[O_Y + robot_offset][nParticles_ / 2],
-            particles_[O_THETA + robot_offset][nParticles_ / 2]);
-  ROS_DEBUG("Odometry = [%f %f %f]", odom.x, odom.y, odom.theta);
-
   for (int i = 0; i < nParticles_; i++)
   {
     // Rotate to final position
@@ -705,12 +703,6 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
     particles_[O_THETA + robot_offset][i] = angles::normalize_angle(
         particles_[O_THETA + robot_offset][i] + deltaFinalRotEffective(seed_));
   }
-
-  // Debugging
-  ROS_DEBUG("After prediction: p[%d] = [%f %f %f]", nParticles_ / 2,
-            particles_[O_X + robot_offset][nParticles_ / 2],
-            particles_[O_Y + robot_offset][nParticles_ / 2],
-            particles_[O_THETA + robot_offset][nParticles_ / 2]);
 
   // If all robots have predicted, also predict the target state
   if (state.allPredicted() && !state.targetPredicted)
