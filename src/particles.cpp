@@ -558,7 +558,7 @@ void ParticleFilter::init(const std::vector<double> custom)
 
 void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
 {
-  if (!initialized_ || state.predicted[robotNumber])
+  if (!initialized_)
     return;
 
   // Change predicted state

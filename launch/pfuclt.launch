@@ -5,7 +5,7 @@
     <param name="MAX_ROBOTS" value="5"/>
     <param name="MY_ID" value="4"/>
     <param name="ROB_HT" type="double" value="0.81"/>
-    <rosparam param="PLAYING_ROBOTS"> [0, 0, 0, 1, 0] </rosparam>
+    <rosparam param="PLAYING_ROBOTS"> [1, 0, 1, 1, 1] </rosparam>
     <param name="NUM_SENSORS_PER_ROBOT" value="3"/>
     <param name="NUM_TARGETS" value="1"/>
     <param name="NUM_LANDMARKS" value="10"/>
