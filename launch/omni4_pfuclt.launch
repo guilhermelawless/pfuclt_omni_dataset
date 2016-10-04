@@ -1,0 +1,68 @@
+<launch>
+    <arg name="path" default="/home/$(optenv USER gsl)/datasets/omni/four_msl_robots_dataset"/>
+    <arg name="debug" default="false"/>
+
+    <param name="MAX_ROBOTS" value="5"/>
+    <param name="MY_ID" value="4"/>
+    <param name="ROB_HT" type="double" value="0.81"/>
+    <rosparam param="PLAYING_ROBOTS"> [0, 0, 0, 1, 0] </rosparam>
+    <param name="NUM_SENSORS_PER_ROBOT" value="3"/>
+    <param name="NUM_TARGETS" value="1"/>
+    <param name="NUM_LANDMARKS" value="10"/>
+    <param name="LANDMARK_COV/K1" type="double" value="2.0"/>
+    <param name="LANDMARK_COV/K2" type="double" value="0.5"/>
+    <param name="LANDMARK_COV/K3" type="double" value="0.2"/>
+    <param name="LANDMARK_COV/K4" type="double" value="0.5"/>
+    <param name="LANDMARK_COV/K5" type="double" value="0.5"/>
+    <rosparam param="POS_INIT"> [5.086676, -2.648978, 0.0, 0.0, 1.688772, -2.095153, 3.26839, -3.574936, 4.058235, -0.127530] </rosparam>
+    <param name="N_PARTICLES" value="200"/>
+	<param name="LANDMARKS_CONFIG" value="$(find pfuclt_omni_dataset)/config/landmarks.csv"/>
+    <param name="USE_CUSTOM_VALUES" value="true"/>
+    <rosparam param="CUSTOM_PARTICLE_INIT">
+        [0,6.0,
+         -4.5,4.5,
+         -3.14159,3.14159,
+
+         0,6.0,
+         -4.5,4.5,
+         -3.14159,3.14159,
+
+         0,6.0,
+         -4.5,4.5,
+         -3.14159,3.14159,
+
+         2.76839,3.76839,
+         -4.074936,-3.074936,
+         3.14059, 3.14259,
+
+         0,6.0,
+         -4.5,4.5,
+         -3.14159,3.14159,
+
+         0,6.0,
+         -4.5,4.5,
+         -3.14159,3.14159]
+    </rosparam>
+
+	<rosparam param="CUSTOM_RANDOM_ALPHA">
+        [0.015, 0.1, 0.5, 0.001,
+         0.015, 0.1, 0.5, 0.001,
+         0.015, 0.1, 0.5, 0.001,
+         0.025, 0.4, 0.9, 0.003,
+         0.015, 0.4, 0.4, 0.001]
+    </rosparam>
+
+    <node name="performer" pkg="pfuclt_omni_dataset" type="pfuclt_omni_dataset" output="screen" args="--debug $(arg debug)">
+    	<remap from="/pfuclt_orangeBallState" to="/estimatedOrangeBallState"/>
+		<remap from="/pfuclt_omni_poses" to="/estimated_omni_poses"/>
+    </node>
+
+    
+    <node
+        pkg="rosbag"
+        type="play"
+        name="player"
+        output="screen"
+        args="--quiet $(arg path)/OMNI1_odomballLandmarks.bag $(arg path)/OMNI3_odomballLandmarks.bag $(arg path)/OMNI4_odomballLandmarks.bag $(arg path)/OMNI5_odomballLandmarks.bag $(arg path)/four_robot_experiment_GT.bag"
+    />
+</launch>
