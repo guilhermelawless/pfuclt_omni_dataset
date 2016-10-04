@@ -20,7 +20,6 @@
 #define O_Y (1)
 #define O_THETA (2)
 #define O_TARGET (nRobots_ * nStatesPerRobot_)
-#define O_Z (2)
 #define O_TX (0)
 #define O_TY (1)
 #define O_TZ (2)

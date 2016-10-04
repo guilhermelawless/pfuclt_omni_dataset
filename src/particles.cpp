@@ -18,6 +18,15 @@ void ParticleFilter::predictTarget(uint robotNumber)
 
   *iteration_oss << "predictTarget(OMNI" << robotNumber + 1 << ") -> ";
 
+  // Update iteration time
+  if (state.allTargetMeasurementsDone())
+  {
+    iterationTime = ROS_TIME_SEC - prevTime;
+    prevTime = ROS_TIME_SEC;
+
+    ROS_DEBUG("Iteration time: %f", iterationTime);
+  }
+
   using namespace boost::random;
 
   ROS_DEBUG("OMNI%d is predicting the target state.", robotNumber + 1);
@@ -221,9 +230,9 @@ void ParticleFilter::fuseTarget()
         Eigen::Vector3f Zglobal = Srobot + toGlobal * Zrobot;
 
         // Error in observation
-        Eigen::Vector3f Target(particles_[O_TARGET + O_X][p],
-                               particles_[O_TARGET + O_Y][p],
-                               particles_[O_TARGET + O_Z][p]);
+        Eigen::Vector3f Target(particles_[O_TARGET + O_TX][p],
+                               particles_[O_TARGET + O_TY][p],
+                               particles_[O_TARGET + O_TZ][p]);
 
         // TODO should the Y frame be inverted?
         Eigen::Vector3f Z_Zcap = Zrobot - (Target - Zglobal);
@@ -262,7 +271,7 @@ void ParticleFilter::fuseTarget()
     }
 
     // Particle m* has been found, let's swap the subparticles
-    for (uint i = O_X; i < O_Z; ++i)
+    for (uint i = O_TX; i < O_TZ; ++i)
       std::swap(particles_[O_TARGET + i][m], particles_[O_TARGET + i][mStar]);
 
     // Update the weight of this particle
@@ -427,12 +436,15 @@ void ParticleFilter::resample()
 
     // Save in the target state
     // First the velocity, then the position
-    state.target.vx = (state.target.x - targetWeightedMeans[O_X])/iterationTime;
-    state.target.x = targetWeightedMeans[O_X];
-    state.target.vy = state.target.y - targetWeightedMeans[O_Y]/iterationTime;
-    state.target.y = targetWeightedMeans[O_Y];
-    state.target.vz = state.target.z - targetWeightedMeans[O_Z]/iterationTime;
-    state.target.z = targetWeightedMeans[O_Z];
+    state.target.vx =
+        (state.target.x - targetWeightedMeans[O_TX]) / iterationTime;
+    state.target.x = targetWeightedMeans[O_TX];
+    state.target.vy =
+        state.target.y - targetWeightedMeans[O_TY] / iterationTime;
+    state.target.y = targetWeightedMeans[O_TY];
+    state.target.vz =
+        state.target.z - targetWeightedMeans[O_TZ] / iterationTime;
+    state.target.z = targetWeightedMeans[O_TZ];
   }
 
   // Print iteration and state information
@@ -670,15 +682,6 @@ void ParticleFilter::saveAllTargetMeasurementsDone(const uint robotNumber)
   state.targetMeasurementsDone[robotNumber] = true;
 
   *iteration_oss << "allTargets(OMNI" << robotNumber + 1 << ") -> ";
-
-  // Update iteration time if all robots have sent their target measurements
-  if (state.allTargetMeasurementsDone())
-  {
-    iterationTime = ROS_TIME_SEC - prevTime;
-    prevTime = ROS_TIME_SEC;
-
-    ROS_DEBUG("Iteration time: %f", iterationTime);
-  }
 
   // Start fusing if all robots have done their target measurements and the
   // robot fusion step has been performed
