@@ -427,11 +427,11 @@ void ParticleFilter::resample()
 
     // Save in the target state
     // First the velocity, then the position
-    state.target.vx = state.target.x - targetWeightedMeans[O_X];
+    state.target.vx = (state.target.x - targetWeightedMeans[O_X])/iterationTime;
     state.target.x = targetWeightedMeans[O_X];
-    state.target.vy = state.target.y - targetWeightedMeans[O_Y];
+    state.target.vy = state.target.y - targetWeightedMeans[O_Y]/iterationTime;
     state.target.y = targetWeightedMeans[O_Y];
-    state.target.vz = state.target.z - targetWeightedMeans[O_Z];
+    state.target.vz = state.target.z - targetWeightedMeans[O_Z]/iterationTime;
     state.target.z = targetWeightedMeans[O_Z];
   }
 
@@ -534,6 +534,9 @@ void ParticleFilter::init(const std::vector<double> custom)
   if (initialized_)
     return;
 
+  // Set flag
+  initialized_ = true;
+
   ROS_INFO("Initializing particle filter");
 
   ROS_DEBUG_COND(custom.size() != ((nSubParticleSets_ - 1) * 2),
@@ -560,8 +563,8 @@ void ParticleFilter::init(const std::vector<double> custom)
   // Particle weights init with same weight (1/nParticles)
   resetWeights();
 
-  // Set flag
-  initialized_ = true;
+  // Reset PF state
+  state.reset();
 
   ROS_INFO("Particle filter initialized");
 
