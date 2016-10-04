@@ -155,7 +155,7 @@ void Robot::startNow()
 Robot::Robot(ros::NodeHandle& nh, RobotFactory* parent,
              Eigen::Isometry2d initPose, ParticleFilter& pf, uint robotNumber,
              RobotType::RobotType_e robotType)
-    : nh_(nh), parent_(parent), initPose_(initPose), curPose_(initPose),
+    : nh_(nh), parent_(parent), initPose_(initPose),
       pf_(pf), started_(false), robotNumber_(robotNumber)
 {
   std::string robotNamespace("/omni" +

@@ -112,10 +112,6 @@ protected:
   ros::Subscriber sOdom_, sBall_, sLandmark_;
   uint robotNumber_;
   Eigen::Isometry2d initPose_; // x y theta;
-  Eigen::Isometry2d prevPose_;
-  Eigen::Isometry2d curPose_;
-  ros::Time curTime_;
-  ros::Time prevTime_;
 
   /**
    * @brief startNow - starts the robot

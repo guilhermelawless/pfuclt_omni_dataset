@@ -8,8 +8,12 @@
 
 namespace pfuclt_ptcls
 {
+
 void ParticleFilter::predictTarget(uint robotNumber)
 {
+  if (!initialized_)
+    return;
+
   state.targetPredicted = true;
 
   *iteration_oss << "predictTarget(OMNI" << robotNumber + 1 << ") -> ";
@@ -41,6 +45,9 @@ void ParticleFilter::predictTarget(uint robotNumber)
 
 void ParticleFilter::fuseRobots()
 {
+  if (!initialized_)
+    return;
+
   *iteration_oss << "fuseRobots() -> ";
 
   ROS_DEBUG("Fusing Robots");
@@ -157,6 +164,9 @@ void ParticleFilter::fuseRobots()
 
 void ParticleFilter::fuseTarget()
 {
+  if (!initialized_)
+    return;
+
   *iteration_oss << "fuseTarget() -> ";
 
   ROS_DEBUG("Fusing Target");
@@ -269,6 +279,9 @@ exitFuseTarget:
 
 void ParticleFilter::resample()
 {
+  if (!initialized_)
+    return;
+
   state.resampled = true;
 
   *iteration_oss << "resample() -> ";
@@ -631,6 +644,9 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
 
 void ParticleFilter::saveAllLandmarkMeasurementsDone(const uint robotNumber)
 {
+  if (!initialized_)
+    return;
+
   *iteration_oss << "allLandmarks(OMNI" << robotNumber + 1 << ") -> ";
 
   // Change state
@@ -644,10 +660,13 @@ void ParticleFilter::saveAllLandmarkMeasurementsDone(const uint robotNumber)
 
 void ParticleFilter::saveAllTargetMeasurementsDone(const uint robotNumber)
 {
-  *iteration_oss << "allTargets(OMNI" << robotNumber + 1 << ") -> ";
+  if (!initialized_)
+    return;
 
   // Change state
   state.targetMeasurementsDone[robotNumber] = true;
+
+  *iteration_oss << "allTargets(OMNI" << robotNumber + 1 << ") -> ";
 
   // Update iteration time if all robots have sent their target measurements
   if (state.allTargetMeasurementsDone())
