@@ -252,16 +252,15 @@ private:
   std::vector<TargetObservation> bufTargetObservations_;
 
   /**
-   * @brief resetWeights - assign the value nParticles^-1 to all particle weights
+   * @brief resetWeights - assign the value val to all particle weights
    */
-  void resetWeights()
-  {
-    pdata_t val = 1.0/nParticles_;
-
+  void resetWeights(pdata_t val)
+  {    
     assign(val, WEIGHT_INDEX);
+
     /*
     for(uint s=0; s < weightComponents_.size(); ++s)
-      weightComponents_[s].assign(nParticles_, 1.0);
+      weightComponents_[s].assign(nParticles_, val);
     */
   }
 

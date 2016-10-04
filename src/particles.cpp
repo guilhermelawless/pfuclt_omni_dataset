@@ -125,6 +125,9 @@ void ParticleFilter::fuseRobots()
     }
   }
 
+  // Reset weights to 1.0 - later we will multiply by the various weight components
+  resetWeights(1.0);
+
   // Duplicate particles
   particles_t dupParticles(particles_);
 
@@ -405,15 +408,13 @@ void ParticleFilter::resample()
   float weightSum = std::accumulate(particles_[WEIGHT_INDEX].begin(),
                                     particles_[WEIGHT_INDEX].end(), 0.0);
 
-  ROS_DEBUG("WeightSum of Particles = %f", weightSum);
+  ROS_DEBUG("WeightSum before resampling = %f", weightSum);
 
-  printWeights("Before resampling: ");
+  printWeights("before resampling: ");
 
   if (weightSum == 0.0)
   {
-    ROS_ERROR("Zero weightsum - returning and resetting weights");
-
-    resetWeights();
+    ROS_ERROR("Zero weightsum - returning without resampling");
 
     // Print iteration and state information
     *iteration_oss << "DONE!";
@@ -435,7 +436,7 @@ void ParticleFilter::resample()
   low_variance_resampler(weightSum);
   // myResampler(weightSum);
 
-  printWeights("After resampling: ");
+  printWeights("after resampling: ");
 
   // Resampling done, find the current state belief
   weightSum = std::accumulate(particles_[WEIGHT_INDEX].begin(),
@@ -637,7 +638,7 @@ void ParticleFilter::init(const std::vector<double> custom)
   }
 
   // Particle weights init with same weight (1/nParticles)
-  resetWeights();
+  resetWeights(1.0/nParticles_);
 
   // Reset PF state
   state.reset();
@@ -664,7 +665,7 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
 
   // Variables concerning this robot specifically
   int robot_offset = robotNumber * nStatesPerRobot_;
-  float alpha[4] = { alpha_[robotNumber * 4], alpha_[robotNumber * 4 + 1],
+  float alpha[4] = { alpha_[robotNumber * 4 + 0], alpha_[robotNumber * 4 + 1],
                      alpha_[robotNumber * 4 + 2], alpha_[robotNumber * 4 + 3] };
 
   // TODO find out if this model is correct
