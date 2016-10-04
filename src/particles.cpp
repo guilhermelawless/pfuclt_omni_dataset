@@ -407,6 +407,8 @@ void ParticleFilter::resample()
 
   ROS_DEBUG("WeightSum of Particles = %f", weightSum);
 
+  printWeights("Before resampling: ");
+
   if (weightSum == 0.0)
   {
     ROS_ERROR("Zero weightsum - returning and resetting weights");
@@ -429,8 +431,6 @@ void ParticleFilter::resample()
     // Exit
     return;
   }
-
-  printWeights("Before resampling: ");
 
   low_variance_resampler(weightSum);
   // myResampler(weightSum);
@@ -518,7 +518,7 @@ void ParticleFilter::resample()
 void ParticleFilter::printWeights(std::string pre)
 {
   std::ostringstream debug;
-  debug << pre;
+  debug << "Weights " << pre;
   for (uint i = 0; i < nParticles_; ++i)
     debug << particles_[WEIGHT_INDEX][i] << " ";
 
