@@ -125,9 +125,6 @@ void ParticleFilter::fuseRobots()
     }
   }
 
-  // Reset weights of the particle filter
-  resetWeights();
-
   // Duplicate particles
   particles_t dupParticles(particles_);
 
@@ -146,7 +143,7 @@ void ParticleFilter::fuseRobots()
     for (uint p = 0; p < nParticles_; ++p)
     {
       // Re-order the particle subsets of this robot
-      int sort_index = sorted[p];
+      uint sort_index = sorted[p];
       particles_[o_robot + O_X][p] = dupParticles[o_robot + O_X][sort_index];
       particles_[o_robot + O_Y][p] = dupParticles[o_robot + O_Y][sort_index];
       particles_[o_robot + O_THETA][p] =
@@ -286,6 +283,102 @@ exitFuseTarget:
   resample();
 }
 
+void ParticleFilter::low_variance_resampler(const float weightSum)
+{
+  // Low variance resampling exactly as implemented in the book Probabilistic
+  // robotics by thrun and burgard
+
+  subparticles_t normalizedWeights(particles_[WEIGHT_INDEX]);
+  // Normalize the weights
+  for(uint i=0; i<nParticles_; ++i)
+    normalizedWeights[i] /= weightSum;
+
+  // Duplicate the particle set
+  particles_t duplicate(particles_);
+
+  // Generate a random number from a gaussian N~(0; 1/nParticles)
+  pdata_t MInv = 1.0 / nParticles_;
+  boost::random::normal_distribution<> genR(0.0, MInv);
+  pdata_t r = genR(seed_);
+
+  // c is equal to the first particle's weight
+  pdata_t c = normalizedWeights[0];
+
+  // Particle iterators
+  uint i = 0, m;
+
+  // Iterate over the particle set
+  for (m = 0; m < nParticles_; ++m)
+  {
+    // Generate number from the random sample
+    pdata_t u = r + m * MInv;
+
+    // Add weight until it reaches u
+    while (u > c)
+      c += normalizedWeights[++i];
+
+    // Check if i is off limits
+    if (i >= nParticles_)
+      break;
+
+    // Add this particle to the set
+    for (uint s = 0; s < nSubParticleSets_; ++s)
+      particles_[s][m] = duplicate[s][i];
+  }
+
+  ROS_DEBUG("End of low_variance_resampler()");
+
+  ROS_ERROR_COND(m != nParticles_, "The variance resampler didn't add the "
+                                   "required number of particles, from %d to "
+                                   "%d the set was left unchanged!",
+                 m, nParticles_ - 1);
+}
+
+void ParticleFilter::myResampler(const float weightSum)
+{
+  // Implementing a very basic resampler... a particle gets selected
+  // proportional to its weight and 50% of the top particles are kept
+
+  subparticles_t normalizedWeights(particles_[WEIGHT_INDEX]);
+  // Normalize the weights
+  for(uint i=0; i<nParticles_; ++i)
+    normalizedWeights[i] /= weightSum;
+
+  particles_t duplicate(particles_);
+
+  std::vector<pdata_t> cumulativeWeights(nParticles_);
+  cumulativeWeights[0] = normalizedWeights[0];
+
+  for (int par = 1; par < nParticles_; par++)
+  {
+    cumulativeWeights[par] =
+        cumulativeWeights[par - 1] + normalizedWeights[par];
+  }
+
+  for (int par = 0; par < nParticles_ * 0.5; par++)
+  {
+    for (int k = 0; k < nSubParticleSets_; k++)
+    {
+      particles_[k][par] = duplicate[k][par];
+    }
+  }
+
+  for (int par = nParticles_ * 0.5; par < nParticles_; par++)
+  {
+    boost::random::uniform_real_distribution<> dist(0, 1);
+    float randNo = dist(seed_);
+
+    int m = 0;
+    while (randNo > cumulativeWeights[m])
+      m++;
+
+    for (int k = 0; k < nSubParticleSets_; k++)
+      particles_[k][par] = duplicate[k][m];
+  }
+
+  ROS_DEBUG("End of myResampler()");
+}
+
 void ParticleFilter::resample()
 {
   if (!initialized_)
@@ -308,7 +401,7 @@ void ParticleFilter::resample()
     state.robots[r].conf = stdX + stdY + stdTheta;
   }
 
-  // Normalize the weights using the sum of all weights
+  // Calc. sum of weights
   float weightSum = std::accumulate(particles_[WEIGHT_INDEX].begin(),
                                     particles_[WEIGHT_INDEX].end(), 0.0);
 
@@ -336,58 +429,19 @@ void ParticleFilter::resample()
     // Exit
     return;
   }
-  std::transform(particles_[WEIGHT_INDEX].begin(),
-                 particles_[WEIGHT_INDEX].end(),
-                 particles_[WEIGHT_INDEX].begin(),
-                 std::bind1st(std::divides<pdata_t>(), weightSum));
 
-  // Low variance resampling exactly as implemented in the book Probabilistic
-  // robotics by thrun and burgard
+  printWeights("Before resampling: ");
 
-  // Duplicate the particle set
-  particles_t duplicate(particles_);
+  low_variance_resampler(weightSum);
+  // myResampler(weightSum);
 
-  // Generate a random number from a gaussian N~(0; 1/nParticles)
-  pdata_t MInv = 1.0 / nParticles_;
-  boost::random::normal_distribution<> genR(0.0, MInv);
-  pdata_t r = genR(seed_);
-
-  // c is equal to the first particle's weight
-  pdata_t c = duplicate[WEIGHT_INDEX][0];
-
-  // Particle iterators
-  uint i = 1, m;
-
-  // Iterate over the particle set
-  for (m = 1; m < nParticles_; ++m)
-  {
-    // Generate number from the random sample
-    float u = r + (m - 1) * MInv;
-
-    // Add weight until it reaches u
-    for (; u > c; c += duplicate[WEIGHT_INDEX][++i])
-      ;
-
-    // Check if i is off limits
-    if (i >= nParticles_)
-      break;
-
-    // Add this particle to the set
-    for (uint s = 0; s < nSubParticleSets_; ++s)
-      particles_[s][m] = duplicate[s][i];
-  }
-
-  ROS_DEBUG("End of low_variance_resampler()");
-
-  ROS_DEBUG_COND(m != nParticles_, "The variance resampler didn't add the "
-                                   "required number of particles, from %d to "
-                                   "%d the set was left unchanged!",
-                 m, nParticles_ - 1);
+  printWeights("After resampling: ");
 
   // Resampling done, find the current state belief
-
   weightSum = std::accumulate(particles_[WEIGHT_INDEX].begin(),
                               particles_[WEIGHT_INDEX].end(), 0.0);
+
+  ROS_DEBUG("WeightSum after resampling = %f", weightSum);
 
   // A vector of weighted means that will be calculated in the following nested
   // loops
@@ -459,6 +513,16 @@ void ParticleFilter::resample()
 
   // Start next iteration
   state.reset();
+}
+
+void ParticleFilter::printWeights(std::string pre)
+{
+  std::ostringstream debug;
+  debug << pre;
+  for (uint i = 0; i < nParticles_; ++i)
+    debug << particles_[WEIGHT_INDEX][i] << " ";
+
+  ROS_DEBUG("%s", debug.str().c_str());
 }
 
 void ParticleFilter::assign(const pdata_t value)

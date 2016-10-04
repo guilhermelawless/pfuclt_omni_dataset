@@ -108,10 +108,10 @@ class ParticleFilter
      * @param numberRobots
      */
     State(const uint numberRobots, const std::vector<bool>& robotsBeingUsed)
-        : nRobots(numberRobots), predicted(nRobots, false),
-          landmarkMeasurementsDone(nRobots, false),
-          targetMeasurementsDone(nRobots, false), robots(nRobots),
-          robotsUsed(robotsBeingUsed)
+      : nRobots(numberRobots), predicted(nRobots, false),
+        landmarkMeasurementsDone(nRobots, false),
+        targetMeasurementsDone(nRobots, false), robots(nRobots),
+        robotsUsed(robotsBeingUsed)
     {
       reset();
     }
@@ -280,6 +280,16 @@ private:
   void fuseTarget();
 
   /**
+   * @brief low_variance_resampler - implementation of the resampler by Thrun and Burgard
+   */
+  void low_variance_resampler(const float weightSum);
+
+  /**
+   * @brief myResampler - a simpler resampler
+   */
+  void myResampler(const float weightSum);
+
+  /**
    * @brief resample - the resampling step
    */
   void resample();
@@ -288,6 +298,11 @@ public:
   double prevTime, iterationTime;
   struct State state;
   boost::shared_ptr<std::ostringstream> iteration_oss;
+
+  /**
+   * @brief printWeights
+   */
+  void printWeights(std::string pre);
 
   /**
    * @brief assign - assign a value to every particle in all subsets
