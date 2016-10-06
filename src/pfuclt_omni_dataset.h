@@ -11,10 +11,6 @@
 #include <tf/transform_broadcaster.h>
 #include <read_omni_dataset/BallData.h>
 #include <read_omni_dataset/LRMLandmarksData.h>
-#include <read_omni_dataset/RobotState.h>
-#include <read_omni_dataset/LRMGTData.h>
-#include <pfuclt_omni_dataset/particle.h>
-#include <pfuclt_omni_dataset/particles.h>
 
 // Eigen libraries
 #include <Eigen/Core>
@@ -40,23 +36,11 @@ using namespace pfuclt_ptcls;
     2.5, 2.5, 2.5, 2.5, FLT_MAX, FLT_MAX, 3.5, 3.5, FLT_MAX, FLT_MAX           \
   }
 
-// workaround for a scoped enum
-struct RobotType
-{
-  enum RobotType_e
-  {
-    Self,
-    Teammate
-  };
-};
-
 // Forward declaration of classes
 class Robot;
-class SelfRobot;
 
 // useful typedefs
 typedef boost::shared_ptr<Robot> Robot_ptr;
-typedef boost::shared_ptr<SelfRobot> SelfRobot_ptr;
 
 /**
  * @brief The RobotFactory class - Creates and keeps information on the
@@ -78,7 +62,7 @@ private:
   bool areAllRobotsActive();
 
 public:
-  ParticleFilter pf;
+  boost::shared_ptr<ParticleFilter> pf;
 
   RobotFactory(ros::NodeHandle& nh);
 
@@ -104,9 +88,8 @@ public:
 class Robot
 {
 protected:
-  ros::NodeHandle& nh_;
   RobotFactory* parent_;
-  ParticleFilter& pf_;
+  ParticleFilter* pf_;
   bool started_;
   ros::Time timeStarted_;
   ros::Subscriber sOdom_, sBall_, sLandmark_;
@@ -126,68 +109,34 @@ public:
    * @param initPose - initial (x,y) pose of the robot
    * @param pf - reference to the particle filter to be used for this robot
    * @param robotNumber - the assigned number in the team
-   * @param robotType - enumeration: is the robot a teammate or the self robot?
    */
   Robot(ros::NodeHandle& nh, RobotFactory* parent, Eigen::Isometry2d initPose,
-        ParticleFilter& pf, uint robotNumber,
-        RobotType::RobotType_e robotType = RobotType::Teammate);
+        ParticleFilter* pf, uint robotNumber);
 
   /**
    * @brief odometryCallback - event-driven function which should be called when
    * new odometry data is received
-   * @param odometry - the odometry data received, using the standard ROS
-   * odometry message type
    */
-  void odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry);
+  void odometryCallback(const nav_msgs::Odometry::ConstPtr&);
 
   /**
    * @brief targetCallBack - event-driven function which should be called when
    * new target data is received
-   * @param target - the target data received, using custom msg types defined in
-   * the read_omni_dataset package
    */
-  void targetCallback(const read_omni_dataset::BallData::ConstPtr& target);
+  void targetCallback(const read_omni_dataset::BallData::ConstPtr&);
 
   /**
    * @brief landmarkDataCallback - event-driven function which should be called
    * when new landmark data is received
-   * @param landmarkData - the landmark data received, using custom msg types
-   * defined in the read_omni_dataset package
    */
-  void landmarkDataCallback(
-      const read_omni_dataset::LRMLandmarksData::ConstPtr& landmarkData);
+  void
+  landmarkDataCallback(const read_omni_dataset::LRMLandmarksData::ConstPtr&);
 
   /**
    * @brief hasStarted
    * @return
    */
   bool hasStarted() { return started_; }
-};
-
-/**
- * @brief The SelfRobot class - This is the class that performs the PF-UCLT
- * algorithm
- */
-class SelfRobot : public Robot
-{
-private:
-  ros::Subscriber GT_sub_;
-  read_omni_dataset::LRMGTData receivedGTdata;
-  pfuclt_omni_dataset::particles msg_particles;
-
-  ros::Publisher State_publisher, targetStatePublisher, virtualGTPublisher,
-      particlePublisher;
-  read_omni_dataset::RobotState msg_state;
-
-public:
-  SelfRobot(ros::NodeHandle& nh, RobotFactory* caller,
-            Eigen::Isometry2d initPose, ParticleFilter& ptcls,
-            uint robotNumber);
-
-  void gtDataCallback(const read_omni_dataset::LRMGTData::ConstPtr&);
-
-  // publish the estimated state of all the teammate robot
-  void publishState(float, float, float);
 };
 
 // end of namespace

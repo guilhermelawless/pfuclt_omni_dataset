@@ -11,9 +11,13 @@
 #include <sstream>
 #include "pfuclt_aux.h"
 
+#include <read_omni_dataset/RobotState.h>
+#include <read_omni_dataset/LRMGTData.h>
+#include <pfuclt_omni_dataset/particle.h>
+#include <pfuclt_omni_dataset/particles.h>
+
 // ideally later this will be a parameter, when it makes sense to
 #define STATES_PER_TARGET 3
-#define WEIGHT_INDEX (nSubParticleSets_ - 1)
 
 // offsets
 #define O_X (0)
@@ -23,13 +27,15 @@
 #define O_TX (0)
 #define O_TY (1)
 #define O_TZ (2)
+#define O_WEIGHT (nSubParticleSets_ - 1)
 
 // target motion model
 #define TARGET_RAND_MEAN 0
 #define TARGET_RAND_STDDEV 20.0
 
 // concerning time
-#define ROS_TIME_SEC (ros::Time::now().toSec())
+#define ITERATION_TIME_DEFAULT 0.0333
+#define ITERATION_TIME_NA (-1)
 
 namespace pfuclt_ptcls
 {
@@ -46,7 +52,7 @@ typedef struct landmarkObs_s
   double x, y;
   double d, phi;
   double covDD, covPP, covXX, covYY;
-  landmarkObs_s(){ found = false; }
+  landmarkObs_s() { found = false; }
 } LandmarkObservation;
 
 typedef struct targetObs_s
@@ -56,7 +62,7 @@ typedef struct targetObs_s
   double d, phi;
   double covDD, covPP, covXX, covYY;
 
-  targetObs_s(){ found = false; }
+  targetObs_s() { found = false; }
 } TargetObservation;
 
 // Apply concept of subparticles (the particle set for each dimension)
@@ -69,6 +75,7 @@ typedef boost::random::mt19937 RNGType;
 
 class ParticleFilter
 {
+protected:
   /**
    * @brief The state_s struct - defines a structure to hold state information
    * for the particle filter class
@@ -111,10 +118,10 @@ class ParticleFilter
      * @param numberRobots
      */
     State(const uint numberRobots, const std::vector<bool>& robotsBeingUsed)
-      : nRobots(numberRobots), predicted(nRobots, false),
-        landmarkMeasurementsDone(nRobots, false),
-        targetMeasurementsDone(nRobots, false), robots(nRobots),
-        robotsUsed(robotsBeingUsed)
+        : nRobots(numberRobots), predicted(nRobots, false),
+          landmarkMeasurementsDone(nRobots, false),
+          targetMeasurementsDone(nRobots, false), robots(nRobots),
+          robotsUsed(robotsBeingUsed)
     {
       reset();
     }
@@ -132,7 +139,6 @@ class ParticleFilter
     }
 
   public:
-    // TODO add state print
     void print()
     {
       std::ostringstream oss;
@@ -233,11 +239,70 @@ class ParticleFilter
     }
   };
 
+public:
+  /**
+   * @brief The PFinitData struct - provides encapsulation to the initial data
+   * necessary to construct a ParticleFilter instance
+   */
+  struct PFinitData
+  {
+    const uint nParticles, nTargets, statesPerRobot, nRobots, nLandmarks;
+    const std::vector<bool>& robotsUsed;
+    const std::vector<Landmark>& landmarksMap;
+    std::vector<float> alpha;
+
+    /**
+     * @brief _PFinitData
+     * @param _nParticles - the number of particles to be in the particle filter
+     * @param _nTargets - the number of targets to consider
+     * @param _statesPerRobot - the state space dimension for each robot
+     * @param _nRobots - number of robots
+     * @param _nLandmarks - number of landmarks
+     * @param _robotsUsed - vector of bools mentioning if robots are being used,
+     * according to the standard robot ordering
+     * @param _landmarksMap - vector of Landmark structs containing information
+     * on the landmark locations
+     * @param _vector with values to be used in the RNG for the model sampling
+     */
+    PFinitData(const uint _nParticles, const uint _nTargets,
+               const uint _statesPerRobot, const uint _nRobots,
+               const uint _nLandmarks, const std::vector<bool>& _robotsUsed,
+               const std::vector<Landmark>& _landmarksMap,
+               const std::vector<float> _alpha = std::vector<float>())
+        : nParticles(_nParticles), nTargets(_nTargets),
+          statesPerRobot(_statesPerRobot), nRobots(_nRobots),
+          nLandmarks(_nLandmarks), alpha(_alpha), robotsUsed(_robotsUsed),
+          landmarksMap(_landmarksMap)
+    {
+      // If vector alpha is not provided, use a default one
+      if (alpha.empty())
+      {
+        for (int r = 0; r < nRobots; ++r)
+        {
+          alpha.push_back(0.015);
+          alpha.push_back(0.1);
+          alpha.push_back(0.5);
+          alpha.push_back(0.001);
+        }
+      }
+
+      // Check size of vector alpha
+      if (alpha.size() != 4 * nRobots)
+      {
+        ROS_ERROR(
+            "The provided vector alpha is not of the correct size. Returning "
+            "without particle filter! (should have %d=nRobots*4 elements)",
+            nRobots * 4);
+        return;
+      }
+    }
+  };
+
   // TODO find if mutex is necessary while using the simple implemented state
   // machine
   // boost::mutex mutex();
 
-private:
+protected:
   const std::vector<Landmark>& landmarksMap_;
   const std::vector<bool>& robotsUsed_;
   const uint nParticles_;
@@ -253,19 +318,14 @@ private:
   bool initialized_;
   std::vector<std::vector<LandmarkObservation> > bufLandmarkObservations_;
   std::vector<TargetObservation> bufTargetObservations_;
+  double iterationTime_;
+  ros::Time prevTime_, newTime_;
+  struct State state_;
 
   /**
    * @brief resetWeights - assign the value val to all particle weights
    */
-  void resetWeights(pdata_t val)
-  {    
-    assign(val, WEIGHT_INDEX);
-
-    /*
-    for(uint s=0; s < weightComponents_.size(); ++s)
-      weightComponents_[s].assign(nParticles_, val);
-    */
-  }
+  void resetWeights(pdata_t val) { assign(val, O_WEIGHT); }
 
   /**
    * @brief predictTarget - predict target state step
@@ -284,7 +344,8 @@ private:
   void fuseTarget();
 
   /**
-   * @brief low_variance_resampler - implementation of the resampler by Thrun and Burgard
+   * @brief low_variance_resampler - implementation of the resampler by Thrun
+   * and Burgard
    */
   void low_variance_resampler(const float weightSum);
 
@@ -298,10 +359,35 @@ private:
    */
   void resample();
 
+  /**
+   * @brief nextIteration - perform final steps and reset the PF state
+   */
+  void nextIteration() { state_.reset(); }
+
 public:
-  double prevTime, iterationTime;
-  struct State state;
   boost::shared_ptr<std::ostringstream> iteration_oss;
+
+  /**
+   * @brief ParticleFilter - constructor
+   * @param data - reference to a struct of PFinitData containing the necessary
+   * information to construct the Particle Filter
+   */
+  ParticleFilter(struct PFinitData& data);
+
+  void updateIterationTime(ros::Time tRos)
+  {
+    prevTime_ = newTime_;
+    newTime_ = tRos;
+    iterationTime_ = (newTime_-prevTime_).toNSec()*1e-9;
+    if(fabs(iterationTime_) > 10)
+    {
+      // Something is wrong, set to default iteration time
+      iterationTime_ = ITERATION_TIME_DEFAULT;
+    }
+    ROS_DEBUG("Target tracking iteration time: %f", iterationTime_);
+  }
+
+  ParticleFilter* getPFReference() { return this; }
 
   /**
    * @brief printWeights
@@ -320,21 +406,6 @@ public:
    * @param index - the subset index [0,N]
    */
   void assign(const pdata_t value, const uint index);
-
-  /**
-   * @brief ParticleFilter - constructor
-   * @param nParticles - the number of particles to be in the particle filter
-   * @param nTargets - the number of targets to consider
-   * @param statesPerRobot - the state space dimension for each robot
-   * @param nRobots - number of robots
-   * @param alpha - vector with values to be used in the RNG for the model
-   * sampling
-   */
-  ParticleFilter(const uint nParticles, const uint nTargets,
-                 const uint statesPerRobot, const uint nRobots,
-                 const uint nLandmarks, const std::vector<bool>& robotsUsed,
-                 const std::vector<Landmark>& landmarksMap,
-                 const std::vector<float> alpha = std::vector<float>());
 
   /**
    * @brief operator [] - array subscripting access to the private particle set
@@ -375,10 +446,6 @@ public:
    * received odometry
    * @param robotNumber - the robot number [0,N]
    * @param odometry - a structure containing the latest odometry readings
-   * @remark will not do anything if the particle filter has not been
-   * initialized
-   * @remark will not do anything if the current state of the robot robotNumber
-   * is not Predict
    * @warning only for the omni dataset configuration
    */
   void predict(const uint robotNumber, const Odometry odom);
@@ -459,6 +526,79 @@ public:
    * @param robotNumber - the robot number performing the measurements
    */
   void saveAllTargetMeasurementsDone(const uint robotNumber);
+};
+
+/**
+ * @brief The PFPublisher class - implements publishing for the ParticleFilter
+ * class using ROS
+ */
+class PFPublisher : public ParticleFilter
+{
+public:
+  struct PublishData
+  {
+    ros::NodeHandle& nh;
+    float robotHeight;
+    std::string publishNamespace;
+
+    /**
+     * @brief PublishData - contains information necessary for the PFPublisher
+     * class
+     * @param _nh - the node handle object
+     * @param _robotHeight - the fixed robot height
+     * @param _publishNamespace - the namespace to publish to
+     */
+    PublishData(ros::NodeHandle& _nh, float _robotHeight,
+                std::string _publishNamespace)
+        : nh(_nh), robotHeight(_robotHeight),
+          publishNamespace(_publishNamespace)
+    {
+    }
+  };
+
+private:
+  ros::Subscriber GT_sub_;
+  ros::Publisher robotStatePublisher_, targetStatePublisher_,
+      particlePublisher_, syncedGTPublisher_;
+
+  read_omni_dataset::LRMGTData msg_GT_;
+  pfuclt_omni_dataset::particles msg_particles_;
+  read_omni_dataset::RobotState msg_state_;
+  read_omni_dataset::BallData msg_target_;
+
+  struct PublishData pubData;
+
+  void publishParticles();
+  void publishRobotStates();
+  void publishTargetState();
+
+public:
+  /**
+   * @brief PFPublisher - constructor
+   * @param data - a structure with the necessary initializing data for the
+   * ParticleFilter class
+   * @param publishData - a structure with some more data for this class
+   */
+  PFPublisher(struct ParticleFilter::PFinitData& data,
+              struct PublishData publishData);
+
+  /**
+   * @brief getPFReference - retrieve a reference to the base class's members
+   * @remark C++ surely is awesome
+   * @return returns a reference to the base ParticleFilter for this object
+   */
+  ParticleFilter* getPFReference() { return (ParticleFilter*)this; }
+
+  /**
+   * @brief gtDataCallback - callback of ground truth data
+   */
+  void gtDataCallback(const read_omni_dataset::LRMGTData::ConstPtr&);
+
+  /**
+   * @brief nextIteration - extends the base class method to add the ROS
+   * publishing
+   */
+  void nextIteration();
 };
 
 // end of namespace pfuclt_ptcls
