@@ -50,7 +50,14 @@ void ParticleFilter::predictTarget(uint robotNumber)
 
   for (int i = 0; i < nParticles_; i++)
   {
-    // delta = v*dt + 0.5*a*dt^2 with a new random acceleration for each
+    // TODO what exactly should happen to ball velocity?
+
+    // v = a*dt
+    state_.target.vx += targetAcceleration(seed_) * iterationTime_;
+    state_.target.vy += targetAcceleration(seed_) * iterationTime_;
+    state_.target.vz += targetAcceleration(seed_) * iterationTime_;
+
+    // x = v*dt + 0.5*a*dt^2 with a new random acceleration for each
     // component
 
     particles_[O_TARGET + O_TX][i] +=
@@ -62,6 +69,7 @@ void ParticleFilter::predictTarget(uint robotNumber)
     particles_[O_TARGET + O_TZ][i] +=
         state_.target.vz * iterationTime_ +
         0.5 * targetAcceleration(seed_) * pow(iterationTime_, 2);
+
   }
 }
 
@@ -509,6 +517,7 @@ void ParticleFilter::resample()
 
     // Save in the target state
     // First the velocity, then the position
+    /*
     state_.target.vx =
         (state_.target.x - targetWeightedMeans[O_TX]) / iterationTime_;
     state_.target.x = targetWeightedMeans[O_TX];
@@ -517,6 +526,14 @@ void ParticleFilter::resample()
     state_.target.y = targetWeightedMeans[O_TY];
     state_.target.vz =
         state_.target.z - targetWeightedMeans[O_TZ] / iterationTime_;
+    state_.target.z = targetWeightedMeans[O_TZ];
+    */
+
+    //Velocities stay the same
+
+    //Update position
+    state_.target.x = targetWeightedMeans[O_TX];
+    state_.target.y = targetWeightedMeans[O_TY];
     state_.target.z = targetWeightedMeans[O_TZ];
   }
 
