@@ -362,7 +362,7 @@ protected:
   /**
    * @brief nextIteration - perform final steps and reset the PF state
    */
-  void nextIteration() { state_.reset(); }
+  virtual void nextIteration() { state_.reset(); }
 
 public:
   boost::shared_ptr<std::ostringstream> iteration_oss;
