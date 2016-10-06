@@ -673,9 +673,8 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
   float alpha[4] = { alpha_[robotNumber * 4 + 0], alpha_[robotNumber * 4 + 1],
                      alpha_[robotNumber * 4 + 2], alpha_[robotNumber * 4 + 3] };
 
-  // TODO find out if this model is correct
   // Determining the propagation of the robot state through odometry
-  float deltaRot = atan2(odom.y, odom.x) - odom.theta;
+  float deltaRot = atan2(odom.y, odom.x) - state.robots[robotNumber].theta; // Uses the previous overall belief of orientation
   float deltaTrans = sqrt(odom.x * odom.x + odom.y * odom.y);
   float deltaFinalRot = odom.theta - deltaRot;
 
