@@ -549,7 +549,7 @@ public:
      * @param _publishNamespace - the namespace to publish to
      */
     PublishData(ros::NodeHandle& _nh, float _robotHeight,
-                std::string _publishNamespace)
+                std::string _publishNamespace = std::string(""))
         : nh(_nh), robotHeight(_robotHeight),
           publishNamespace(_publishNamespace)
     {

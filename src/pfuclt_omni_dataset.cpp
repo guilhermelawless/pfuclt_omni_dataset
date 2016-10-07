@@ -53,7 +53,6 @@ std::vector<float> CUSTOM_RANDOM_ALPHA; // Used to set custom values for the
 
 bool DEBUG;
 bool PUBLISH;
-std::string PUBLISH_NS("");
 
 // for ease of access
 std::vector<pfuclt_aux::Landmark> landmarks;
@@ -68,8 +67,8 @@ RobotFactory::RobotFactory(ros::NodeHandle& nh) : nh_(nh)
       PLAYING_ROBOTS, landmarks, CUSTOM_RANDOM_ALPHA);
 
   if (PUBLISH)
-    pf = boost::shared_ptr<PFPublisher>(new PFPublisher(
-        initData, PFPublisher::PublishData(nh, ROB_HT, PUBLISH_NS)));
+    pf = boost::shared_ptr<PFPublisher>(
+        new PFPublisher(initData, PFPublisher::PublishData(nh, ROB_HT)));
   else
     pf = boost::shared_ptr<ParticleFilter>(new ParticleFilter(initData));
 
@@ -239,9 +238,8 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
   pf_->saveAllTargetMeasurementsDone(robotNumber_);
 
   // If this is the "self robot", update the iteration time
-  if(MY_ID == robotNumber_ + 1)
+  if (MY_ID == robotNumber_ + 1)
     pf_->updateIterationTime(target->header.stamp);
-
 }
 
 void Robot::landmarkDataCallback(
@@ -378,7 +376,7 @@ int main(int argc, char* argv[])
   using namespace pfuclt;
 
   // Parse input parameters
-  // TODO use a library for this
+  // TODO Consider using a library for this
   if (argc > 2)
   {
     if (!strcmp(argv[2], "true"))
@@ -404,12 +402,6 @@ int main(int argc, char* argv[])
     {
       PUBLISH = true;
       ROS_INFO("Publish = true");
-
-      if (argc > 6)
-      {
-        PUBLISH_NS = std::string(argv[6]);
-        ROS_INFO("Publishing to namespace %s", argv[6]);
-      }
     }
     else
       PUBLISH = false;
