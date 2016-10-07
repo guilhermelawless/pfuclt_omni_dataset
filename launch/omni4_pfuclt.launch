@@ -1,10 +1,11 @@
 <launch>
     <arg name="path" default="/home/$(optenv USER gsl)/datasets/omni/four_msl_robots_dataset"/>
     <arg name="debug" default="false"/>
+    <arg name="publish" default="true"/>
 
     <param name="MAX_ROBOTS" value="5"/>
-    <param name="MY_ID" value="4"/>
     <param name="ROB_HT" type="double" value="0.81"/>
+    <param name="MY_ID" value="4"/>
     <rosparam param="PLAYING_ROBOTS"> [0, 0, 0, 1, 0] </rosparam>
     <param name="NUM_SENSORS_PER_ROBOT" value="3"/>
     <param name="NUM_TARGETS" value="1"/>
@@ -52,7 +53,7 @@
          0.015, 0.4, 0.4, 0.001]
     </rosparam>
 
-    <node name="performer" pkg="pfuclt_omni_dataset" type="pfuclt_omni_dataset" output="screen" args="--debug $(arg debug)">
+    <node name="performer" pkg="pfuclt_omni_dataset" type="pfuclt_omni_dataset" output="screen" args="--debug $(arg debug) --publish $(arg publish)">
     	<remap from="/pfuclt_orangeBallState" to="/estimatedOrangeBallState"/>
 		<remap from="/pfuclt_omni_poses" to="/estimated_omni_poses"/>
     </node>

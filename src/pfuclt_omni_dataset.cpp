@@ -6,7 +6,7 @@
 
 namespace pfuclt
 {
-
+int MY_ID;
 int MAX_ROBOTS;
 int NUM_ROBOTS; // total number of playing robots in the team including self
 int NUM_SENSORS_PER_ROBOT; // SENSORS include odometry, each feature sensor like
@@ -33,11 +33,6 @@ float K1, K2;
 float K3, K4, K5;
 
 float ROB_HT; // Fixed height of the robots above ground in meters
-int MY_ID; // Use this flag to set the ID of the robot expected to run a certain
-// decentralized algorithm. Robot with MY_ID will be trated as the
-// self robot running the algorithm while the rest will be considered
-// teammates. Note that in the dataset there are 4 robots with IDs
-// 1,3,4 and 5. Robot with ID=2 is not present.
 
 // Initial 2D positons of the robot as obtained from the overhead ground truth
 // system. The order is OMNI1 OMNI2 OMNI3 OMNI4 and OMNI5. Notice OMNI2 is
@@ -56,18 +51,30 @@ std::vector<float> CUSTOM_RANDOM_ALPHA; // Used to set custom values for the
 // sampling models in the particle
 // filter
 
+bool DEBUG;
+bool PUBLISH;
+
 // for ease of access
 std::vector<pfuclt_aux::Landmark> landmarks;
 ros::Time timeInit;
 
 // Method definitions
 
-RobotFactory::RobotFactory(ros::NodeHandle& nh)
-    : nh_(nh),
-      pf(pfuclt_ptcls::ParticleFilter(
-          N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS, NUM_LANDMARKS,
-          PLAYING_ROBOTS, landmarks, CUSTOM_RANDOM_ALPHA))
+RobotFactory::RobotFactory(ros::NodeHandle& nh) : nh_(nh)
 {
+  ParticleFilter::PFinitData initData(
+      N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS, NUM_LANDMARKS,
+      PLAYING_ROBOTS, landmarks, CUSTOM_RANDOM_ALPHA);
+
+  if (PUBLISH)
+    pf = boost::shared_ptr<PFPublisher>(
+        new PFPublisher(initData, PFPublisher::PublishData(nh, ROB_HT)));
+  else
+    pf = boost::shared_ptr<ParticleFilter>(new ParticleFilter(initData));
+
+  timeInit = ros::Time::now();
+  ROS_INFO("Init time set to %f", timeInit.toSec());
+
   for (uint rn = 0; rn < MAX_ROBOTS; rn++)
   {
     if (PLAYING_ROBOTS[rn])
@@ -77,19 +84,8 @@ RobotFactory::RobotFactory(ros::NodeHandle& nh)
       initialRobotPose.translation() =
           Eigen::Vector2d(POS_INIT[2 * rn + 0], POS_INIT[2 * rn + 1]);
 
-      timeInit = ros::Time::now();
-      ROS_INFO("Init time set to %f", timeInit.toSec());
-
-      if (rn + 1 == MY_ID)
-      {
-        robots_.push_back(
-            SelfRobot_ptr(new SelfRobot(nh_, this, initialRobotPose, pf, rn)));
-      }
-      else
-      {
-        robots_.push_back(
-            Robot_ptr(new Robot(nh_, this, initialRobotPose, pf, rn)));
-      }
+      robots_.push_back(Robot_ptr(
+          new Robot(nh_, this, initialRobotPose, pf->getPFReference(), rn)));
     }
   }
 }
@@ -100,9 +96,9 @@ void RobotFactory::tryInitializeParticles()
     return;
 
   if (USE_CUSTOM_VALUES)
-    pf.init(CUSTOM_PARTICLE_INIT);
+    pf->init(CUSTOM_PARTICLE_INIT);
   else
-    pf.init();
+    pf->init();
 }
 
 void RobotFactory::initializeFixedLandmarks()
@@ -153,10 +149,9 @@ void Robot::startNow()
 }
 
 Robot::Robot(ros::NodeHandle& nh, RobotFactory* parent,
-             Eigen::Isometry2d initPose, ParticleFilter& pf, uint robotNumber,
-             RobotType::RobotType_e robotType)
-    : nh_(nh), parent_(parent), initPose_(initPose),
-      pf_(pf), started_(false), robotNumber_(robotNumber)
+             Eigen::Isometry2d initPose, ParticleFilter* pf, uint robotNumber)
+    : parent_(parent), initPose_(initPose), pf_(pf), started_(false),
+      robotNumber_(robotNumber)
 {
   std::string robotNamespace("/omni" +
                              boost::lexical_cast<std::string>(robotNumber + 1));
@@ -174,8 +169,7 @@ Robot::Robot(ros::NodeHandle& nh, RobotFactory* parent,
       robotNamespace + "/landmarkspositions", 10,
       boost::bind(&Robot::landmarkDataCallback, this, _1));
 
-  if (robotType == RobotType::Teammate)
-    ROS_INFO("Created teammate robot OMNI%d", robotNumber + 1);
+  ROS_INFO("Created robot OMNI%d", robotNumber + 1);
 }
 
 void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
@@ -183,7 +177,7 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   if (!started_)
     startNow();
 
-  if (!pf_.isInitialized())
+  if (!pf_->isInitialized())
     parent_->tryInitializeParticles();
 
   pfuclt_ptcls::Odometry odomStruct = {
@@ -195,7 +189,7 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
             odometry->header.stamp.sec);
 
   // Call the particle filter predict step for this robot
-  pf_.predict(robotNumber_, odomStruct);
+  pf_->predict(robotNumber_, odomStruct);
 }
 
 void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
@@ -208,14 +202,14 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
     ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
               target->header.stamp.sec);
 
-    Eigen::Vector2d ballObsVec = Eigen::Vector2d(target->x, target->y);
+    Eigen::Vector2d targetObsVec = Eigen::Vector2d(target->x, target->y);
     pfuclt_ptcls::TargetObservation obs;
 
     obs.found = true;
     obs.x = target->x;
     obs.y = target->y;
     obs.z = target->z;
-    obs.d = ballObsVec.norm();
+    obs.d = targetObsVec.norm();
     obs.phi = atan2(target->y, target->x);
 
     obs.covDD = (double)(1 / target->mismatchFactor) *
@@ -231,17 +225,21 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
                     (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
 
     // Save this observation
-    pf_.saveTargetObservation(robotNumber_, obs);
+    pf_->saveTargetObservation(robotNumber_, obs);
   }
   else
   {
     ROS_DEBUG("OMNI%d didn't find the ball at time %d", robotNumber_ + 1,
               target->header.stamp.sec);
 
-    pf_.saveTargetObservation(robotNumber_, false);
+    pf_->saveTargetObservation(robotNumber_, false);
   }
 
-  pf_.saveAllTargetMeasurementsDone(robotNumber_);
+  pf_->saveAllTargetMeasurementsDone(robotNumber_);
+
+  // If this is the "self robot", update the iteration time
+  if (MY_ID == robotNumber_ + 1)
+    pf_->updateIterationTime(target->header.stamp);
 }
 
 void Robot::landmarkDataCallback(
@@ -334,17 +332,14 @@ void Robot::landmarkDataCallback(
   {
 
     if (false == heuristicsFound[i])
-      pf_.saveLandmarkObservation(robotNumber_, i, false);
+      pf_->saveLandmarkObservation(robotNumber_, i, false);
 
     else
     {
-      // TODO in the no-ROS version the y frame is inverted. Not here? Check
-      // later
-
       pfuclt_ptcls::LandmarkObservation obs;
       obs.found = true;
       obs.x = landmarkData->x[i];
-      obs.y = landmarkData->y[i];
+      obs.y = -landmarkData->y[i]; // TODO check if correct to invert Y frame
       obs.d = sqrt(obs.x * obs.x + obs.y * obs.y);
       obs.phi = atan2(obs.y, obs.x);
       obs.covDD =
@@ -359,79 +354,11 @@ void Robot::landmarkDataCallback(
                   pow(cos(obs.phi), 2) *
                       (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
 
-      pf_.saveLandmarkObservation(robotNumber_, i, obs);
+      pf_->saveLandmarkObservation(robotNumber_, i, obs);
     }
   }
 
-  pf_.saveAllLandmarkMeasurementsDone(robotNumber_);
-}
-
-SelfRobot::SelfRobot(ros::NodeHandle& nh, RobotFactory* caller,
-                     Eigen::Isometry2d initPose, ParticleFilter& ptcls,
-                     uint robotNumber)
-    : Robot(nh, caller, initPose, ptcls, robotNumber, RobotType::Self)
-{
-  // Prepare particle message
-  msg_particles.particles.resize(N_PARTICLES);
-  for (uint part = 0; part < N_PARTICLES; ++part)
-  {
-    msg_particles.particles[part].particle.resize(ptcls.size());
-  }
-
-  // The Graph Generator ans solver should also subscribe to the GT data and
-  // publish it... This is important for time synchronization
-  GT_sub_ = nh.subscribe<read_omni_dataset::LRMGTData>(
-      "gtData_4robotExp", 10,
-      boost::bind(&SelfRobot::gtDataCallback, this, _1));
-  // GT_sub_ = nh->subscribe("gtData_4robotExp", 1000, gtDataCallback);
-
-  // Advertise some topics; don't change the names, preferably remap in a
-  // launch file
-  State_publisher =
-      nh.advertise<read_omni_dataset::RobotState>("/pfuclt_omni_poses", 1000);
-
-  targetStatePublisher = nh.advertise<read_omni_dataset::BallData>(
-      "/pfuclt_orangeBallState", 1000);
-
-  virtualGTPublisher = nh.advertise<read_omni_dataset::LRMGTData>(
-      "/gtData_synced_pfuclt_estimate", 1000);
-
-  particlePublisher =
-      nh.advertise<pfuclt_omni_dataset::particles>("/pfuclt_particles", 10);
-
-  ROS_INFO("Created main robot OMNI%d", robotNumber + 1);
-}
-
-void SelfRobot::gtDataCallback(
-    const read_omni_dataset::LRMGTData::ConstPtr& gtMsgReceived)
-{
-  receivedGTdata = *gtMsgReceived;
-}
-
-void SelfRobot::publishState(float x, float y, float theta)
-{
-  // using the first robot for the globaltime stamp of this message
-  // printf("we are here \n\n\n");
-
-  // first publish the particles!!!!
-  particlePublisher.publish(msg_particles);
-
-  msg_state.header.stamp =
-      ros::Time::now(); // time of the self-robot must be in the full state
-  receivedGTdata.header.stamp = ros::Time::now();
-
-  msg_state.robotPose[MY_ID - 1].pose.pose.position.x = x;
-  msg_state.robotPose[MY_ID - 1].pose.pose.position.y = y;
-  msg_state.robotPose[MY_ID - 1].pose.pose.position.z =
-      ROB_HT; // fixed height aboveground
-
-  msg_state.robotPose[MY_ID - 1].pose.pose.orientation.x = 0;
-  msg_state.robotPose[MY_ID - 1].pose.pose.orientation.y = 0;
-  msg_state.robotPose[MY_ID - 1].pose.pose.orientation.z = sin(theta / 2);
-  msg_state.robotPose[MY_ID - 1].pose.pose.orientation.w = cos(theta / 2);
-
-  State_publisher.publish(msg_state);
-  virtualGTPublisher.publish(receivedGTdata);
+  pf_->saveAllLandmarkMeasurementsDone(robotNumber_);
 }
 
 // end of namespace
@@ -443,7 +370,10 @@ int main(int argc, char* argv[])
   ros::init(argc, argv, "pfuclt_omni_dataset");
   ros::NodeHandle nh;
 
-  // Set debug if asked
+  using namespace pfuclt;
+
+  // Parse input parameters
+  // TODO Consider using a library for this
   if (argc > 2)
   {
     if (!strcmp(argv[2], "true"))
@@ -453,18 +383,34 @@ int main(int argc, char* argv[])
       {
         ros::console::notifyLoggerLevelsChanged();
       }
-    }
 
-    ROS_DEBUG("DEBUG mode set");
+      ROS_DEBUG("DEBUG mode set");
+      DEBUG = true;
+    }
+    else
+      DEBUG = false;
   }
+  else
+    DEBUG = false;
+
+  if (argc > 4)
+  {
+    if (!strcmp(argv[4], "true"))
+    {
+      PUBLISH = true;
+      ROS_INFO("Publish = true");
+    }
+    else
+      PUBLISH = false;
+  }
+  else
+    PUBLISH = false;
 
   // read parameters from param server
   using pfuclt_aux::readParam;
-  using namespace pfuclt;
 
   readParam<int>(nh, "/MAX_ROBOTS", MAX_ROBOTS);
   readParam<float>(nh, "/ROB_HT", ROB_HT);
-  readParam<int>(nh, "/MY_ID", MY_ID);
   readParam<int>(nh, "/N_PARTICLES", N_PARTICLES);
   readParam<int>(nh, "/NUM_SENSORS_PER_ROBOT", NUM_SENSORS_PER_ROBOT);
   readParam<int>(nh, "/NUM_TARGETS", NUM_TARGETS);
@@ -476,8 +422,8 @@ int main(int argc, char* argv[])
   readParam<float>(nh, "/LANDMARK_COV/K5", K5);
   readParam<bool>(nh, "/PLAYING_ROBOTS", PLAYING_ROBOTS);
   readParam<double>(nh, "/POS_INIT", POS_INIT);
-  readParam<float>(nh, "/CUSTOM_RANDOM_ALPHA", CUSTOM_RANDOM_ALPHA);
   readParam<bool>(nh, "/USE_CUSTOM_VALUES", USE_CUSTOM_VALUES);
+  readParam<int>(nh, "/MY_ID", MY_ID);
 
   uint total_size = (MAX_ROBOTS + NUM_TARGETS) * STATES_PER_ROBOT;
 
@@ -490,21 +436,28 @@ int main(int argc, char* argv[])
                 "have %d numbers and has %d",
                 total_size * 2, (int)CUSTOM_PARTICLE_INIT.size());
     }
+
+    readParam<float>(nh, "/CUSTOM_RANDOM_ALPHA", CUSTOM_RANDOM_ALPHA);
+    if (CUSTOM_RANDOM_ALPHA.size() != (MAX_ROBOTS * 4))
+    {
+      ROS_ERROR("/CUSTOM_RANDOM_ALPHA given but not of correct size - should "
+                "have %d numbers and has %d",
+                MAX_ROBOTS * 4, (int)CUSTOM_RANDOM_ALPHA.size());
+    }
   }
 
   if (N_PARTICLES < 0 || total_size < 0)
   {
-    ROS_ERROR("Unacceptable configuration for particles class");
+    ROS_ERROR("Unacceptable configuration for ParticleFilter class");
     nh.shutdown();
     return 0;
   }
 
   pfuclt::RobotFactory Factory(nh);
 
-  if (pfuclt::MY_ID == 2)
+  if (USE_CUSTOM_VALUES && PLAYING_ROBOTS[1])
   {
-    // ROS_WARN("OMNI2 not present in dataset. Please try with another Robot ID
-    // for self robot");
+    ROS_WARN("OMNI2 not present in dataset.");
     return 0;
   }
 
