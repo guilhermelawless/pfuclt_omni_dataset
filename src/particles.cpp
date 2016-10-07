@@ -819,8 +819,6 @@ void PFPublisher::gtDataCallback(
 
 void PFPublisher::nextIteration()
 {
-  ROS_WARN("Got here");
-
   // Time stamps using ros time
   msg_state_.header.stamp = msg_GT_.header.stamp = msg_target_.header.stamp =
       ros::Time::now();
