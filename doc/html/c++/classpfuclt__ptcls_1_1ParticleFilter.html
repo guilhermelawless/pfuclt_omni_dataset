@@ -30,8 +30,8 @@
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="#pri-methods">Private Member Functions</a> &#124;
-<a href="#pri-attribs">Private Attributes</a> &#124;
+<a href="#pro-methods">Protected Member Functions</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classpfuclt__ptcls_1_1ParticleFilter-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">pfuclt_ptcls::ParticleFilter Class Reference</div>  </div>
@@ -39,9 +39,19 @@
 <div class="contents">
 
 <p><code>#include &lt;<a class="el" href="particles_8h_source.html">particles.h</a>&gt;</code></p>
+<div class="dynheader">
+Inheritance diagram for pfuclt_ptcls::ParticleFilter:</div>
+<div class="dyncontent">
+<div class="center"><img src="classpfuclt__ptcls_1_1ParticleFilter__inherit__graph.png" border="0" usemap="#pfuclt__ptcls_1_1ParticleFilter_inherit__map" alt="Inheritance graph"/></div>
+<map name="pfuclt__ptcls_1_1ParticleFilter_inherit__map" id="pfuclt__ptcls_1_1ParticleFilter_inherit__map">
+<area shape="rect" id="node2" href="classpfuclt__ptcls_1_1PFPublisher.html" title="The PFPublisher class &#45; implements publishing for the ParticleFilter class using ROS. " alt="" coords="6,80,172,107"/></map>
+<center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1PFinitData.html">PFinitData</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1PFinitData.html" title="The PFinitData struct - provides encapsulation to the initial data necessary to construct a ParticleF...">PFinitData</a> struct - provides encapsulation to the initial data necessary to construct a <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a> instance.  <a href="structpfuclt__ptcls_1_1ParticleFilter_1_1PFinitData.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html">State</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The state_s struct - defines a structure to hold state information for the particle filter class.  <a href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -54,6 +64,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a79d80be1bab1f0dae71610a99d532337"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a79d80be1bab1f0dae71610a99d532337">assign</a> (const <a class="el" href="namespacepfuclt__ptcls.html#a42fe47110230c79d79033d5e2c945104">pdata_t</a> value, const uint index)</td></tr>
 <tr class="memdesc:a79d80be1bab1f0dae71610a99d532337"><td class="mdescLeft">&#160;</td><td class="mdescRight">assign - assign a value to every particle in one subset  <a href="#a79d80be1bab1f0dae71610a99d532337">More...</a><br/></td></tr>
 <tr class="separator:a79d80be1bab1f0dae71610a99d532337"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa545e41e9289efa0b739c4967691619e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#aa545e41e9289efa0b739c4967691619e">getPFReference</a> ()</td></tr>
+<tr class="separator:aa545e41e9289efa0b739c4967691619e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a56d0123314335c8dd771936f01711f74"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a56d0123314335c8dd771936f01711f74">init</a> ()</td></tr>
 <tr class="memdesc:a56d0123314335c8dd771936f01711f74"><td class="mdescLeft">&#160;</td><td class="mdescRight">init - initialize the particle filter set with the default randomized values  <a href="#a56d0123314335c8dd771936f01711f74">More...</a><br/></td></tr>
 <tr class="separator:a56d0123314335c8dd771936f01711f74"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -69,9 +81,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af4fba5d1e3a0145f14ccf41b7a910518"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="namespacepfuclt__ptcls.html#ad636c13e367ae1ac32ffa12029f079cb">subparticles_t</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#af4fba5d1e3a0145f14ccf41b7a910518">operator[]</a> (int index) const </td></tr>
 <tr class="memdesc:af4fba5d1e3a0145f14ccf41b7a910518"><td class="mdescLeft">&#160;</td><td class="mdescRight">operator [] - const version of the array subscripting access, when using it on const intantiations of the class  <a href="#af4fba5d1e3a0145f14ccf41b7a910518">More...</a><br/></td></tr>
 <tr class="separator:af4fba5d1e3a0145f14ccf41b7a910518"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a74f5e861d5d3fe1350f425125f2eb4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a0a74f5e861d5d3fe1350f425125f2eb4">ParticleFilter</a> (const uint nParticles, const uint nTargets, const uint statesPerRobot, const uint nRobots, const uint nLandmarks, const std::vector&lt; bool &gt; &amp;robotsUsed, const std::vector&lt; <a class="el" href="namespacepfuclt__aux.html#a3030f9bc1952f850948000342f3dc114">Landmark</a> &gt; &amp;landmarksMap, const std::vector&lt; float &gt; alpha=std::vector&lt; float &gt;())</td></tr>
-<tr class="memdesc:a0a74f5e861d5d3fe1350f425125f2eb4"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a> - constructor.  <a href="#a0a74f5e861d5d3fe1350f425125f2eb4">More...</a><br/></td></tr>
-<tr class="separator:a0a74f5e861d5d3fe1350f425125f2eb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa79cc6dd346db6d6e1388c26b2dbba5e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#aa79cc6dd346db6d6e1388c26b2dbba5e">ParticleFilter</a> (struct <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1PFinitData.html">PFinitData</a> &amp;data)</td></tr>
+<tr class="memdesc:aa79cc6dd346db6d6e1388c26b2dbba5e"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a> - constructor.  <a href="#aa79cc6dd346db6d6e1388c26b2dbba5e">More...</a><br/></td></tr>
+<tr class="separator:aa79cc6dd346db6d6e1388c26b2dbba5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c3cad0dc8c0e3d5d1cdef8cad804aa6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a6c3cad0dc8c0e3d5d1cdef8cad804aa6">predict</a> (const uint robotNumber, const <a class="el" href="namespacepfuclt__ptcls.html#a1ebc1dd5c03f8a8925366d8bd872a0ab">Odometry</a> odom)</td></tr>
 <tr class="memdesc:a6c3cad0dc8c0e3d5d1cdef8cad804aa6"><td class="mdescLeft">&#160;</td><td class="mdescRight">predict - prediction step in the particle filter set with the received odometry  <a href="#a6c3cad0dc8c0e3d5d1cdef8cad804aa6">More...</a><br/></td></tr>
 <tr class="separator:a6c3cad0dc8c0e3d5d1cdef8cad804aa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -99,21 +111,17 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:adb8db20f4af4b5585bd75b40664ff079"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#adb8db20f4af4b5585bd75b40664ff079">size</a> ()</td></tr>
 <tr class="memdesc:adb8db20f4af4b5585bd75b40664ff079"><td class="mdescLeft">&#160;</td><td class="mdescRight">size - interface to the size of the particle filter  <a href="#adb8db20f4af4b5585bd75b40664ff079">More...</a><br/></td></tr>
 <tr class="separator:adb8db20f4af4b5585bd75b40664ff079"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae02385aa2c5bfe078952eac0a7f1e404"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#ae02385aa2c5bfe078952eac0a7f1e404">updateIterationTime</a> (ros::Time tRos)</td></tr>
+<tr class="separator:ae02385aa2c5bfe078952eac0a7f1e404"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a5ff18b1eb83f4e2d4acae8db0f1d14d7"><td class="memItemLeft" align="right" valign="top">boost::shared_ptr<br class="typebreak"/>
 &lt; std::ostringstream &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a5ff18b1eb83f4e2d4acae8db0f1d14d7">iteration_oss</a></td></tr>
 <tr class="separator:a5ff18b1eb83f4e2d4acae8db0f1d14d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5813007780617cc0aea1b69b875f8eec"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a5813007780617cc0aea1b69b875f8eec">iterationTime</a></td></tr>
-<tr class="separator:a5813007780617cc0aea1b69b875f8eec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a82e62c49a531a653c56da8e8e3b92a37"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a82e62c49a531a653c56da8e8e3b92a37">prevTime</a></td></tr>
-<tr class="separator:a82e62c49a531a653c56da8e8e3b92a37"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1db5c956a813e04a678af66a8e2d582c"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html">State</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a1db5c956a813e04a678af66a8e2d582c">state</a></td></tr>
-<tr class="separator:a1db5c956a813e04a678af66a8e2d582c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
-Private Member Functions</h2></td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
+Protected Member Functions</h2></td></tr>
 <tr class="memitem:a8dc14870619f79617a3c3d05a4b9836d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a8dc14870619f79617a3c3d05a4b9836d">fuseRobots</a> ()</td></tr>
 <tr class="memdesc:a8dc14870619f79617a3c3d05a4b9836d"><td class="mdescLeft">&#160;</td><td class="mdescRight">fuseRobots - fuse robot states step  <a href="#a8dc14870619f79617a3c3d05a4b9836d">More...</a><br/></td></tr>
 <tr class="separator:a8dc14870619f79617a3c3d05a4b9836d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -126,18 +134,21 @@ Private Member Functions</h2></td></tr>
 <tr class="memitem:a15bd6282a12222357824b1a186f9668a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a15bd6282a12222357824b1a186f9668a">myResampler</a> (const float weightSum)</td></tr>
 <tr class="memdesc:a15bd6282a12222357824b1a186f9668a"><td class="mdescLeft">&#160;</td><td class="mdescRight">myResampler - a simpler resampler  <a href="#a15bd6282a12222357824b1a186f9668a">More...</a><br/></td></tr>
 <tr class="separator:a15bd6282a12222357824b1a186f9668a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b6cd3190bf5efd51aaf9d9327b48f98"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a0b6cd3190bf5efd51aaf9d9327b48f98">nextIteration</a> ()</td></tr>
+<tr class="memdesc:a0b6cd3190bf5efd51aaf9d9327b48f98"><td class="mdescLeft">&#160;</td><td class="mdescRight">nextIteration - perform final steps and reset the PF state  <a href="#a0b6cd3190bf5efd51aaf9d9327b48f98">More...</a><br/></td></tr>
+<tr class="separator:a0b6cd3190bf5efd51aaf9d9327b48f98"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a451b458bd98079f26d7792d1c499704f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a451b458bd98079f26d7792d1c499704f">predictTarget</a> (uint robotNumber)</td></tr>
 <tr class="memdesc:a451b458bd98079f26d7792d1c499704f"><td class="mdescLeft">&#160;</td><td class="mdescRight">predictTarget - predict target state step  <a href="#a451b458bd98079f26d7792d1c499704f">More...</a><br/></td></tr>
 <tr class="separator:a451b458bd98079f26d7792d1c499704f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afea2e2201761cc33ae2753ced474a9df"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#afea2e2201761cc33ae2753ced474a9df">resample</a> ()</td></tr>
 <tr class="memdesc:afea2e2201761cc33ae2753ced474a9df"><td class="mdescLeft">&#160;</td><td class="mdescRight">resample - the resampling step  <a href="#afea2e2201761cc33ae2753ced474a9df">More...</a><br/></td></tr>
 <tr class="separator:afea2e2201761cc33ae2753ced474a9df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a047956aadb880684f77bb8d65ebfdbcd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a047956aadb880684f77bb8d65ebfdbcd">resetWeights</a> ()</td></tr>
-<tr class="memdesc:a047956aadb880684f77bb8d65ebfdbcd"><td class="mdescLeft">&#160;</td><td class="mdescRight">resetWeights - assign the value 1.0 to all particle weights  <a href="#a047956aadb880684f77bb8d65ebfdbcd">More...</a><br/></td></tr>
-<tr class="separator:a047956aadb880684f77bb8d65ebfdbcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2249ac826a32c8d0a12bc57589f56ff9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a2249ac826a32c8d0a12bc57589f56ff9">resetWeights</a> (<a class="el" href="namespacepfuclt__ptcls.html#a42fe47110230c79d79033d5e2c945104">pdata_t</a> val)</td></tr>
+<tr class="memdesc:a2249ac826a32c8d0a12bc57589f56ff9"><td class="mdescLeft">&#160;</td><td class="mdescRight">resetWeights - assign the value val to all particle weights  <a href="#a2249ac826a32c8d0a12bc57589f56ff9">More...</a><br/></td></tr>
+<tr class="separator:a2249ac826a32c8d0a12bc57589f56ff9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
-Private Attributes</h2></td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
 <tr class="memitem:aa8553670cd180ce273d8fee357943fba"><td class="memItemLeft" align="right" valign="top">std::vector&lt; float &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#aa8553670cd180ce273d8fee357943fba">alpha_</a></td></tr>
 <tr class="separator:aa8553670cd180ce273d8fee357943fba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5c7a26ca8b3b7bcef9a829ed99fa3799"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector<br class="typebreak"/>
@@ -147,8 +158,12 @@ Private Attributes</h2></td></tr>
 <tr class="separator:aa5393b482613ef68293afed613cb7d91"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1e70e13f1b22f5bad4a92db43c09af0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#ad1e70e13f1b22f5bad4a92db43c09af0">initialized_</a></td></tr>
 <tr class="separator:ad1e70e13f1b22f5bad4a92db43c09af0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0de20c377033e102188035afd36b8e43"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a0de20c377033e102188035afd36b8e43">iterationTime_</a></td></tr>
+<tr class="separator:a0de20c377033e102188035afd36b8e43"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79741f54f0802baa5b20f0b92948349b"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="namespacepfuclt__aux.html#a3030f9bc1952f850948000342f3dc114">Landmark</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a79741f54f0802baa5b20f0b92948349b">landmarksMap_</a></td></tr>
 <tr class="separator:a79741f54f0802baa5b20f0b92948349b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad51ce7dfc9e0cfa7b104de62b9785c79"><td class="memItemLeft" align="right" valign="top">ros::Time&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#ad51ce7dfc9e0cfa7b104de62b9785c79">newTime_</a></td></tr>
+<tr class="separator:ad51ce7dfc9e0cfa7b104de62b9785c79"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad3a969d5788452180e7c040f80651856"><td class="memItemLeft" align="right" valign="top">const uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#ad3a969d5788452180e7c040f80651856">nLandmarks_</a></td></tr>
 <tr class="separator:ad3a969d5788452180e7c040f80651856"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab8a4602e10258c58608db467c0f581d9"><td class="memItemLeft" align="right" valign="top">const uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#ab8a4602e10258c58608db467c0f581d9">nParticles_</a></td></tr>
@@ -163,73 +178,31 @@ Private Attributes</h2></td></tr>
 <tr class="separator:aa3a3711077c5d7e02ac45510b342f62b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afbebe07dc7d552e356187c773f5e00a7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacepfuclt__ptcls.html#aa0bb2a558a57194f93f5470fc581ef52">particles_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#afbebe07dc7d552e356187c773f5e00a7">particles_</a></td></tr>
 <tr class="separator:afbebe07dc7d552e356187c773f5e00a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5de158ee8b7d06233d0dcfe2dea6a3ed"><td class="memItemLeft" align="right" valign="top">ros::Time&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a5de158ee8b7d06233d0dcfe2dea6a3ed">prevTime_</a></td></tr>
+<tr class="separator:a5de158ee8b7d06233d0dcfe2dea6a3ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83a21d860ffe13d405d129d3075c1782"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; bool &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a83a21d860ffe13d405d129d3075c1782">robotsUsed_</a></td></tr>
 <tr class="separator:a83a21d860ffe13d405d129d3075c1782"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62bdddcad0aa317e8c2769a2e812bfc3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacepfuclt__ptcls.html#a95759aa5b5fa0789f4993143c08cb7a2">RNGType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a62bdddcad0aa317e8c2769a2e812bfc3">seed_</a></td></tr>
 <tr class="separator:a62bdddcad0aa317e8c2769a2e812bfc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f450edc1380cf58d65e4e4b60dc0952"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html">State</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a6f450edc1380cf58d65e4e4b60dc0952">state_</a></td></tr>
+<tr class="separator:a6f450edc1380cf58d65e4e4b60dc0952"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a473e7bcc1016a6f8149784bd500b8161"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacepfuclt__ptcls.html#aa0bb2a558a57194f93f5470fc581ef52">particles_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html#a473e7bcc1016a6f8149784bd500b8161">weightComponents_</a></td></tr>
 <tr class="separator:a473e7bcc1016a6f8149784bd500b8161"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00067">67</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00076">76</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="a0a74f5e861d5d3fe1350f425125f2eb4"></a>
+<a class="anchor" id="aa79cc6dd346db6d6e1388c26b2dbba5e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">pfuclt_ptcls::ParticleFilter::ParticleFilter </td>
           <td>(</td>
-          <td class="paramtype">const uint&#160;</td>
-          <td class="paramname"><em>nParticles</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype">struct <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1PFinitData.html">PFinitData</a> &amp;&#160;</td>
+          <td class="paramname"><em>data</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">const uint&#160;</td>
-          <td class="paramname"><em>nTargets</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const uint&#160;</td>
-          <td class="paramname"><em>statesPerRobot</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const uint&#160;</td>
-          <td class="paramname"><em>nRobots</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const uint&#160;</td>
-          <td class="paramname"><em>nLandmarks</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; bool &gt; &amp;&#160;</td>
-          <td class="paramname"><em>robotsUsed</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; <a class="el" href="namespacepfuclt__aux.html#a3030f9bc1952f850948000342f3dc114">Landmark</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>landmarksMap</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; float &gt;&#160;</td>
-          <td class="paramname"><em>alpha</em> = <code>std::vector&lt;float&gt;()</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -237,16 +210,12 @@ Private Attributes</h2></td></tr>
 <p><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a> - constructor. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">nParticles</td><td>- the number of particles to be in the particle filter </td></tr>
-    <tr><td class="paramname">nTargets</td><td>- the number of targets to consider </td></tr>
-    <tr><td class="paramname">statesPerRobot</td><td>- the state space dimension for each robot </td></tr>
-    <tr><td class="paramname">nRobots</td><td>- number of robots </td></tr>
-    <tr><td class="paramname">alpha</td><td>- vector with values to be used in the RNG for the model sampling </td></tr>
+    <tr><td class="paramname">data</td><td>- reference to a struct of <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1PFinitData.html" title="The PFinitData struct - provides encapsulation to the initial data necessary to construct a ParticleF...">PFinitData</a> containing the necessary information to construct the Particle Filter </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00539">539</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00012">12</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
 
 </div>
 </div>
@@ -273,7 +242,7 @@ Private Attributes</h2></td></tr>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00528">528</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00577">577</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
 
 </div>
 </div>
@@ -310,7 +279,7 @@ Private Attributes</h2></td></tr>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00534">534</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00583">583</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
 
 </div>
 </div>
@@ -330,14 +299,14 @@ Private Attributes</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
 <p>fuseRobots - fuse robot states step </p>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00055">55</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00076">76</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
 
 </div>
 </div>
@@ -357,14 +326,39 @@ Private Attributes</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
 <p>fuseTarget - fuse target state step </p>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00171">171</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00195">195</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="aa545e41e9289efa0b739c4967691619e"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a>* pfuclt_ptcls::ParticleFilter::getPFReference </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00386">386</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -383,7 +377,7 @@ Private Attributes</h2></td></tr>
 
 <p>init - initialize the particle filter set with the default randomized values </p>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00587">587</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00590">590</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
 
 </div>
 </div>
@@ -409,7 +403,7 @@ Private Attributes</h2></td></tr>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00608">608</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00611">611</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
 
 </div>
 </div>
@@ -437,7 +431,7 @@ Private Attributes</h2></td></tr>
 <p>isInitialized - simple interface to access private member initialized_ </p>
 <dl class="section return"><dt>Returns</dt><dd>true if particle filter has been initialized, false otherwise </dd></dl>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00387">387</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00454">454</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -458,14 +452,14 @@ Private Attributes</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
 <p>low_variance_resampler - implementation of the resampler by Thrun and Burgard </p>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00286">286</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00317">317</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
 
 </div>
 </div>
@@ -486,14 +480,43 @@ Private Attributes</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
 <p>myResampler - a simpler resampler </p>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00337">337</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00368">368</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a0b6cd3190bf5efd51aaf9d9327b48f98"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void pfuclt_ptcls::ParticleFilter::nextIteration </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>nextIteration - perform final steps and reset the PF state </p>
+
+<p>Reimplemented in <a class="el" href="classpfuclt__ptcls_1_1PFPublisher.html#a4d9c9eb8418abad923e8075266421927">pfuclt_ptcls::PFPublisher</a>.</p>
+
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00361">361</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -528,7 +551,7 @@ Private Attributes</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the subparticles_t object reference located at particles_[index] </dd></dl>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00340">340</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00411">411</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -563,7 +586,7 @@ Private Attributes</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a const subparticles_t object reference located at particles_[index] </dd></dl>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00349">349</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00420">420</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -599,12 +622,9 @@ Private Attributes</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section remark"><dt>Remarks</dt><dd>will not do anything if the particle filter has not been initialized </dd>
-<dd>
-will not do anything if the current state of the robot robotNumber is not Predict </dd></dl>
 <dl class="section warning"><dt>Warning</dt><dd>only for the omni dataset configuration </dd></dl>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00651">651</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00649">649</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
 
 </div>
 </div>
@@ -625,7 +645,7 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -638,7 +658,7 @@ will not do anything if the current state of the robot robotNumber is not Predic
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00012">12</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00034">34</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
 
 </div>
 </div>
@@ -658,7 +678,7 @@ will not do anything if the current state of the robot robotNumber is not Predic
 
 <p>printWeights </p>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00518">518</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00567">567</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
 
 </div>
 </div>
@@ -678,7 +698,7 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -686,11 +706,11 @@ will not do anything if the current state of the robot robotNumber is not Predic
 <p>resample - the resampling step </p>
 <p>TODO change this to a much more stable way of finding the mean of the cluster which will represent the ball position. Because it's not the highest weight particle which represent's the ball position </p>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00382">382</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00413">413</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a047956aadb880684f77bb8d65ebfdbcd"></a>
+<a class="anchor" id="a2249ac826a32c8d0a12bc57589f56ff9"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -700,20 +720,21 @@ will not do anything if the current state of the robot robotNumber is not Predic
         <tr>
           <td class="memname">void pfuclt_ptcls::ParticleFilter::resetWeights </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="namespacepfuclt__ptcls.html#a42fe47110230c79d79033d5e2c945104">pdata_t</a>&#160;</td>
+          <td class="paramname"><em>val</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>resetWeights - assign the value 1.0 to all particle weights </p>
+<p>resetWeights - assign the value val to all particle weights </p>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00257">257</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00324">324</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -739,7 +760,7 @@ will not do anything if the current state of the robot robotNumber is not Predic
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00724">724</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00711">711</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
 
 </div>
 </div>
@@ -765,7 +786,7 @@ will not do anything if the current state of the robot robotNumber is not Predic
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00740">740</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
+<p>Definition at line <a class="el" href="particles_8cpp_source.html#l00727">727</a> of file <a class="el" href="particles_8cpp_source.html">particles.cpp</a>.</p>
 
 </div>
 </div>
@@ -817,7 +838,7 @@ will not do anything if the current state of the robot robotNumber is not Predic
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00403">403</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00470">470</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -868,7 +889,7 @@ will not do anything if the current state of the robot robotNumber is not Predic
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00415">415</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00482">482</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -913,7 +934,7 @@ will not do anything if the current state of the robot robotNumber is not Predic
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00435">435</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00502">502</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -958,7 +979,7 @@ will not do anything if the current state of the robot robotNumber is not Predic
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00446">446</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00513">513</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -986,7 +1007,33 @@ will not do anything if the current state of the robot robotNumber is not Predic
 <p>size - interface to the size of the particle filter </p>
 <dl class="section return"><dt>Returns</dt><dd>- the number of subparticle sets </dd></dl>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00393">393</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00460">460</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ae02385aa2c5bfe078952eac0a7f1e404"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void pfuclt_ptcls::ParticleFilter::updateIterationTime </td>
+          <td>(</td>
+          <td class="paramtype">ros::Time&#160;</td>
+          <td class="paramname"><em>tRos</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00373">373</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1004,12 +1051,12 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00249">249</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00313">313</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1026,12 +1073,12 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00251">251</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00315">315</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1048,12 +1095,12 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00252">252</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00316">316</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1070,12 +1117,12 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00250">250</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00314">314</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1089,21 +1136,29 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00300">300</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00364">364</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a5813007780617cc0aea1b69b875f8eec"></a>
+<a class="anchor" id="a0de20c377033e102188035afd36b8e43"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double pfuclt_ptcls::ParticleFilter::iterationTime</td>
+          <td class="memname">double pfuclt_ptcls::ParticleFilter::iterationTime_</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00298">298</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00317">317</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1120,12 +1175,34 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00238">238</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00302">302</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ad51ce7dfc9e0cfa7b104de62b9785c79"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">ros::Time pfuclt_ptcls::ParticleFilter::newTime_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00318">318</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1142,12 +1219,12 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00245">245</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00309">309</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1164,12 +1241,12 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00240">240</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00304">304</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1186,12 +1263,12 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00242">242</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00306">306</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1208,12 +1285,12 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00243">243</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00307">307</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1230,12 +1307,12 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00244">244</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00308">308</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1252,12 +1329,12 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00241">241</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00305">305</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1274,26 +1351,34 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00246">246</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00310">310</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a82e62c49a531a653c56da8e8e3b92a37"></a>
+<a class="anchor" id="a5de158ee8b7d06233d0dcfe2dea6a3ed"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double pfuclt_ptcls::ParticleFilter::prevTime</td>
+          <td class="memname">ros::Time pfuclt_ptcls::ParticleFilter::prevTime_</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00298">298</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00318">318</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1310,12 +1395,12 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00239">239</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00303">303</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1332,26 +1417,34 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00248">248</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00312">312</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a1db5c956a813e04a678af66a8e2d582c"></a>
+<a class="anchor" id="a6f450edc1380cf58d65e4e4b60dc0952"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">struct <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html">State</a> pfuclt_ptcls::ParticleFilter::state</td>
+          <td class="memname">struct <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html">State</a> pfuclt_ptcls::ParticleFilter::state_</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00299">299</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00319">319</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1368,12 +1461,12 @@ will not do anything if the current state of the robot robotNumber is not Predic
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00247">247</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00311">311</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -1387,7 +1480,7 @@ will not do anything if the current state of the robot robotNumber is not Predic
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Tue Oct 4 2016 14:34:17</small>
+<small>autogenerated on Fri Oct 7 2016 12:08:30</small>
 </div>
 </body>
 </html>

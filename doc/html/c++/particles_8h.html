@@ -43,12 +43,16 @@
 <code>#include &lt;Eigen/Geometry&gt;</code><br/>
 <code>#include &lt;sstream&gt;</code><br/>
 <code>#include &quot;<a class="el" href="pfuclt__aux_8h_source.html">pfuclt_aux.h</a>&quot;</code><br/>
+<code>#include &lt;read_omni_dataset/RobotState.h&gt;</code><br/>
+<code>#include &lt;read_omni_dataset/LRMGTData.h&gt;</code><br/>
+<code>#include &lt;pfuclt_omni_dataset/particle.h&gt;</code><br/>
+<code>#include &lt;pfuclt_omni_dataset/particles.h&gt;</code><br/>
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for particles.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="particles_8h__incl.png" border="0" usemap="#particles_8h" alt=""/></div>
 <map name="particles_8h" id="particles_8h">
-<area shape="rect" id="node10" href="pfuclt__aux_8h.html" title="pfuclt_aux.h" alt="" coords="923,80,1013,107"/></map>
+<area shape="rect" id="node10" href="pfuclt__aux_8h.html" title="pfuclt_aux.h" alt="" coords="924,88,1015,115"/></map>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
@@ -67,6 +71,14 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1odometry__s.html">pfuclt_ptcls::odometry_s</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">pfuclt_ptcls::ParticleFilter</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1PFinitData.html">pfuclt_ptcls::ParticleFilter::PFinitData</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1PFinitData.html" title="The PFinitData struct - provides encapsulation to the initial data necessary to construct a ParticleF...">PFinitData</a> struct - provides encapsulation to the initial data necessary to construct a <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a> instance.  <a href="structpfuclt__ptcls_1_1ParticleFilter_1_1PFinitData.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1PFPublisher.html">pfuclt_ptcls::PFPublisher</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classpfuclt__ptcls_1_1PFPublisher.html" title="The PFPublisher class - implements publishing for the ParticleFilter class using ROS. ">PFPublisher</a> class - implements publishing for the <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a> class using ROS.  <a href="classpfuclt__ptcls_1_1PFPublisher.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1PFPublisher_1_1PublishData.html">pfuclt_ptcls::PFPublisher::PublishData</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1robotState__s.html">pfuclt_ptcls::ParticleFilter::State::robotState_s</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1robotState__s.html" title="The robotState_s struct - saves information on the belief of a robot&#39;s state. ">robotState_s</a> struct - saves information on the belief of a robot's state.  <a href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1robotState__s.html#details">More...</a><br/></td></tr>
@@ -87,6 +99,10 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
+<tr class="memitem:ae198843ca7e6b34b34c375e1b865a3a5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="particles_8h.html#ae198843ca7e6b34b34c375e1b865a3a5">ITERATION_TIME_DEFAULT</a>&#160;&#160;&#160;0.0333</td></tr>
+<tr class="separator:ae198843ca7e6b34b34c375e1b865a3a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21a9d3ea3c5c8143d3386aad8eab7520"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="particles_8h.html#a21a9d3ea3c5c8143d3386aad8eab7520">ITERATION_TIME_NA</a>&#160;&#160;&#160;(-1)</td></tr>
+<tr class="separator:a21a9d3ea3c5c8143d3386aad8eab7520"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af21d4cbacf14604938b2b498a07752bb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="particles_8h.html#af21d4cbacf14604938b2b498a07752bb">O_TARGET</a>&#160;&#160;&#160;(nRobots_ * nStatesPerRobot_)</td></tr>
 <tr class="separator:af21d4cbacf14604938b2b498a07752bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9f9f7f4744859284d69ae8eed7c13894"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="particles_8h.html#a9f9f7f4744859284d69ae8eed7c13894">O_THETA</a>&#160;&#160;&#160;(2)</td></tr>
@@ -97,20 +113,18 @@ Macros</h2></td></tr>
 <tr class="separator:af5697c8f743f248db6f831a2ca3171f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad800190a8f19822715296bdacd294975"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="particles_8h.html#ad800190a8f19822715296bdacd294975">O_TZ</a>&#160;&#160;&#160;(2)</td></tr>
 <tr class="separator:ad800190a8f19822715296bdacd294975"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a211b2f98038bd57bccadc2ffc8930e2e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="particles_8h.html#a211b2f98038bd57bccadc2ffc8930e2e">O_WEIGHT</a>&#160;&#160;&#160;(nSubParticleSets_ - 1)</td></tr>
+<tr class="separator:a211b2f98038bd57bccadc2ffc8930e2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6653f5949045c1d697b88c3860ce4e7a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="particles_8h.html#a6653f5949045c1d697b88c3860ce4e7a">O_X</a>&#160;&#160;&#160;(0)</td></tr>
 <tr class="separator:a6653f5949045c1d697b88c3860ce4e7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae3dee58af67358328ca76399494c4dbb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="particles_8h.html#ae3dee58af67358328ca76399494c4dbb">O_Y</a>&#160;&#160;&#160;(1)</td></tr>
 <tr class="separator:ae3dee58af67358328ca76399494c4dbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8161d7bd85d96cc618320ddc7adbfb5b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="particles_8h.html#a8161d7bd85d96cc618320ddc7adbfb5b">ROS_TIME_SEC</a>&#160;&#160;&#160;(ros::Time::now().toSec())</td></tr>
-<tr class="separator:a8161d7bd85d96cc618320ddc7adbfb5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a555573684c4abf3d079d0e007557b3a5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="particles_8h.html#a555573684c4abf3d079d0e007557b3a5">STATES_PER_TARGET</a>&#160;&#160;&#160;3</td></tr>
 <tr class="separator:a555573684c4abf3d079d0e007557b3a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaec40b936f5bb5a3b751de75f9786ae7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="particles_8h.html#aaec40b936f5bb5a3b751de75f9786ae7">TARGET_RAND_MEAN</a>&#160;&#160;&#160;0</td></tr>
 <tr class="separator:aaec40b936f5bb5a3b751de75f9786ae7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67f814282094e9766c1632dad08f8e07"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="particles_8h.html#a67f814282094e9766c1632dad08f8e07">TARGET_RAND_STDDEV</a>&#160;&#160;&#160;20.0</td></tr>
 <tr class="separator:a67f814282094e9766c1632dad08f8e07"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a098197d905ae686c5754483cd8725b7a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="particles_8h.html#a098197d905ae686c5754483cd8725b7a">WEIGHT_INDEX</a>&#160;&#160;&#160;(nSubParticleSets_ - 1)</td></tr>
-<tr class="separator:a098197d905ae686c5754483cd8725b7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
@@ -134,6 +148,34 @@ Typedefs</h2></td></tr>
 <tr class="separator:a18d3b8c67bb61648a105ef59a20e3bc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
+<a class="anchor" id="ae198843ca7e6b34b34c375e1b865a3a5"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ITERATION_TIME_DEFAULT&#160;&#160;&#160;0.0333</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00037">37</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a21a9d3ea3c5c8143d3386aad8eab7520"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ITERATION_TIME_NA&#160;&#160;&#160;(-1)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00038">38</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="af21d4cbacf14604938b2b498a07752bb"></a>
 <div class="memitem">
 <div class="memproto">
@@ -144,7 +186,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00022">22</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00026">26</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -158,7 +200,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00021">21</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00025">25</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -172,7 +214,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00023">23</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00027">27</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -186,7 +228,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00024">24</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00028">28</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -200,7 +242,21 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00025">25</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00029">29</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a211b2f98038bd57bccadc2ffc8930e2e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define O_WEIGHT&#160;&#160;&#160;(nSubParticleSets_ - 1)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00030">30</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -214,7 +270,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00019">19</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00023">23</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -228,21 +284,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00020">20</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="a8161d7bd85d96cc618320ddc7adbfb5b"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define ROS_TIME_SEC&#160;&#160;&#160;(ros::Time::now().toSec())</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00032">32</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00024">24</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -256,7 +298,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00015">15</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00020">20</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -270,7 +312,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00028">28</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00033">33</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -284,21 +326,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00029">29</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="a098197d905ae686c5754483cd8725b7a"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define WEIGHT_INDEX&#160;&#160;&#160;(nSubParticleSets_ - 1)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00016">16</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00034">34</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -308,7 +336,7 @@ Typedefs</h2></td></tr>
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Tue Oct 4 2016 14:34:17</small>
+<small>autogenerated on Fri Oct 7 2016 12:08:30</small>
 </div>
 </body>
 </html>
