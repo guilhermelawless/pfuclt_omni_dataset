@@ -298,10 +298,6 @@ public:
     }
   };
 
-  // TODO find if mutex is necessary while using the simple implemented state
-  // machine
-  // boost::mutex mutex();
-
 protected:
   const std::vector<Landmark>& landmarksMap_;
   const std::vector<bool>& robotsUsed_;

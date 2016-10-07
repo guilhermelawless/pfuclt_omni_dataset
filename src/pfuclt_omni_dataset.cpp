@@ -202,14 +202,14 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
     ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
               target->header.stamp.sec);
 
-    Eigen::Vector2d ballObsVec = Eigen::Vector2d(target->x, target->y);
+    Eigen::Vector2d targetObsVec = Eigen::Vector2d(target->x, target->y);
     pfuclt_ptcls::TargetObservation obs;
 
     obs.found = true;
     obs.x = target->x;
     obs.y = target->y;
     obs.z = target->z;
-    obs.d = ballObsVec.norm();
+    obs.d = targetObsVec.norm();
     obs.phi = atan2(target->y, target->x);
 
     obs.covDD = (double)(1 / target->mismatchFactor) *
@@ -336,13 +336,10 @@ void Robot::landmarkDataCallback(
 
     else
     {
-      // TODO in the no-ROS version the y frame is inverted. Not here? Check
-      // later
-
       pfuclt_ptcls::LandmarkObservation obs;
       obs.found = true;
       obs.x = landmarkData->x[i];
-      obs.y = landmarkData->y[i];
+      obs.y = -landmarkData->y[i]; // TODO check if correct to invert Y frame
       obs.d = sqrt(obs.x * obs.x + obs.y * obs.y);
       obs.phi = atan2(obs.y, obs.x);
       obs.covDD =

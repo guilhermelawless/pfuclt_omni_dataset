@@ -113,7 +113,6 @@ void ParticleFilter::fuseRobots()
         // Error in observation
         Eigen::Vector2f LM(landmarksMap_[l].x, landmarksMap_[l].y);
 
-        // TODO should the Y frame be inverted?
         Eigen::Vector2f Zglobal_err = LM - Zglobal;
         Eigen::Vector2f Z_Zcap = Zrobot - Zglobal_err;
 
@@ -217,7 +216,10 @@ void ParticleFilter::fuseTarget()
 
   // resample and exit if ball not seen by any robot
   if (!ballSeen)
+  {
+    *iteration_oss << "Ball not seen ";
     return resample();
+  }
 
   // If program is here, at least one robot saw the ball
 
@@ -298,7 +300,7 @@ void ParticleFilter::fuseTarget()
     }
 
     // Particle m* has been found, let's swap the subparticles
-    for (uint i = O_TX; i < O_TZ; ++i)
+    for (uint i = 0; i < STATES_PER_TARGET; ++i)
       std::swap(particles_[O_TARGET + i][m], particles_[O_TARGET + i][mStar]);
 
     // Update the weight of this particle
@@ -420,6 +422,9 @@ void ParticleFilter::resample()
 
   for (uint r = 0; r < nRobots_; ++r)
   {
+    if (false == robotsUsed_[r])
+      continue ;
+
     uint o_robot = r * nStatesPerRobot_;
 
     float stdX = pfuclt_aux::calc_stdDev<pdata_t>(particles_[o_robot + O_X]);
@@ -484,6 +489,10 @@ void ParticleFilter::resample()
   // For each robot
   for (uint r = 0; r < nRobots_; ++r)
   {
+    // If the robot isn't playing, skip it
+    if( false == robotsUsed_[r])
+      continue;
+
     uint o_robot = r * nStatesPerRobot_;
 
     // ..and each particle
