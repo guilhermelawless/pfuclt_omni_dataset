@@ -6,7 +6,7 @@
 #include <boost/thread/mutex.hpp>
 #include <angles/angles.h>
 
-#define DONT_FUSE_TARGET true
+// #define DONT_FUSE_TARGET true
 
 namespace pfuclt_ptcls
 {
