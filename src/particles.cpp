@@ -493,10 +493,10 @@ void ParticleFilter::resample()
 
   // A vector of weighted means that will be calculated in the following nested
   // loops
-  std::vector<pdata_t> weightedMeans(nStatesPerRobot_, 0.0);
+  std::vector<double> weightedMeans(nStatesPerRobot_, 0.0);
 
   // Target weighted means
-  std::vector<pdata_t> targetWeightedMeans(STATES_PER_TARGET, 0.0);
+  std::vector<double> targetWeightedMeans(STATES_PER_TARGET, 0.0);
 
   /// TODO change this to a much more stable way of finding the mean of the
   /// cluster which will represent the ball position. Because it's not the
@@ -539,7 +539,10 @@ void ParticleFilter::resample()
       targetWeightedMeans[t] = targetWeightedMeans[t] / weightSum;
 
     // Save in the robot state
-    state_.robots[r].pose = weightedMeans;
+    // Can't use easy copy since one is using double precision
+    state_.robots[r].pose[O_X] = weightedMeans[O_X];
+    state_.robots[r].pose[O_Y] = weightedMeans[O_Y];
+    state_.robots[r].pose[O_THETA] = weightedMeans[O_THETA];
 
     // Save in the target state
     // First the velocity, then the position
@@ -558,7 +561,10 @@ void ParticleFilter::resample()
     // Velocities stay the same
 
     // Update position
-    state_.target.pos = targetWeightedMeans;
+    // Can't use easy copy since one is using double precision
+    state_.target.pos[O_TX] = targetWeightedMeans[O_TX];
+    state_.target.pos[O_TY] = targetWeightedMeans[O_TY];
+    state_.target.pos[O_TZ] = targetWeightedMeans[O_TZ];
   }
 
   // Print iteration and state information
