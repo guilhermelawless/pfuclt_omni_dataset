@@ -24,7 +24,7 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
       bufTargetObservations_(data.nRobots), prevTime_(ros::Time::now()),
       newTime_(ros::Time::now()), iterationTime_(ITERATION_TIME_DEFAULT),
       weightComponents_(data.nRobots, subparticles_t(data.nParticles, 0.0)),
-      state_(data.nRobots, data.robotsUsed)
+      state_(data.statesPerRobot, data.nRobots, data.robotsUsed)
 {
 
   ROS_INFO("Created particle filter with dimensions %d, %d",
@@ -48,28 +48,28 @@ void ParticleFilter::predictTarget(uint robotNumber)
   normal_distribution<> targetAcceleration(TARGET_RAND_MEAN,
                                            TARGET_RAND_STDDEV);
 
+  // If the iterationTime is too high, consider the default value
+  if (iterationTime_ > ITERATION_TIME_MAX)
+    iterationTime_ = ITERATION_TIME_DEFAULT;
+
   for (int i = 0; i < nParticles_; i++)
   {
     // TODO what exactly should happen to ball velocity?
 
+    // Get random accelerations
+    pdata_t accel[STATES_PER_TARGET] = { targetAcceleration(seed_),
+                                         targetAcceleration(seed_),
+                                         targetAcceleration(seed_) };
+
     // v = a*dt
-    state_.target.vx += targetAcceleration(seed_) * iterationTime_;
-    state_.target.vy += targetAcceleration(seed_) * iterationTime_;
-    state_.target.vz += targetAcceleration(seed_) * iterationTime_;
+    for (uint v = 0; v < STATES_PER_TARGET; ++v)
+      state_.target.vel[v] += accel[v] * iterationTime_;
 
     // x = v*dt + 0.5*a*dt^2 with a new random acceleration for each
     // component
-
-    particles_[O_TARGET + O_TX][i] +=
-        state_.target.vx * iterationTime_ +
-        0.5 * targetAcceleration(seed_) * pow(iterationTime_, 2);
-    particles_[O_TARGET + O_TY][i] +=
-        state_.target.vy * iterationTime_ +
-        0.5 * targetAcceleration(seed_) * pow(iterationTime_, 2);
-    particles_[O_TARGET + O_TZ][i] +=
-        state_.target.vz * iterationTime_ +
-        0.5 * targetAcceleration(seed_) * pow(iterationTime_, 2);
-
+    for (uint v = 0; v < STATES_PER_TARGET; ++v)
+      particles_[O_TARGET + v][i] += state_.target.vel[v] * iterationTime_ +
+                                     0.5 * accel[v] * pow(iterationTime_, 2);
   }
 }
 
@@ -115,12 +115,6 @@ void ParticleFilter::fuseRobots()
 
         Eigen::Vector2f Zglobal_err = LM - Zglobal;
         Eigen::Vector2f Z_Zcap = Zrobot - Zglobal_err;
-
-        ROS_DEBUG_COND(p == 0, "Error in seeing landmark %d = (%f , %f)", l,
-                       Zglobal_err[O_X], Zglobal_err[O_Y]);
-        ROS_DEBUG_COND(p == 0,
-                       "Landmark %d is at (%f , %f) and I see it at (%f, %f)",
-                       l, LM[O_X], LM[O_Y], Zglobal[O_X], Zglobal[O_Y]);
 
         // The values of interest to the particle weights
         // Note: using Eigen wasn't of particular interest here since it does
@@ -430,7 +424,7 @@ void ParticleFilter::resample()
   for (uint r = 0; r < nRobots_; ++r)
   {
     if (false == robotsUsed_[r])
-      continue ;
+      continue;
 
     uint o_robot = r * nStatesPerRobot_;
 
@@ -441,12 +435,13 @@ void ParticleFilter::resample()
 
     state_.robots[r].conf = stdX + stdY + stdTheta;
 
-    ROS_DEBUG("OMNI%d stdX = %f, stdY = %f, stdTheta = %f", r+1, stdX, stdY, stdTheta);
+    ROS_DEBUG("OMNI%d stdX = %f, stdY = %f, stdTheta = %f", r + 1, stdX, stdY,
+              stdTheta);
   }
 
   // Calc. sum of weights
-  float weightSum = std::accumulate(particles_[O_WEIGHT].begin(),
-                                    particles_[O_WEIGHT].end(), 0.0);
+  pdata_t weightSum = std::accumulate(particles_[O_WEIGHT].begin(),
+                                      particles_[O_WEIGHT].end(), 0.0);
 
   ROS_DEBUG("WeightSum before resampling = %f", weightSum);
 
@@ -473,7 +468,7 @@ void ParticleFilter::resample()
     return;
   }
 
-  //low_variance_resampler(weightSum);
+  // low_variance_resampler(weightSum);
   myResampler(weightSum);
 
   printWeights("after resampling: ");
@@ -486,10 +481,10 @@ void ParticleFilter::resample()
 
   // A vector of weighted means that will be calculated in the following nested
   // loops
-  std::vector<double> weightedMeans(nStatesPerRobot_, 0);
+  std::vector<pdata_t> weightedMeans(nStatesPerRobot_, 0.0);
 
   // Target weighted means
-  std::vector<double> targetWeightedMeans(STATES_PER_TARGET, 0);
+  std::vector<pdata_t> targetWeightedMeans(STATES_PER_TARGET, 0.0);
 
   /// TODO change this to a much more stable way of finding the mean of the
   /// cluster which will represent the ball position. Because it's not the
@@ -499,7 +494,7 @@ void ParticleFilter::resample()
   for (uint r = 0; r < nRobots_; ++r)
   {
     // If the robot isn't playing, skip it
-    if( false == robotsUsed_[r])
+    if (false == robotsUsed_[r])
       continue;
 
     uint o_robot = r * nStatesPerRobot_;
@@ -529,9 +524,7 @@ void ParticleFilter::resample()
       targetWeightedMeans[t] = targetWeightedMeans[t] / weightSum;
 
     // Save in the robot state
-    state_.robots[r].x = weightedMeans[O_X];
-    state_.robots[r].y = weightedMeans[O_Y];
-    state_.robots[r].theta = weightedMeans[O_THETA];
+    state_.robots[r].pose = weightedMeans;
 
     // Save in the target state
     // First the velocity, then the position
@@ -547,17 +540,11 @@ void ParticleFilter::resample()
     state_.target.z = targetWeightedMeans[O_TZ];
     */
 
-    //Velocities stay the same
+    // Velocities stay the same
 
-    //Update position
-    state_.target.x = targetWeightedMeans[O_TX];
-    state_.target.y = targetWeightedMeans[O_TY];
-    state_.target.z = targetWeightedMeans[O_TZ];
+    // Update position
+    state_.target.pos = targetWeightedMeans;
   }
-
-  // Debug
-  ROS_DEBUG("PF says OMNI4 at (x,y) = [ %f, %f ]", state_.robots[3].x,
-            state_.robots[3].y);
 
   // Print iteration and state information
   *iteration_oss << "DONE!";
@@ -627,10 +614,10 @@ void ParticleFilter::init(const std::vector<double> custom)
 
   ROS_INFO("Initializing particle filter");
 
-  ROS_DEBUG_COND(custom.size() != ((nSubParticleSets_ - 1) * 2),
-                 "The provided vector for initilization does not have the "
-                 "correct size (should have %d elements",
-                 (nSubParticleSets_ - 1) * 2);
+  ROS_WARN_COND(custom.size() != ((nSubParticleSets_ - 1) * 2),
+                "The provided vector for initilization does not have the "
+                "correct size (should have %d elements",
+                (nSubParticleSets_ - 1) * 2);
 
   // For all subparticle sets except the particle weights
   for (int i = 0; i < custom.size() / 2; ++i)
@@ -678,7 +665,7 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
   float deltaRot =
       atan2(odom.y, odom.x) -
       state_.robots[robotNumber]
-          .theta; // Uses the previous overall belief of orientation
+          .pose[O_THETA]; // Uses the previous overall belief of orientation
   float deltaTrans = sqrt(odom.x * odom.x + odom.y * odom.y);
   float deltaFinalRot = odom.theta - deltaRot;
 
@@ -807,14 +794,14 @@ void PFPublisher::publishRobotStates()
     ParticleFilter::State::robotState_s& pfState = state_.robots[r];
     geometry_msgs::PoseWithCovariance& rosState = msg_state_.robotPose[r].pose;
 
-    rosState.pose.position.x = pfState.x;
-    rosState.pose.position.y = pfState.y;
+    rosState.pose.position.x = pfState.pose[O_X];
+    rosState.pose.position.y = pfState.pose[O_Y];
     rosState.pose.position.z = pubData.robotHeight;
 
     rosState.pose.orientation.x = 0;
     rosState.pose.orientation.y = 0;
-    rosState.pose.orientation.z = sin(pfState.theta / 2);
-    rosState.pose.orientation.w = cos(pfState.theta / 2);
+    rosState.pose.orientation.z = sin(pfState.pose[O_THETA] / 2);
+    rosState.pose.orientation.w = cos(pfState.pose[O_THETA] / 2);
   }
 
   robotStatePublisher_.publish(msg_state_);
@@ -822,9 +809,9 @@ void PFPublisher::publishRobotStates()
 
 void PFPublisher::publishTargetState()
 {
-  msg_target_.x = state_.target.x;
-  msg_target_.y = state_.target.y;
-  msg_target_.z = state_.target.z;
+  msg_target_.x = state_.target.pos[O_TX];
+  msg_target_.y = state_.target.pos[O_TY];
+  msg_target_.z = state_.target.pos[O_TZ];
 
   targetStatePublisher_.publish(msg_target_);
 }

@@ -36,6 +36,7 @@
 // concerning time
 #define ITERATION_TIME_DEFAULT 0.0333
 #define ITERATION_TIME_NA (-1)
+#define ITERATION_TIME_MAX (1)
 
 namespace pfuclt_ptcls
 {
@@ -98,8 +99,10 @@ protected:
      */
     struct robotState_s
     {
-      float x, y, theta;
-      float conf;
+      std::vector<pdata_t> pose;
+      pdata_t conf;
+
+      robotState_s(uint poseSize) : pose(poseSize, 0.0), conf(0.0) {}
     };
     std::vector<struct robotState_s> robots;
 
@@ -109,21 +112,30 @@ protected:
      */
     struct targetState_s
     {
-      float x, y, z;
-      float vx, vy, vz;
+      std::vector<pdata_t> pos;
+      std::vector<pdata_t> vel;
+
+      targetState_s() : pos(STATES_PER_TARGET, 0.0), vel(STATES_PER_TARGET, 0.0)
+      {
+      }
     } target;
 
     /**
      * @brief State - constructor
      * @param numberRobots
      */
-    State(const uint numberRobots, const std::vector<bool>& robotsBeingUsed)
+    State(const uint nStatesPerRobot, const uint numberRobots,
+          const std::vector<bool>& robotsBeingUsed)
         : nRobots(numberRobots), predicted(nRobots, false),
           landmarkMeasurementsDone(nRobots, false),
-          targetMeasurementsDone(nRobots, false), robots(nRobots),
+          targetMeasurementsDone(nRobots, false),
           robotsUsed(robotsBeingUsed)
     {
       reset();
+
+      // Create and initialize the robots vector
+      for(uint r=0; r<nRobots; ++r)
+        robots.push_back(robotState_s(nStatesPerRobot));
     }
 
   private:
@@ -374,8 +386,8 @@ public:
   {
     prevTime_ = newTime_;
     newTime_ = tRos;
-    iterationTime_ = (newTime_-prevTime_).toNSec()*1e-9;
-    if(fabs(iterationTime_) > 10)
+    iterationTime_ = (newTime_ - prevTime_).toNSec() * 1e-9;
+    if (fabs(iterationTime_) > 10)
     {
       // Something is wrong, set to default iteration time
       iterationTime_ = ITERATION_TIME_DEFAULT;
