@@ -386,15 +386,22 @@ void ParticleFilter::myResampler(const float weightSum)
         cumulativeWeights[par - 1] + normalizedWeights[par];
   }
 
-  for (int par = 0; par < nParticles_ * 0.5; par++)
+  int halfParticles = nParticles_ / 2;
+
+  // Keep top 50% of particles
+  // Taken care of when duplicating, above
+  /*
+  for (int par = 0; par < halfParticles; par++)
   {
     for (int k = 0; k < nSubParticleSets_; k++)
     {
       particles_[k][par] = duplicate[k][par];
     }
   }
+  */
 
-  for (int par = nParticles_ * 0.5; par < nParticles_; par++)
+  // Resample the rest of the set
+  for (int par = halfParticles; par < nParticles_; par++)
   {
     boost::random::uniform_real_distribution<> dist(0, 1);
     float randNo = dist(seed_);
@@ -427,12 +434,14 @@ void ParticleFilter::resample()
 
     uint o_robot = r * nStatesPerRobot_;
 
-    float stdX = pfuclt_aux::calc_stdDev<pdata_t>(particles_[o_robot + O_X]);
-    float stdY = pfuclt_aux::calc_stdDev<pdata_t>(particles_[o_robot + O_Y]);
-    float stdTheta =
+    pdata_t stdX = pfuclt_aux::calc_stdDev<pdata_t>(particles_[o_robot + O_X]);
+    pdata_t stdY = pfuclt_aux::calc_stdDev<pdata_t>(particles_[o_robot + O_Y]);
+    pdata_t stdTheta =
         pfuclt_aux::calc_stdDev<pdata_t>(particles_[o_robot + O_THETA]);
 
     state_.robots[r].conf = stdX + stdY + stdTheta;
+
+    ROS_DEBUG("OMNI%d stdX = %f, stdY = %f, stdTheta = %f", r+1, stdX, stdY, stdTheta);
   }
 
   // Calc. sum of weights
