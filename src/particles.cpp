@@ -6,6 +6,8 @@
 #include <boost/thread/mutex.hpp>
 #include <angles/angles.h>
 
+#define DONT_FUSE_TARGET true
+
 namespace pfuclt_ptcls
 {
 
@@ -162,10 +164,9 @@ void ParticleFilter::fuseRobots()
     {
       // Re-order the particle subsets of this robot
       uint sort_index = sorted[p];
-      particles_[o_robot + O_X][p] = dupParticles[o_robot + O_X][sort_index];
-      particles_[o_robot + O_Y][p] = dupParticles[o_robot + O_Y][sort_index];
-      particles_[o_robot + O_THETA][p] =
-          dupParticles[o_robot + O_THETA][sort_index];
+
+      for (uint s = 0; s < nStatesPerRobot_; ++s)
+        particles_[o_robot + s][p] = dupParticles[o_robot + s][sort_index];
 
       // Update the particle weight (will get multiplied nRobots times and get a
       // lower value)
@@ -196,6 +197,10 @@ void ParticleFilter::fuseTarget()
   ROS_DEBUG("Fusing Target");
 
   state_.targetFused = true;
+
+#ifdef DONT_FUSE_TARGET
+  return resample();
+#endif
 
   // If ball not seen by any robot, just skip all of this
   bool ballSeen = false;
@@ -654,12 +659,13 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
 
   using namespace boost::random;
 
-  ROS_DEBUG("Predicting for OMNI%d", robotNumber + 1);
-
   // Variables concerning this robot specifically
   int robot_offset = robotNumber * nStatesPerRobot_;
   float alpha[4] = { alpha_[robotNumber * 4 + 0], alpha_[robotNumber * 4 + 1],
                      alpha_[robotNumber * 4 + 2], alpha_[robotNumber * 4 + 3] };
+
+  ROS_DEBUG("Predicting for OMNI%d with alphas [%f,%f,%f,%f]", robotNumber + 1,
+            alpha[0], alpha[1], alpha[2], alpha[3]);
 
   // Determining the propagation of the robot state through odometry
   float deltaRot =
@@ -678,16 +684,25 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
   normal_distribution<> deltaFinalRotEffective(
       deltaFinalRot, alpha[0] * fabs(deltaFinalRot) + alpha[1] * deltaTrans);
 
+  ROS_DEBUG("When predicting for OMNI%d used means [%f,%f,%f] and stdDevs "
+            "[%f,%f,%f] for Rot, Trans and FinalRot",
+            robotNumber + 1, deltaRotEffective.mean(),
+            deltaTransEffective.mean(), deltaFinalRotEffective.mean(),
+            deltaRotEffective.sigma(), deltaTransEffective.sigma(),
+            deltaFinalRotEffective.sigma());
+
   for (int i = 0; i < nParticles_; i++)
   {
     // Rotate to final position
     particles_[O_THETA + robot_offset][i] += deltaRotEffective(seed_);
 
+    float sampleTrans = deltaTransEffective(seed_);
+
     // Translate to final position
     particles_[O_X + robot_offset][i] +=
-        deltaTransEffective(seed_) * cos(particles_[O_THETA + robot_offset][i]);
+        sampleTrans * cos(particles_[O_THETA + robot_offset][i]);
     particles_[O_Y + robot_offset][i] +=
-        deltaTransEffective(seed_) * sin(particles_[O_THETA + robot_offset][i]);
+        sampleTrans * sin(particles_[O_THETA + robot_offset][i]);
 
     // Rotate to final position and normalize angle
     particles_[O_THETA + robot_offset][i] = angles::normalize_angle(
