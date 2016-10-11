@@ -794,9 +794,9 @@ PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
   for (uint r = 0; r < particleStdPublishers_.size(); ++r)
   {
     std::ostringstream robotName;
-    robotName << "OMNI" << r + 1;
+    robotName << "omni" << r + 1;
     particleStdPublishers_[r] = pubData.nh.advertise<geometry_msgs::PoseArray>(
-        robotName.str() + "/particles", 10);
+        robotName.str() + "/particles", 1000);
   }
 
   ROS_INFO("It's a publishing particle filter!");
