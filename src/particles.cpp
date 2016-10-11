@@ -5,6 +5,11 @@
 #include <boost/foreach.hpp>
 #include <boost/thread/mutex.hpp>
 #include <angles/angles.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/transform_datatypes.h>
+#include <geometry_msgs/PoseArray.h>
 
 // #define DONT_FUSE_TARGET true
 
@@ -450,7 +455,7 @@ void ParticleFilter::resample()
 
   ROS_DEBUG("WeightSum before resampling = %f", weightSum);
 
-  //printWeights("before resampling: ");
+  // printWeights("before resampling: ");
 
   if (weightSum < 0.001)
   {
@@ -476,7 +481,7 @@ void ParticleFilter::resample()
   // low_variance_resampler(weightSum);
   myResampler(weightSum);
 
-  //printWeights("after resampling: ");
+  // printWeights("after resampling: ");
 
   // Resampling done, find the current state belief
   weightSum = std::accumulate(particles_[O_WEIGHT].begin(),
@@ -757,7 +762,8 @@ void ParticleFilter::saveAllTargetMeasurementsDone(const uint robotNumber)
 
 PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
                          struct PublishData publishData)
-    : ParticleFilter(data), pubData(publishData)
+    : ParticleFilter(data), pubData(publishData),
+      robotBroadcasters(data.nRobots), particleStdPublishers_(data.nRobots)
 {
   // Prepare particle message
   msg_particles_.particles.resize(nParticles_);
@@ -785,6 +791,14 @@ PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
   particlePublisher_ = pubData.nh.advertise<pfuclt_omni_dataset::particles>(
       pubData.publishNamespace + "/pfuclt_particles", 10);
 
+  for (uint r = 0; r < particleStdPublishers_.size(); ++r)
+  {
+    std::ostringstream robotName;
+    robotName << "OMNI" << r + 1;
+    particleStdPublishers_[r] = pubData.nh.advertise<geometry_msgs::PoseArray>(
+        robotName.str() + "/particles", 10);
+  }
+
   ROS_INFO("It's a publishing particle filter!");
 }
 
@@ -802,6 +816,31 @@ void PFPublisher::publishParticles()
 
   // Send it!
   particlePublisher_.publish(msg_particles_);
+
+  // Also send as a series of PoseArray messages for each robot
+
+  for (uint r = 0; r < nRobots_; ++r)
+  {
+    if(false == state_.robotsUsed[r])
+      continue;
+
+    uint o_robot = r * nStatesPerRobot_;
+    geometry_msgs::PoseArray msgStd_particles;
+    msgStd_particles.header.stamp = ros::Time::now();
+    msgStd_particles.header.frame_id = "world";
+
+    for (uint p = 0; p < nParticles_; ++p)
+    {
+      tf2::Quaternion tf2q(tf2::Vector3(0, 0, 1), particles_[o_robot + O_THETA][p]);
+      tf2::Transform tf2t(tf2q, tf2::Vector3(particles_[o_robot + O_X][p], particles_[o_robot + O_Y][p], pubData.robotHeight));
+
+      geometry_msgs::Pose pose;
+      tf2::toMsg(tf2t, pose);
+      msgStd_particles.poses.insert(msgStd_particles.poses.begin(), pose);
+    }
+
+    particleStdPublishers_[r].publish(msgStd_particles);
+  }
 }
 
 void PFPublisher::publishRobotStates()
@@ -809,17 +848,30 @@ void PFPublisher::publishRobotStates()
   // This is pretty much copy and paste
   for (uint r = 0; r < nRobots_; ++r)
   {
+    if(false == state_.robotsUsed[r])
+      continue;
+
+    std::ostringstream robotName;
+    robotName << "OMNI" << r + 1;
+
     ParticleFilter::State::robotState_s& pfState = state_.robots[r];
-    geometry_msgs::PoseWithCovariance& rosState = msg_state_.robotPose[r].pose;
+    geometry_msgs::Pose& rosState = msg_state_.robotPose[r].pose.pose;
 
-    rosState.pose.position.x = pfState.pose[O_X];
-    rosState.pose.position.y = pfState.pose[O_Y];
-    rosState.pose.position.z = pubData.robotHeight;
+    // Create from Euler angles
+    tf2::Quaternion tf2q(tf2::Vector3(0, 0, 1), pfState.pose[O_THETA]);
+    tf2::Transform tf2t(tf2q, tf2::Vector3(pfState.pose[O_X], pfState.pose[O_Y],
+                                           pubData.robotHeight));
 
-    rosState.pose.orientation.x = 0;
-    rosState.pose.orientation.y = 0;
-    rosState.pose.orientation.z = sin(pfState.pose[O_THETA] / 2);
-    rosState.pose.orientation.w = cos(pfState.pose[O_THETA] / 2);
+    // Transform to our message type
+    tf2::toMsg(tf2t, rosState);
+
+    // TF2 broadcast
+    geometry_msgs::TransformStamped gt;
+    gt.header.stamp = ros::Time::now();
+    gt.header.frame_id = "world";
+    gt.child_frame_id = robotName.str();
+    gt.transform = tf2::toMsg(tf2t);
+    robotBroadcasters[r].sendTransform(gt);
   }
 
   robotStatePublisher_.publish(msg_state_);
@@ -827,11 +879,22 @@ void PFPublisher::publishRobotStates()
 
 void PFPublisher::publishTargetState()
 {
+  // Our custom message type
   msg_target_.x = state_.target.pos[O_TX];
   msg_target_.y = state_.target.pos[O_TY];
   msg_target_.z = state_.target.pos[O_TZ];
-
   targetStatePublisher_.publish(msg_target_);
+
+  // TF2 broadcast
+  tf2::Transform tf2t(tf2::Quaternion(), tf2::Vector3(state_.target.pos[O_TX],
+                                                      state_.target.pos[O_TY],
+                                                      state_.target.pos[O_TZ]));
+  geometry_msgs::TransformStamped gt;
+  gt.header.stamp = ros::Time::now();
+  gt.header.frame_id = "world";
+  gt.child_frame_id = "target";
+  gt.transform = tf2::toMsg(tf2t);
+  targetBroadcaster.sendTransform(gt);
 }
 
 void PFPublisher::gtDataCallback(

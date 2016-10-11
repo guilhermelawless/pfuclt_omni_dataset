@@ -16,6 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs     
   nav_msgs
   message_generation
+  tf2
+  tf2_ros
 )
 
 INCLUDE_DIRECTORIES(${catkin_INCLUDE_DIRS})

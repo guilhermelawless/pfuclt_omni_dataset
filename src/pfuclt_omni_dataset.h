@@ -8,7 +8,6 @@
 // ROS message definitions
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
-#include <tf/transform_broadcaster.h>
 #include <read_omni_dataset/BallData.h>
 #include <read_omni_dataset/LRMLandmarksData.h>
 
@@ -28,7 +27,6 @@
 namespace pfuclt
 {
 using namespace pfuclt_ptcls;
-#define PI 3.14159
 #define NUM_WEIGHT 1
 #define STATES_PER_ROBOT 3
 #define HEURISTICS_THRESH_DEFAULT                                              \

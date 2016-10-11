@@ -1,15 +1,17 @@
 #ifndef PARTICLES_H
 #define PARTICLES_H
 
+#include "pfuclt_aux.h"
+
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 #include <boost/random.hpp>
 #include <boost/thread/mutex.hpp>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <sstream>
-#include "pfuclt_aux.h"
+#include <tf2_ros/transform_broadcaster.h>
 
 #include <read_omni_dataset/RobotState.h>
 #include <read_omni_dataset/LRMGTData.h>
@@ -568,11 +570,15 @@ private:
   ros::Subscriber GT_sub_;
   ros::Publisher robotStatePublisher_, targetStatePublisher_,
       particlePublisher_, syncedGTPublisher_;
+  std::vector<ros::Publisher> particleStdPublishers_;
 
   read_omni_dataset::LRMGTData msg_GT_;
   pfuclt_omni_dataset::particles msg_particles_;
   read_omni_dataset::RobotState msg_state_;
   read_omni_dataset::BallData msg_target_;
+
+  std::vector<tf2_ros::TransformBroadcaster> robotBroadcasters;
+  tf2_ros::TransformBroadcaster targetBroadcaster;
 
   struct PublishData pubData;
 
@@ -589,6 +595,7 @@ public:
    */
   PFPublisher(struct ParticleFilter::PFinitData& data,
               struct PublishData publishData);
+
 
   /**
    * @brief getPFReference - retrieve a reference to the base class's members

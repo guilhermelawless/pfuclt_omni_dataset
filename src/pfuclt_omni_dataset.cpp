@@ -1,6 +1,7 @@
 #include "pfuclt_aux.h"
 #include "particles.h"
 #include "pfuclt_omni_dataset.h"
+#include <tf2/utils.h>
 
 #define ROS_TDIFF(t) (t.toSec() - timeInit.toSec())
 
@@ -180,10 +181,9 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   if (!pf_->isInitialized())
     parent_->tryInitializeParticles();
 
-  pfuclt_ptcls::Odometry odomStruct = {
-    odometry->pose.pose.position.x, odometry->pose.pose.position.y,
-    tf::getYaw(odometry->pose.pose.orientation)
-  };
+  pfuclt_ptcls::Odometry odomStruct = { odometry->pose.pose.position.x,
+                                        odometry->pose.pose.position.y,
+                                        tf2::getYaw(odometry->pose.pose.orientation)};
 
   ROS_DEBUG("OMNI%d odometry at time %d", robotNumber_ + 1,
             odometry->header.stamp.sec);
