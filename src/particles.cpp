@@ -11,7 +11,9 @@
 #include <tf2/transform_datatypes.h>
 #include <geometry_msgs/PoseArray.h>
 
-// #define DONT_FUSE_TARGET true
+//#define DONT_FUSE_TARGET true
+#define BROADCAST_TF true
+#define PUBLISH_PTCLS true
 
 namespace pfuclt_ptcls
 {
@@ -817,8 +819,8 @@ void PFPublisher::publishParticles()
   // Send it!
   particlePublisher_.publish(msg_particles_);
 
+#ifdef PUBLISH_PTCLS
   // Also send as a series of PoseArray messages for each robot
-
   for (uint r = 0; r < nRobots_; ++r)
   {
     if(false == state_.robotsUsed[r])
@@ -841,6 +843,7 @@ void PFPublisher::publishParticles()
 
     particleStdPublishers_[r].publish(msgStd_particles);
   }
+#endif
 }
 
 void PFPublisher::publishRobotStates()
@@ -865,6 +868,7 @@ void PFPublisher::publishRobotStates()
     // Transform to our message type
     tf2::toMsg(tf2t, rosState);
 
+#ifdef BROADCAST_TF
     // TF2 broadcast
     geometry_msgs::TransformStamped gt;
     gt.header.stamp = ros::Time::now();
@@ -872,6 +876,7 @@ void PFPublisher::publishRobotStates()
     gt.child_frame_id = robotName.str();
     gt.transform = tf2::toMsg(tf2t);
     robotBroadcasters[r].sendTransform(gt);
+#endif
   }
 
   robotStatePublisher_.publish(msg_state_);
@@ -885,6 +890,7 @@ void PFPublisher::publishTargetState()
   msg_target_.z = state_.target.pos[O_TZ];
   targetStatePublisher_.publish(msg_target_);
 
+#ifdef BROADCAST_TF
   // TF2 broadcast
   tf2::Transform tf2t(tf2::Quaternion(), tf2::Vector3(state_.target.pos[O_TX],
                                                       state_.target.pos[O_TY],
@@ -895,6 +901,7 @@ void PFPublisher::publishTargetState()
   gt.child_frame_id = "target";
   gt.transform = tf2::toMsg(tf2t);
   targetBroadcaster.sendTransform(gt);
+#endif
 }
 
 void PFPublisher::gtDataCallback(
