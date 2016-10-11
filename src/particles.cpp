@@ -450,7 +450,7 @@ void ParticleFilter::resample()
 
   ROS_DEBUG("WeightSum before resampling = %f", weightSum);
 
-  printWeights("before resampling: ");
+  //printWeights("before resampling: ");
 
   if (weightSum < 0.001)
   {
@@ -476,7 +476,7 @@ void ParticleFilter::resample()
   // low_variance_resampler(weightSum);
   myResampler(weightSum);
 
-  printWeights("after resampling: ");
+  //printWeights("after resampling: ");
 
   // Resampling done, find the current state belief
   weightSum = std::accumulate(particles_[O_WEIGHT].begin(),
