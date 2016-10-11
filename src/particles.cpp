@@ -525,6 +525,9 @@ void ParticleFilter::resample()
     for (uint g = 0; g < nStatesPerRobot_; ++g)
       weightedMeans[g] = weightedMeans[g] / weightSum;
 
+    // Normalize the angle
+    weightedMeans[O_THETA] = angles::normalize_angle(weightedMeans[O_THETA]);
+
     for (uint t = 0; t < STATES_PER_TARGET; ++t)
       targetWeightedMeans[t] = targetWeightedMeans[t] / weightSum;
 
