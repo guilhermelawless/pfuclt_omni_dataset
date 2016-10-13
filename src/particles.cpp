@@ -132,6 +132,8 @@ void ParticleFilter::fuseRobots()
 
         probabilities[r] *= detValue * exp(expArg);
         landmarksUsed[r]++;
+
+        ROS_DEBUG("OMNI%d sees landmark %d with certainty %f%%", r+1, l, 100*(detValue * exp(expArg)));
       }
     }
 
@@ -467,8 +469,8 @@ void ParticleFilter::resample()
 
   else
   {
-    // low_variance_resampler(weightSum);
-    myResampler(weightSum);
+    low_variance_resampler(weightSum);
+    //myResampler(weightSum);
 
     // printWeights("after resampling: ");
   }

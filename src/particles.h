@@ -34,7 +34,7 @@
 // target motion model and estimator
 #define MAX_ESTIMATOR_STACK_SIZE 25
 #define TARGET_RAND_MEAN 0
-#define TARGET_RAND_STDDEV 1.0
+#define TARGET_RAND_STDDEV 5.0
 
 // concerning time
 #define ITERATION_TIME_DEFAULT 0.0333
@@ -42,7 +42,7 @@
 #define ITERATION_TIME_MAX (1)
 
 // others
-#define MIN_WEIGHTSUM 0.01
+#define MIN_WEIGHTSUM 0.0001
 
 namespace pfuclt_ptcls
 {
