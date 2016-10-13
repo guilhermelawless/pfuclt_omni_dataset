@@ -31,7 +31,8 @@
 #define O_TZ (2)
 #define O_WEIGHT (nSubParticleSets_ - 1)
 
-// target motion model
+// target motion model and estimator
+#define MAX_ESTIMATOR_STACK_SIZE 25
 #define TARGET_RAND_MEAN 0
 #define TARGET_RAND_STDDEV 20.0
 
@@ -43,6 +44,8 @@
 namespace pfuclt_ptcls
 {
 using namespace pfuclt_aux;
+
+typedef double (*estimatorFunc)(const std::vector<double>&, const std::vector<double>&);
 
 typedef struct odometry_s
 {
@@ -123,6 +126,57 @@ protected:
     } target;
 
     /**
+     * @brief The targetVelocityEstimator_s struct - will estimate the velocity
+     * of a target using a custom function. The struct keeps vectors with the
+     * latest avilable information, up until a max data amount is reached
+     */
+    struct targetVelocityEstimator_s
+    {
+      std::vector<double> timeVec;
+      std::vector<std::vector<double> > posVec;
+      estimatorFunc estimateVelocity;
+
+      uint maxDataSize;
+      uint timeInit;
+      uint numberVels;
+
+      targetVelocityEstimator_s(const uint _numberVels, const uint _maxDataSize,
+                                estimatorFunc ptrFunc)
+        : numberVels(_numberVels), posVec(_numberVels, std::vector<double>()),
+          maxDataSize(_maxDataSize)
+      {
+        estimateVelocity = ptrFunc;
+      }
+
+      void insert(const double timeData, const double posData[])
+      {
+        if (timeVec.empty())
+          timeInit = ros::Time::now().toNSec() * 1e-9;
+
+        timeVec.push_back(timeData - timeInit);
+        for (uint velType = 0; velType < posVec.size(); ++velType)
+          posVec[velType].push_back(posData[velType]);
+
+        if (timeVec.size() > maxDataSize)
+        {
+          timeVec.erase(timeVec.begin());
+          for (uint velType = 0; velType < posVec.size(); ++velType)
+            posVec[velType].erase(posVec[velType].begin());
+        }
+      }
+
+      bool isReadyToEstimate() { return (timeVec.size() == maxDataSize); }
+
+      double estimate(uint velType)
+      {
+        double velEst = estimateVelocity(timeVec, posVec[velType]);
+        ROS_DEBUG("Estimated velocity type %d = %f", velType, velEst);
+
+        return velEst;
+      }
+    } targetVelocityEstimator;
+
+    /**
      * @brief State - constructor
      * @param numberRobots
      */
@@ -130,7 +184,9 @@ protected:
           const std::vector<bool>& robotsBeingUsed)
       : nRobots(numberRobots), predicted(nRobots, false),
         landmarkMeasurementsDone(nRobots, false),
-        targetMeasurementsDone(nRobots, false), robotsUsed(robotsBeingUsed)
+        targetMeasurementsDone(nRobots, false), robotsUsed(robotsBeingUsed),
+        targetVelocityEstimator(STATES_PER_TARGET, MAX_ESTIMATOR_STACK_SIZE,
+                                pfuclt_aux::linearRegressionSlope)
     {
       reset();
 
@@ -564,11 +620,11 @@ public:
 private:
   ros::Subscriber GT_sub_;
   ros::Publisher robotStatePublisher_, targetStatePublisher_,
-  particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_, targetGTPublisher_, targetParticlePublisher_;
+  particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_,
+  targetGTPublisher_, targetParticlePublisher_;
   std::vector<ros::Publisher> particleStdPublishers_;
   std::vector<ros::Publisher> robotGTPublishers_;
   std::vector<ros::Publisher> robotEstimatePublishers_;
-
 
   read_omni_dataset::LRMGTData msg_GT_;
   pfuclt_omni_dataset::particles msg_particles_;

@@ -72,15 +72,12 @@ void ParticleFilter::predictTarget(uint robotNumber)
                                          targetAcceleration(seed_),
                                          targetAcceleration(seed_) };
 
-    // v = a*dt
-    for (uint v = 0; v < STATES_PER_TARGET; ++v)
-      state_.target.vel[v] += accel[v] * iterationTime_;
-
-    // x = v*dt + 0.5*a*dt^2 with a new random acceleration for each
-    // component
-    for (uint v = 0; v < STATES_PER_TARGET; ++v)
-      particles_[O_TARGET + v][i] += state_.target.vel[v] * iterationTime_ +
-                                     0.5 * accel[v] * pow(iterationTime_, 2);
+    for (uint s = 0; s < STATES_PER_TARGET; ++s)
+    {
+      state_.target.vel[s] += accel[s] * iterationTime_;
+      particles_[O_TARGET + s][i] += state_.target.vel[s] * iterationTime_ +
+                                     0.5 * accel[s] * pow(iterationTime_, 2);
+    }
   }
 }
 
@@ -880,7 +877,7 @@ void PFPublisher::publishParticles()
   target_particles.header.stamp = ros::Time::now();
   target_particles.header.frame_id = "world";
 
-  for (uint p=0; p < nParticles_; ++p)
+  for (uint p = 0; p < nParticles_; ++p)
   {
     geometry_msgs::Point32 point;
     point.x = particles_[O_TARGET + O_TX][p];
@@ -982,7 +979,7 @@ void PFPublisher::publishGTData()
   robotGTPublishers_[4].publish(gtPoint);
 
   // Publish for the target as well
-  if(msg_GT_.orangeBall3DGTposition.found)
+  if (msg_GT_.orangeBall3DGTposition.found)
   {
     gtPoint.point.x = msg_GT_.orangeBall3DGTposition.x;
     gtPoint.point.y = msg_GT_.orangeBall3DGTposition.y;

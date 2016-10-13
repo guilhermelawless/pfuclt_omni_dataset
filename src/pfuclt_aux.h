@@ -153,6 +153,8 @@ bool readParam(ros::NodeHandle& nh, const std::string name,
     ROS_ERROR("Failed to receive parameter %s", name.c_str());
 }
 
+double linearRegressionSlope(const std::vector<double>& x, const std::vector<double>& y);
+
 // end of namespace
 }
 
