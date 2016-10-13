@@ -412,7 +412,6 @@ int main(int argc, char* argv[])
   readParam<int>(nh, "/MAX_ROBOTS", MAX_ROBOTS);
   readParam<float>(nh, "/ROB_HT", ROB_HT);
   readParam<int>(nh, "/N_PARTICLES", N_PARTICLES);
-  readParam<int>(nh, "/NUM_SENSORS_PER_ROBOT", NUM_SENSORS_PER_ROBOT);
   readParam<int>(nh, "/NUM_TARGETS", NUM_TARGETS);
   readParam<int>(nh, "/NUM_LANDMARKS", NUM_LANDMARKS);
   readParam<float>(nh, "/LANDMARK_COV/K1", K1);
@@ -425,7 +424,7 @@ int main(int argc, char* argv[])
   readParam<bool>(nh, "/USE_CUSTOM_VALUES", USE_CUSTOM_VALUES);
   readParam<int>(nh, "/MY_ID", MY_ID);
 
-  uint total_size = (MAX_ROBOTS + NUM_TARGETS) * STATES_PER_ROBOT;
+  uint total_size = MAX_ROBOTS * STATES_PER_ROBOT + NUM_TARGETS * STATES_PER_TARGET;
 
   if (USE_CUSTOM_VALUES)
   {

@@ -10,9 +10,11 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/transform_datatypes.h>
 #include <geometry_msgs/PoseArray.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <sensor_msgs/PointCloud.h>
 
 //#define DONT_FUSE_TARGET true
-#define BROADCAST_TF true
+#define BROADCAST_TF_AND_POSES true
 #define PUBLISH_PTCLS true
 
 namespace pfuclt_ptcls
@@ -771,7 +773,8 @@ void ParticleFilter::saveAllTargetMeasurementsDone(const uint robotNumber)
 PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
                          struct PublishData publishData)
     : ParticleFilter(data), pubData(publishData),
-      robotBroadcasters(data.nRobots), particleStdPublishers_(data.nRobots)
+      robotBroadcasters(data.nRobots), particleStdPublishers_(data.nRobots),
+      robotGTPublishers_(data.nRobots), robotEstimatePublishers_(data.nRobots)
 {
   // Prepare particle message
   msg_particles_.particles.resize(nParticles_);
@@ -787,24 +790,43 @@ PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
       boost::bind(&PFPublisher::gtDataCallback, this, _1));
 
   syncedGTPublisher_ = pubData.nh.advertise<read_omni_dataset::LRMGTData>(
-      pubData.publishNamespace + "/gtData_synced_pfuclt_estimate", 1000);
+      "/gtData_synced_pfuclt_estimate", 1000);
 
   // Other publishers
   robotStatePublisher_ = pubData.nh.advertise<read_omni_dataset::RobotState>(
-      pubData.publishNamespace + "/pfuclt_omni_poses", 1000);
-
+      "/pfuclt_omni_poses", 1000);
   targetStatePublisher_ = pubData.nh.advertise<read_omni_dataset::BallData>(
-      pubData.publishNamespace + "/pfuclt_orangeBallState", 1000);
-
+      "/pfuclt_orangeBallState", 1000);
   particlePublisher_ = pubData.nh.advertise<pfuclt_omni_dataset::particles>(
-      pubData.publishNamespace + "/pfuclt_particles", 10);
+      "/pfuclt_particles", 10);
 
-  for (uint r = 0; r < particleStdPublishers_.size(); ++r)
+  // Rviz visualization publishers
+  // Target
+  targetEstimatePublisher_ = pubData.nh.advertise<geometry_msgs::PointStamped>(
+      "/target/estimatedPose", 1000);
+  targetGTPublisher_ =
+      pubData.nh.advertise<geometry_msgs::PointStamped>("/target/gtPose", 1000);
+  targetParticlePublisher_ =
+      pubData.nh.advertise<sensor_msgs::PointCloud>("/target/particles", 10);
+
+  // Robots
+  for (uint r = 0; r < nRobots_; ++r)
   {
     std::ostringstream robotName;
     robotName << "omni" << r + 1;
+
+    // particle publisher
     particleStdPublishers_[r] = pubData.nh.advertise<geometry_msgs::PoseArray>(
         robotName.str() + "/particles", 1000);
+
+    // estimated state
+    robotEstimatePublishers_[r] =
+        pubData.nh.advertise<geometry_msgs::PoseStamped>(
+            robotName.str() + "/estimatedPose", 1000);
+
+    // ground truth publisher
+    robotGTPublishers_[r] = pubData.nh.advertise<geometry_msgs::PointStamped>(
+        robotName.str() + "/gtPose", 1000);
   }
 
   ROS_INFO("It's a publishing particle filter!");
@@ -829,7 +851,7 @@ void PFPublisher::publishParticles()
   // Also send as a series of PoseArray messages for each robot
   for (uint r = 0; r < nRobots_; ++r)
   {
-    if(false == state_.robotsUsed[r])
+    if (false == state_.robotsUsed[r])
       continue;
 
     uint o_robot = r * nStatesPerRobot_;
@@ -839,8 +861,11 @@ void PFPublisher::publishParticles()
 
     for (uint p = 0; p < nParticles_; ++p)
     {
-      tf2::Quaternion tf2q(tf2::Vector3(0, 0, 1), particles_[o_robot + O_THETA][p]);
-      tf2::Transform tf2t(tf2q, tf2::Vector3(particles_[o_robot + O_X][p], particles_[o_robot + O_Y][p], pubData.robotHeight));
+      tf2::Quaternion tf2q(tf2::Vector3(0, 0, 1),
+                           particles_[o_robot + O_THETA][p]);
+      tf2::Transform tf2t(tf2q, tf2::Vector3(particles_[o_robot + O_X][p],
+                                             particles_[o_robot + O_Y][p],
+                                             pubData.robotHeight));
 
       geometry_msgs::Pose pose;
       tf2::toMsg(tf2t, pose);
@@ -849,6 +874,23 @@ void PFPublisher::publishParticles()
 
     particleStdPublishers_[r].publish(msgStd_particles);
   }
+
+  // Send target particles as a pointcloud
+  sensor_msgs::PointCloud target_particles;
+  target_particles.header.stamp = ros::Time::now();
+  target_particles.header.frame_id = "world";
+
+  for (uint p=0; p < nParticles_; ++p)
+  {
+    geometry_msgs::Point32 point;
+    point.x = particles_[O_TARGET + O_TX][p];
+    point.y = particles_[O_TARGET + O_TY][p];
+    point.z = particles_[O_TARGET + O_TZ][p];
+
+    target_particles.points.insert(target_particles.points.begin(), point);
+  }
+  targetParticlePublisher_.publish(target_particles);
+
 #endif
 }
 
@@ -857,7 +899,7 @@ void PFPublisher::publishRobotStates()
   // This is pretty much copy and paste
   for (uint r = 0; r < nRobots_; ++r)
   {
-    if(false == state_.robotsUsed[r])
+    if (false == state_.robotsUsed[r])
       continue;
 
     std::ostringstream robotName;
@@ -874,14 +916,22 @@ void PFPublisher::publishRobotStates()
     // Transform to our message type
     tf2::toMsg(tf2t, rosState);
 
-#ifdef BROADCAST_TF
+#ifdef BROADCAST_TF_AND_POSES
     // TF2 broadcast
-    geometry_msgs::TransformStamped gt;
-    gt.header.stamp = ros::Time::now();
-    gt.header.frame_id = "world";
-    gt.child_frame_id = robotName.str();
-    gt.transform = tf2::toMsg(tf2t);
-    robotBroadcasters[r].sendTransform(gt);
+    geometry_msgs::TransformStamped estTransf;
+    estTransf.header.stamp = ros::Time::now();
+    estTransf.header.frame_id = "world";
+    estTransf.child_frame_id = robotName.str();
+    estTransf.transform = tf2::toMsg(tf2t);
+    robotBroadcasters[r].sendTransform(estTransf);
+
+    // Publish as a standard pose msg using the previous TF
+    geometry_msgs::PoseStamped estPose;
+    estPose.header.stamp = estTransf.header.stamp;
+    estPose.header.frame_id = estTransf.child_frame_id;
+    // Pose is everything at 0 as it's the same as the TF
+
+    robotEstimatePublishers_[r].publish(estPose);
 #endif
   }
 
@@ -896,18 +946,49 @@ void PFPublisher::publishTargetState()
   msg_target_.z = state_.target.pos[O_TZ];
   targetStatePublisher_.publish(msg_target_);
 
-#ifdef BROADCAST_TF
-  // TF2 broadcast
-  tf2::Transform tf2t(tf2::Quaternion(), tf2::Vector3(state_.target.pos[O_TX],
-                                                      state_.target.pos[O_TY],
-                                                      state_.target.pos[O_TZ]));
-  geometry_msgs::TransformStamped gt;
-  gt.header.stamp = ros::Time::now();
-  gt.header.frame_id = "world";
-  gt.child_frame_id = "target";
-  gt.transform = tf2::toMsg(tf2t);
-  targetBroadcaster.sendTransform(gt);
+#ifdef BROADCAST_TF_AND_POSES
+  // Publish as a standard pose msg using the previous TF
+  geometry_msgs::PointStamped estPoint;
+  estPoint.header.stamp = ros::Time::now();
+  estPoint.header.frame_id = "world";
+  estPoint.point.x = state_.target.pos[O_TX];
+  estPoint.point.y = state_.target.pos[O_TY];
+  estPoint.point.z = state_.target.pos[O_TZ];
+
+  targetEstimatePublisher_.publish(estPoint);
 #endif
+}
+
+void PFPublisher::publishGTData()
+{
+  // Publish custom format
+  syncedGTPublisher_.publish(msg_GT_);
+
+  // Publish poses for every robot
+  geometry_msgs::PointStamped gtPoint;
+  gtPoint.header.stamp = ros::Time::now();
+  gtPoint.header.frame_id = "world";
+
+  gtPoint.point = msg_GT_.poseOMNI1.pose.position;
+  robotGTPublishers_[0].publish(gtPoint);
+
+  gtPoint.point = msg_GT_.poseOMNI3.pose.position;
+  robotGTPublishers_[2].publish(gtPoint);
+
+  gtPoint.point = msg_GT_.poseOMNI4.pose.position;
+  robotGTPublishers_[3].publish(gtPoint);
+
+  gtPoint.point = msg_GT_.poseOMNI5.pose.position;
+  robotGTPublishers_[4].publish(gtPoint);
+
+  // Publish for the target as well
+  if(msg_GT_.orangeBall3DGTposition.found)
+  {
+    gtPoint.point.x = msg_GT_.orangeBall3DGTposition.x;
+    gtPoint.point.y = msg_GT_.orangeBall3DGTposition.y;
+    gtPoint.point.z = msg_GT_.orangeBall3DGTposition.z;
+    targetGTPublisher_.publish(gtPoint);
+  }
 }
 
 void PFPublisher::gtDataCallback(
@@ -932,7 +1013,7 @@ void PFPublisher::nextIteration()
   publishTargetState();
 
   // Publish GT data
-  syncedGTPublisher_.publish(msg_GT_);
+  publishGTData();
 
   // Call the base class method
   ParticleFilter::nextIteration();

@@ -128,15 +128,14 @@ protected:
      */
     State(const uint nStatesPerRobot, const uint numberRobots,
           const std::vector<bool>& robotsBeingUsed)
-        : nRobots(numberRobots), predicted(nRobots, false),
-          landmarkMeasurementsDone(nRobots, false),
-          targetMeasurementsDone(nRobots, false),
-          robotsUsed(robotsBeingUsed)
+      : nRobots(numberRobots), predicted(nRobots, false),
+        landmarkMeasurementsDone(nRobots, false),
+        targetMeasurementsDone(nRobots, false), robotsUsed(robotsBeingUsed)
     {
       reset();
 
       // Create and initialize the robots vector
-      for(uint r=0; r<nRobots; ++r)
+      for (uint r = 0; r < nRobots; ++r)
         robots.push_back(robotState_s(nStatesPerRobot));
     }
 
@@ -283,10 +282,10 @@ public:
                const uint _nLandmarks, const std::vector<bool>& _robotsUsed,
                const std::vector<Landmark>& _landmarksMap,
                const std::vector<float> _alpha = std::vector<float>())
-        : nParticles(_nParticles), nTargets(_nTargets),
-          statesPerRobot(_statesPerRobot), nRobots(_nRobots),
-          nLandmarks(_nLandmarks), alpha(_alpha), robotsUsed(_robotsUsed),
-          landmarksMap(_landmarksMap)
+      : nParticles(_nParticles), nTargets(_nTargets),
+        statesPerRobot(_statesPerRobot), nRobots(_nRobots),
+        nLandmarks(_nLandmarks), alpha(_alpha), robotsUsed(_robotsUsed),
+        landmarksMap(_landmarksMap)
     {
       // If vector alpha is not provided, use a default one
       if (alpha.empty())
@@ -304,9 +303,9 @@ public:
       if (alpha.size() != 4 * nRobots)
       {
         ROS_ERROR(
-            "The provided vector alpha is not of the correct size. Returning "
-            "without particle filter! (should have %d=nRobots*4 elements)",
-            nRobots * 4);
+              "The provided vector alpha is not of the correct size. Returning "
+              "without particle filter! (should have %d=nRobots*4 elements)",
+              nRobots * 4);
         return;
       }
     }
@@ -549,19 +548,15 @@ public:
   {
     ros::NodeHandle& nh;
     float robotHeight;
-    std::string publishNamespace;
 
     /**
      * @brief PublishData - contains information necessary for the PFPublisher
      * class
      * @param _nh - the node handle object
      * @param _robotHeight - the fixed robot height
-     * @param _publishNamespace - the namespace to publish to
      */
-    PublishData(ros::NodeHandle& _nh, float _robotHeight,
-                std::string _publishNamespace = std::string(""))
-        : nh(_nh), robotHeight(_robotHeight),
-          publishNamespace(_publishNamespace)
+    PublishData(ros::NodeHandle& _nh, float _robotHeight)
+      : nh(_nh), robotHeight(_robotHeight)
     {
     }
   };
@@ -569,8 +564,11 @@ public:
 private:
   ros::Subscriber GT_sub_;
   ros::Publisher robotStatePublisher_, targetStatePublisher_,
-      particlePublisher_, syncedGTPublisher_;
+  particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_, targetGTPublisher_, targetParticlePublisher_;
   std::vector<ros::Publisher> particleStdPublishers_;
+  std::vector<ros::Publisher> robotGTPublishers_;
+  std::vector<ros::Publisher> robotEstimatePublishers_;
+
 
   read_omni_dataset::LRMGTData msg_GT_;
   pfuclt_omni_dataset::particles msg_particles_;
@@ -578,13 +576,13 @@ private:
   read_omni_dataset::BallData msg_target_;
 
   std::vector<tf2_ros::TransformBroadcaster> robotBroadcasters;
-  tf2_ros::TransformBroadcaster targetBroadcaster;
 
   struct PublishData pubData;
 
   void publishParticles();
   void publishRobotStates();
   void publishTargetState();
+  void publishGTData();
 
 public:
   /**
@@ -595,7 +593,6 @@ public:
    */
   PFPublisher(struct ParticleFilter::PFinitData& data,
               struct PublishData publishData);
-
 
   /**
    * @brief getPFReference - retrieve a reference to the base class's members
