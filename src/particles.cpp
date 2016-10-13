@@ -457,12 +457,12 @@ void ParticleFilter::resample()
 
   // printWeights("before resampling: ");
 
-  if (weightSum < 0.001)
+  if (weightSum < MIN_WEIGHTSUM)
   {
     ROS_WARN("Zero weightsum - returning without resampling");
 
     // Print iteration and state information
-    *iteration_oss << "FAIL!";
+    *iteration_oss << "FAIL! -> ";
   }
 
   else
@@ -479,16 +479,38 @@ void ParticleFilter::resample()
 
 void ParticleFilter::estimate()
 {
-  *iteration_oss << "estimate()";
+  *iteration_oss << "estimate() -> ";
 
   pdata_t weightSum = std::accumulate(particles_[O_WEIGHT].begin(),
                               particles_[O_WEIGHT].end(), 0.0);
 
-  ROS_DEBUG("WeightSum after resampling = %f", weightSum);
+  ROS_DEBUG("WeightSum when estimating = %f", weightSum);
+
+  if(weightSum < MIN_WEIGHTSUM)
+  {
+    // Print iteration and state information
+    *iteration_oss << "DONE!";
+    ROS_DEBUG("Iteration: %s", iteration_oss->str().c_str());
+
+    state_.print();
+
+    // Clear ostringstream
+    iteration_oss->str("");
+    iteration_oss->clear();
+
+    // Start next iteration
+    return nextIteration();
+  }
 
   // A vector of weighted means that will be calculated in the following nested
   // loops
   std::vector<double> weightedMeans(nStatesPerRobot_, 0.0);
+
+  subparticles_t normalizedWeights(particles_[O_WEIGHT]);
+
+  // Normalize the weights
+  for (uint i = 0; i < nParticles_; ++i)
+    normalizedWeights[i] = normalizedWeights[i] / weightSum;
 
   // For each robot
   for (uint r = 0; r < nRobots_; ++r)
@@ -502,17 +524,15 @@ void ParticleFilter::estimate()
     // ..and each particle
     for (uint p = 0; p < nParticles_; ++p)
     {
-      // Accumulate the state proportionally to the particle's weight
+      // Accumulate the state proportionally to the particle's normalized weight
       for (uint g = 0; g < nStatesPerRobot_; ++g)
       {
         weightedMeans[g] +=
-            particles_[o_robot + g][p] * particles_[O_WEIGHT][p];
+            particles_[o_robot + g][p] * normalizedWeights[p];
       }
     }
 
-    // Normalize the means
-    for (uint g = 0; g < nStatesPerRobot_; ++g)
-      weightedMeans[g] = weightedMeans[g] / weightSum;
+    //std::cout << weightedMeans[4] << std::endl;
 
     // Normalize the angle
     weightedMeans[O_THETA] = angles::normalize_angle(weightedMeans[O_THETA]);
@@ -524,8 +544,6 @@ void ParticleFilter::estimate()
     state_.robots[r].pose[O_THETA] = weightedMeans[O_THETA];
   }
 
-  std::cout << state_.robots[3].pose[O_X] << std::endl;
-
   // Target weighted means
   std::vector<double> targetWeightedMeans(STATES_PER_TARGET, 0.0);
 
@@ -535,13 +553,9 @@ void ParticleFilter::estimate()
     for (uint t = 0; t < STATES_PER_TARGET; ++t)
     {
       targetWeightedMeans[t] +=
-          particles_[O_TARGET + t][p] * particles_[O_WEIGHT][p];
+          particles_[O_TARGET + t][p] * normalizedWeights[p];
     }
   }
-
-  // Normalize the mean
-  for (uint t = 0; t < STATES_PER_TARGET; ++t)
-    targetWeightedMeans[t] = targetWeightedMeans[t] / weightSum;
 
   // Update position
   // Can't use easy copy since one is using double precision
@@ -688,9 +702,11 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
   // Create an error model based on a gaussian distribution
   normal_distribution<> deltaRotEffective(deltaRot, alpha[0] * fabs(deltaRot) +
                                                         alpha[1] * deltaTrans);
+
   normal_distribution<> deltaTransEffective(
       deltaTrans,
       alpha[2] * deltaTrans + alpha[3] * fabs(deltaRot + deltaFinalRot));
+
   normal_distribution<> deltaFinalRotEffective(
       deltaFinalRot, alpha[0] * fabs(deltaFinalRot) + alpha[1] * deltaTrans);
 
