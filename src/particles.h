@@ -34,7 +34,7 @@
 // target motion model and estimator
 #define MAX_ESTIMATOR_STACK_SIZE 25
 #define TARGET_RAND_MEAN 0
-#define TARGET_RAND_STDDEV 20.0
+#define TARGET_RAND_STDDEV 10.0
 
 // concerning time
 #define ITERATION_TIME_DEFAULT 0.0333
@@ -148,7 +148,7 @@ protected:
         estimateVelocity = ptrFunc;
       }
 
-      void insert(const double timeData, const double posData[])
+      void insert(const double timeData, const std::vector<double>& posData)
       {
         if (timeVec.empty())
           timeInit = ros::Time::now().toNSec() * 1e-9;
@@ -423,6 +423,11 @@ protected:
    * @brief resample - the resampling step
    */
   void resample();
+
+  /**
+   * @brief resample - state estimation through weighted means, and linear regression for the target velocity
+   */
+  void estimate();
 
   /**
    * @brief nextIteration - perform final steps and reset the PF state

@@ -74,7 +74,6 @@ void ParticleFilter::predictTarget(uint robotNumber)
 
     for (uint s = 0; s < STATES_PER_TARGET; ++s)
     {
-      state_.target.vel[s] += accel[s] * iterationTime_;
       particles_[O_TARGET + s][i] += state_.target.vel[s] * iterationTime_ +
                                      0.5 * accel[s] * pow(iterationTime_, 2);
     }
@@ -315,7 +314,7 @@ void ParticleFilter::fuseTarget()
   // The target subparticles are now reordered according to their weight
   // contribution
 
-  // All that's missing is the resampling step
+  // Start resampling
   resample();
 }
 
@@ -391,7 +390,7 @@ void ParticleFilter::myResampler(const float weightSum)
         cumulativeWeights[par - 1] + normalizedWeights[par];
   }
 
-  int halfParticles = nParticles_ / 2;
+  int halfParticles = nParticles_ * 0.5;
 
   // Keep top 50% of particles
   // Taken care of when duplicating, above
@@ -460,32 +459,29 @@ void ParticleFilter::resample()
 
   if (weightSum < 0.001)
   {
-    ROS_ERROR("Zero weightsum - returning without resampling");
+    ROS_WARN("Zero weightsum - returning without resampling");
 
     // Print iteration and state information
     *iteration_oss << "FAIL!";
-    ROS_DEBUG("Iteration: %s", iteration_oss->str().c_str());
-
-    state_.print();
-
-    // Clear ostringstream
-    iteration_oss->str("");
-    iteration_oss->clear();
-
-    // Start next iteration
-    nextIteration();
-
-    // Exit
-    return;
   }
 
-  // low_variance_resampler(weightSum);
-  myResampler(weightSum);
+  else
+  {
+    // low_variance_resampler(weightSum);
+    myResampler(weightSum);
 
-  // printWeights("after resampling: ");
+    // printWeights("after resampling: ");
+  }
 
   // Resampling done, find the current state belief
-  weightSum = std::accumulate(particles_[O_WEIGHT].begin(),
+  estimate();
+}
+
+void ParticleFilter::estimate()
+{
+  *iteration_oss << "estimate()";
+
+  pdata_t weightSum = std::accumulate(particles_[O_WEIGHT].begin(),
                               particles_[O_WEIGHT].end(), 0.0);
 
   ROS_DEBUG("WeightSum after resampling = %f", weightSum);
@@ -493,13 +489,6 @@ void ParticleFilter::resample()
   // A vector of weighted means that will be calculated in the following nested
   // loops
   std::vector<double> weightedMeans(nStatesPerRobot_, 0.0);
-
-  // Target weighted means
-  std::vector<double> targetWeightedMeans(STATES_PER_TARGET, 0.0);
-
-  /// TODO change this to a much more stable way of finding the mean of the
-  /// cluster which will represent the ball position. Because it's not the
-  /// highest weight particle which represent's the ball position
 
   // For each robot
   for (uint r = 0; r < nRobots_; ++r)
@@ -519,12 +508,6 @@ void ParticleFilter::resample()
         weightedMeans[g] +=
             particles_[o_robot + g][p] * particles_[O_WEIGHT][p];
       }
-
-      for (uint t = 0; t < STATES_PER_TARGET; ++t)
-      {
-        targetWeightedMeans[t] +=
-            particles_[O_TARGET + t][p] * particles_[O_WEIGHT][p];
-      }
     }
 
     // Normalize the means
@@ -534,36 +517,48 @@ void ParticleFilter::resample()
     // Normalize the angle
     weightedMeans[O_THETA] = angles::normalize_angle(weightedMeans[O_THETA]);
 
-    for (uint t = 0; t < STATES_PER_TARGET; ++t)
-      targetWeightedMeans[t] = targetWeightedMeans[t] / weightSum;
-
     // Save in the robot state
     // Can't use easy copy since one is using double precision
     state_.robots[r].pose[O_X] = weightedMeans[O_X];
     state_.robots[r].pose[O_Y] = weightedMeans[O_Y];
     state_.robots[r].pose[O_THETA] = weightedMeans[O_THETA];
+  }
 
-    // Save in the target state
-    // First the velocity, then the position
-    /*
-    state_.target.vx =
-        (state_.target.x - targetWeightedMeans[O_TX]) / iterationTime_;
-    state_.target.x = targetWeightedMeans[O_TX];
-    state_.target.vy =
-        state_.target.y - targetWeightedMeans[O_TY] / iterationTime_;
-    state_.target.y = targetWeightedMeans[O_TY];
-    state_.target.vz =
-        state_.target.z - targetWeightedMeans[O_TZ] / iterationTime_;
-    state_.target.z = targetWeightedMeans[O_TZ];
-    */
+  std::cout << state_.robots[3].pose[O_X] << std::endl;
 
-    // Velocities stay the same
+  // Target weighted means
+  std::vector<double> targetWeightedMeans(STATES_PER_TARGET, 0.0);
 
-    // Update position
-    // Can't use easy copy since one is using double precision
-    state_.target.pos[O_TX] = targetWeightedMeans[O_TX];
-    state_.target.pos[O_TY] = targetWeightedMeans[O_TY];
-    state_.target.pos[O_TZ] = targetWeightedMeans[O_TZ];
+  // For each particle
+  for (uint p = 0; p < nParticles_; ++p)
+  {
+    for (uint t = 0; t < STATES_PER_TARGET; ++t)
+    {
+      targetWeightedMeans[t] +=
+          particles_[O_TARGET + t][p] * particles_[O_WEIGHT][p];
+    }
+  }
+
+  // Normalize the mean
+  for (uint t = 0; t < STATES_PER_TARGET; ++t)
+    targetWeightedMeans[t] = targetWeightedMeans[t] / weightSum;
+
+  // Update position
+  // Can't use easy copy since one is using double precision
+  state_.target.pos[O_TX] = targetWeightedMeans[O_TX];
+  state_.target.pos[O_TY] = targetWeightedMeans[O_TY];
+  state_.target.pos[O_TZ] = targetWeightedMeans[O_TZ];
+
+  // Add to the velocity estimator
+  double timeNow = ros::Time::now().toNSec()*1e-9;
+  state_.targetVelocityEstimator.insert(timeNow, targetWeightedMeans);
+
+  // Ball velocity is estimated using linear regression
+  if(state_.targetVelocityEstimator.isReadyToEstimate())
+  {
+    state_.target.vel[O_TX] = state_.targetVelocityEstimator.estimate(O_X);
+    state_.target.vel[O_TY] = state_.targetVelocityEstimator.estimate(O_TY);
+    state_.target.vel[O_TZ] = state_.targetVelocityEstimator.estimate(O_TZ);
   }
 
   // Print iteration and state information
