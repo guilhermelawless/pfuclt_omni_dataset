@@ -406,7 +406,7 @@ void ParticleFilter::resample()
   {
     // All resamplers use normalized weights
     for (uint p = 0; p < nParticles_; ++p)
-      particles_t[O_WEIGHT][p] = particles_t[O_WEIGHT][p] / weightSum;
+      particles_[O_WEIGHT][p] = particles_[O_WEIGHT][p] / weightSum;
 
     modifiedMultinomialResampler();
 
