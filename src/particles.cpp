@@ -320,91 +320,23 @@ void ParticleFilter::fuseTarget()
   resample();
 }
 
-void ParticleFilter::low_variance_resampler(const float weightSum)
-{
-  // Low variance resampling exactly as implemented in the book Probabilistic
-  // robotics by thrun and burgard
-
-  subparticles_t normalizedWeights(particles_[O_WEIGHT]);
-  // Normalize the weights
-  for (uint i = 0; i < nParticles_; ++i)
-    normalizedWeights[i] = normalizedWeights[i] / weightSum;
-
-  // Duplicate the particle set
-  particles_t duplicate(particles_);
-
-  // Generate a random number from a gaussian N~(0; 1/nParticles)
-  pdata_t MInv = 1.0 / nParticles_;
-  boost::random::normal_distribution<> genR(0.0, MInv);
-  pdata_t r = genR(seed_);
-
-  // c is equal to the first particle's weight
-  pdata_t c = normalizedWeights[0];
-
-  // Particle iterators
-  uint i = 0, m;
-
-  // Iterate over the particle set
-  for (m = 0; m < nParticles_; ++m)
-  {
-    // Generate number from the random sample
-    pdata_t u = r + m * MInv;
-
-    // Add weight until it reaches u
-    while (u > c)
-      c += normalizedWeights[++i];
-
-    // Check if i is off limits
-    if (i >= nParticles_)
-      break;
-
-    // Add this particle to the set
-    for (uint s = 0; s < nSubParticleSets_; ++s)
-      particles_[s][m] = duplicate[s][i];
-  }
-
-  ROS_DEBUG("End of low_variance_resampler()");
-
-  ROS_WARN_COND(m != nParticles_, "The resampler didn't add the "
-                                  "required number of particles, from %d to "
-                                  "%d the set was left unchanged!",
-                m, nParticles_ - 1);
-}
-
-void ParticleFilter::myResampler(const float weightSum)
+void ParticleFilter::modifiedMultinomialResampler()
 {
   // Implementing a very basic resampler... a particle gets selected
   // proportional to its weight and 50% of the top particles are kept
 
-  subparticles_t normalizedWeights(particles_[O_WEIGHT]);
-  // Normalize the weights
-  for (uint i = 0; i < nParticles_; ++i)
-    normalizedWeights[i] = normalizedWeights[i] / weightSum;
-
   particles_t duplicate(particles_);
 
   std::vector<pdata_t> cumulativeWeights(nParticles_);
-  cumulativeWeights[0] = normalizedWeights[0];
+  cumulativeWeights[0] = duplicate[O_WEIGHT][0];
 
   for (int par = 1; par < nParticles_; par++)
   {
     cumulativeWeights[par] =
-        cumulativeWeights[par - 1] + normalizedWeights[par];
+        cumulativeWeights[par - 1] + duplicate[O_WEIGHT][par];
   }
 
   int halfParticles = nParticles_ * 0.5;
-
-  // Keep top 50% of particles
-  // Taken care of when duplicating, above
-  /*
-  for (int par = 0; par < halfParticles; par++)
-  {
-    for (int k = 0; k < nSubParticleSets_; k++)
-    {
-      particles_[k][par] = duplicate[k][par];
-    }
-  }
-  */
 
   // Resample the rest of the set
   for (int par = halfParticles; par < nParticles_; par++)
@@ -419,6 +351,9 @@ void ParticleFilter::myResampler(const float weightSum)
     for (int k = 0; k < nSubParticleSets_; k++)
       particles_[k][par] = duplicate[k][m];
   }
+
+  // Every particle with the same weight
+  resetWeights(1/nParticles_);
 
   ROS_DEBUG("End of myResampler()");
 }
@@ -469,8 +404,11 @@ void ParticleFilter::resample()
 
   else
   {
-    low_variance_resampler(weightSum);
-    //myResampler(weightSum);
+    // All resamplers use normalized weights
+    for (uint p = 0; p < nParticles_; ++p)
+      particles_t[O_WEIGHT][p] = particles_t[O_WEIGHT][p] / weightSum;
+
+    modifiedMultinomialResampler();
 
     // printWeights("after resampling: ");
   }

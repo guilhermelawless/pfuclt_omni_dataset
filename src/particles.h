@@ -412,15 +412,9 @@ protected:
   void fuseTarget();
 
   /**
-   * @brief low_variance_resampler - implementation of the resampler by Thrun
-   * and Burgard
+   * @brief modifiedMultinomialResampler - a costly resampler that keeps 50% of the particles and implements the multinomial resampler on the rest
    */
-  void low_variance_resampler(const float weightSum);
-
-  /**
-   * @brief myResampler - a simpler resampler
-   */
-  void myResampler(const float weightSum);
+  void modifiedMultinomialResampler();
 
   /**
    * @brief resample - the resampling step
