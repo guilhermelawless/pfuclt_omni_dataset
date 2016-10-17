@@ -42,7 +42,7 @@
 #define ITERATION_TIME_MAX (1)
 
 // others
-#define MIN_WEIGHTSUM 0.0001
+#define MIN_WEIGHTSUM 1e-7
 
 namespace pfuclt_ptcls
 {

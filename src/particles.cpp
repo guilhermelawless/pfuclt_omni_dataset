@@ -181,13 +181,6 @@ void ParticleFilter::fuseRobots()
     }
   }
 
-  // Debugging
-  // for(uint p=0; p<nParticles_/5; ++p)
-  //  ROS_DEBUG("pWeight[%d] = %f", p, particles_[WEIGHT_INDEX][p]);
-
-  // Change state
-  state_.robotsFused = true;
-
   // If the target measurements were performed prior to this function ending,
   // then we should call the target fusion step here
   if (!state_.targetFused && state_.allTargetMeasurementsDone())
@@ -355,8 +348,6 @@ void ParticleFilter::modifiedMultinomialResampler()
   // Every particle with the same weight
   resetWeights(1.0/nParticles_);
 
-  printWeights("After resampling");
-
   ROS_DEBUG("End of modifiedMultinomialResampler()");
 }
 
@@ -444,10 +435,6 @@ void ParticleFilter::estimate()
     return nextIteration();
   }
 
-  // A vector of weighted means that will be calculated in the following nested
-  // loops
-  std::vector<double> weightedMeans(nStatesPerRobot_, 0.0);
-
   subparticles_t normalizedWeights(particles_[O_WEIGHT]);
 
   // Normalize the weights
@@ -462,6 +449,9 @@ void ParticleFilter::estimate()
       continue;
 
     uint o_robot = r * nStatesPerRobot_;
+
+    // A vector of weighted means that will be calculated in the next loop
+    std::vector<double> weightedMeans(nStatesPerRobot_, 0.0);
 
     // ..and each particle
     for (uint p = 0; p < nParticles_; ++p)
