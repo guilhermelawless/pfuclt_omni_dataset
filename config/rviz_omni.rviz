@@ -54,13 +54,7 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        OMNI1:
-          Value: true
-        OMNI3:
-          Value: true
         OMNI4:
-          Value: true
-        OMNI5:
           Value: true
         world:
           Value: true
@@ -71,13 +65,7 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          OMNI1:
-            {}
-          OMNI3:
-            {}
           OMNI4:
-            {}
-          OMNI5:
             {}
       Update Interval: 0
       Value: true
@@ -307,22 +295,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 15.5033
+      Distance: 15.259
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 2.99709
-        Y: -2.50489
-        Z: 1.30362
+        X: 2.03438
+        Y: -2.78983
+        Z: 1.17514
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.935203
+      Pitch: 1.3202
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.65532
+      Yaw: 4.72032
     Saved: ~
 Window Geometry:
   Displays:

@@ -13,7 +13,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/PointCloud.h>
 
-//#define DONT_FUSE_TARGET true
+#define DONT_FUSE_TARGET true
 #define BROADCAST_TF_AND_POSES true
 #define PUBLISH_PTCLS true
 
@@ -121,13 +121,12 @@ void ParticleFilter::fuseRobots()
         Eigen::Vector2d LM(landmarksMap_[l].x, landmarksMap_[l].y);
 
         Eigen::Vector2d Zglobal_err = LM - Zglobal;
-        Eigen::Vector2d Z_Zcap = Zrobot - Zglobal_err;
 
         // The values of interest to the particle weights
         // Note: using Eigen wasn't of particular interest here since it does
         // not allow for transposing a non-dynamic matrix
-        float expArg = -0.5 * (Z_Zcap(0) * Z_Zcap(0) / m.covXX +
-                               Z_Zcap(1) * Z_Zcap(1) / m.covYY);
+        float expArg = -0.5 * (Zglobal_err(0) * Zglobal_err(0) / m.covXX +
+                               Zglobal_err(1) * Zglobal_err(1) / m.covYY);
         float detValue = 1.0; // pow( (2*M_PI*m.covXX*m.covYY),-0.5);
 
         probabilities[r] *= detValue * exp(expArg);
@@ -456,26 +455,38 @@ void ParticleFilter::estimate()
     uint o_robot = r * nStatesPerRobot_;
 
     // A vector of weighted means that will be calculated in the next loop
-    std::vector<double> weightedMeans(nStatesPerRobot_, 0.0);
+    std::vector<double> weightedMeans(nStatesPerRobot_ - 1, 0.0);
+
+    // For theta we will obtain the mean of circular quantities, by converting
+    // to cartesian coordinates, placing each angle in the unit circle,
+    // averaging these points and finally converting again to polar
+    double weightedMeanThetaCartesian[2] = { 0, 0 };
 
     // ..and each particle
     for (uint p = 0; p < nParticles_; ++p)
     {
       // Accumulate the state proportionally to the particle's normalized weight
-      for (uint g = 0; g < nStatesPerRobot_; ++g)
+      for (uint g = 0; g < nStatesPerRobot_ - 1; ++g)
       {
         weightedMeans[g] += particles_[o_robot + g][p] * normalizedWeights[p];
       }
+
+      // Mean of circular quantities for theta
+      weightedMeanThetaCartesian[O_X] +=
+          cos(particles_[o_robot + O_THETA][p]) * normalizedWeights[p];
+      weightedMeanThetaCartesian[O_Y] +=
+          sin(particles_[o_robot + O_THETA][p]) * normalizedWeights[p];
     }
 
-    // Normalize the angle
-    weightedMeans[O_THETA] = angles::normalize_angle(weightedMeans[O_THETA]);
+    // Put the angle back in polar coordinates
+    double weightedMeanThetaPolar =
+        atan2(weightedMeanThetaCartesian[O_Y], weightedMeanThetaCartesian[O_X]);
 
     // Save in the robot state
     // Can't use easy copy since one is using double precision
     state_.robots[r].pose[O_X] = weightedMeans[O_X];
     state_.robots[r].pose[O_Y] = weightedMeans[O_Y];
-    state_.robots[r].pose[O_THETA] = weightedMeans[O_THETA];
+    state_.robots[r].pose[O_THETA] = weightedMeanThetaPolar;
   }
 
   // Target weighted means

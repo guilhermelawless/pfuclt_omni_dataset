@@ -181,13 +181,14 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   if (!pf_->isInitialized())
     parent_->tryInitializeParticles();
 
-  pfuclt_ptcls::Odometry odomStruct = {
-    odometry->pose.pose.position.x, odometry->pose.pose.position.y,
-    tf2::getYaw(odometry->pose.pose.orientation)
-  };
+  pfuclt_ptcls::Odometry odomStruct;
+  odomStruct.x = odometry->pose.pose.position.x;
+  odomStruct.y = odometry->pose.pose.position.y;
+  odomStruct.theta = tf2::getYaw(odometry->pose.pose.orientation);
 
-  ROS_DEBUG("OMNI%d odometry at time %d", robotNumber_ + 1,
-            odometry->header.stamp.sec);
+  ROS_DEBUG("OMNI%d odometry at time %d = {%f;%f;%f}", robotNumber_ + 1,
+            odometry->header.stamp.sec, odomStruct.x, odomStruct.y,
+            odomStruct.theta);
 
   // Call the particle filter predict step for this robot
   pf_->predict(robotNumber_, odomStruct);
