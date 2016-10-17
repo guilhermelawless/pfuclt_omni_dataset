@@ -112,7 +112,7 @@ void ParticleFilter::fuseRobots()
         Eigen::Vector2d Zrobot(m.x, m.y);
 
         // Transformation to global frame
-        Eigen::Rotation2Dd Rrobot(particles_[o_robot + O_THETA][p]);
+        Eigen::Rotation2Dd Rrobot(-particles_[o_robot + O_THETA][p]);
         Eigen::Vector2d Srobot(particles_[o_robot + O_X][p],
                                particles_[o_robot + O_Y][p]);
         Eigen::Vector2d Zglobal = Srobot + Rrobot * Zrobot;
@@ -126,14 +126,21 @@ void ParticleFilter::fuseRobots()
         // The values of interest to the particle weights
         // Note: using Eigen wasn't of particular interest here since it does
         // not allow for transposing a non-dynamic matrix
-        float expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / m.covXX +
-                               Z_Zcap[1] * Z_Zcap[1] / m.covYY);
-        float detValue = 1.0; // powf( (2*PI*Q[0][0]*Q[1][1]),-0.5);
+        float expArg = -0.5 * (Z_Zcap(0) * Z_Zcap(0) / m.covXX +
+                               Z_Zcap(1) * Z_Zcap(1) / m.covYY);
+        float detValue = 1.0; // pow( (2*M_PI*m.covXX*m.covYY),-0.5);
 
         probabilities[r] *= detValue * exp(expArg);
         landmarksUsed[r]++;
 
-        //ROS_DEBUG("OMNI%d sees landmark %d with certainty %f%%", r+1, l, 100*(detValue * exp(expArg)));
+        ROS_DEBUG_COND(
+            p == 0,
+            "OMNI%d's particle 0 is at {%f;%f;%f}, sees landmark %d with "
+            "certainty %f%%, at {%f;%f} "
+            "although it is at {%f;%f}",
+            r + 1, particles_[o_robot + O_X][p], particles_[o_robot + O_Y][p],
+            particles_[o_robot + O_THETA][p], l, 100 * (detValue * exp(expArg)),
+            Zglobal(0), Zglobal(1), LM(0), LM(1));
       }
     }
 
@@ -198,10 +205,7 @@ void ParticleFilter::fuseTarget()
 
   state_.targetFused = true;
 
-#ifdef DONT_FUSE_TARGET
-  return resample();
-#endif
-
+#ifndef DONT_FUSE_TARGET
   // If ball not seen by any robot, just skip all of this
   bool ballSeen = false;
   for (std::vector<TargetObservation>::iterator it =
@@ -252,7 +256,7 @@ void ParticleFilter::fuseTarget()
         // Affine creates a (Dim+1) * (Dim+1) matrix and sets
         // last row to [0 0 ... 1]
         Eigen::Transform<pdata_t, 2, Eigen::Affine> toGlobal(
-            Eigen::Rotation2Dd(particles_[o_robot + O_THETA][m]));
+            Eigen::Rotation2Dd(-particles_[o_robot + O_THETA][m]));
         Eigen::Vector3d Srobot(particles_[o_robot + O_X][m],
                                particles_[o_robot + O_Y][m], 0.0);
         Eigen::Vector3d Zglobal = Srobot + toGlobal * Zrobot;
@@ -306,8 +310,9 @@ void ParticleFilter::fuseTarget()
     particles_[O_WEIGHT][m] *= maxTargetSubParticleWeight;
   }
 
-  // The target subparticles are now reordered according to their weight
-  // contribution
+// The target subparticles are now reordered according to their weight
+// contribution
+#endif
 
   // Start resampling
   resample();
@@ -346,7 +351,7 @@ void ParticleFilter::modifiedMultinomialResampler()
   }
 
   // Every particle with the same weight
-  resetWeights(1.0/nParticles_);
+  resetWeights(1.0 / nParticles_);
 
   ROS_DEBUG("End of modifiedMultinomialResampler()");
 }
@@ -415,14 +420,14 @@ void ParticleFilter::estimate()
   *iteration_oss << "estimate() -> ";
 
   pdata_t weightSum = std::accumulate(particles_[O_WEIGHT].begin(),
-                              particles_[O_WEIGHT].end(), 0.0);
+                                      particles_[O_WEIGHT].end(), 0.0);
 
-  ROS_DEBUG("WeightSum when estimating = %f", weightSum);
+  // ROS_DEBUG("WeightSum when estimating = %f", weightSum);
 
-  if(weightSum < MIN_WEIGHTSUM)
+  if (weightSum < MIN_WEIGHTSUM)
   {
     // Print iteration and state information
-    *iteration_oss << "DONE!";
+    *iteration_oss << "DONE without estimating!";
     ROS_DEBUG("Iteration: %s", iteration_oss->str().c_str());
 
     state_.print();
@@ -459,8 +464,7 @@ void ParticleFilter::estimate()
       // Accumulate the state proportionally to the particle's normalized weight
       for (uint g = 0; g < nStatesPerRobot_; ++g)
       {
-        weightedMeans[g] +=
-            particles_[o_robot + g][p] * normalizedWeights[p];
+        weightedMeans[g] += particles_[o_robot + g][p] * normalizedWeights[p];
       }
     }
 
@@ -494,11 +498,11 @@ void ParticleFilter::estimate()
   state_.target.pos[O_TZ] = targetWeightedMeans[O_TZ];
 
   // Add to the velocity estimator
-  double timeNow = ros::Time::now().toNSec()*1e-9;
+  double timeNow = ros::Time::now().toNSec() * 1e-9;
   state_.targetVelocityEstimator.insert(timeNow, targetWeightedMeans);
 
   // Ball velocity is estimated using linear regression
-  if(state_.targetVelocityEstimator.isReadyToEstimate())
+  if (state_.targetVelocityEstimator.isReadyToEstimate())
   {
     state_.target.vel[O_TX] = state_.targetVelocityEstimator.estimate(O_X);
     state_.target.vel[O_TY] = state_.targetVelocityEstimator.estimate(O_TY);

@@ -181,9 +181,10 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   if (!pf_->isInitialized())
     parent_->tryInitializeParticles();
 
-  pfuclt_ptcls::Odometry odomStruct = { odometry->pose.pose.position.x,
-                                        odometry->pose.pose.position.y,
-                                        tf2::getYaw(odometry->pose.pose.orientation)};
+  pfuclt_ptcls::Odometry odomStruct = {
+    odometry->pose.pose.position.x, odometry->pose.pose.position.y,
+    tf2::getYaw(odometry->pose.pose.orientation)
+  };
 
   ROS_DEBUG("OMNI%d odometry at time %d", robotNumber_ + 1,
             odometry->header.stamp.sec);
@@ -286,15 +287,7 @@ void Robot::landmarkDataCallback(
 
     float heuristicsThresh[] = HEURISTICS_THRESH_DEFAULT;
 
-    if (robotNumber_ == 4)
-    {
-      heuristicsThresh[4] = 3.0;
-      heuristicsThresh[5] = 3.0;
-      heuristicsThresh[8] = 3.0;
-      heuristicsThresh[9] = 3.0;
-    }
-
-    if (robotNumber_ == 3)
+    if (robotNumber_ == 0)
     {
       heuristicsThresh[4] = 6.5;
       heuristicsThresh[5] = 6.5;
@@ -302,7 +295,7 @@ void Robot::landmarkDataCallback(
       heuristicsThresh[9] = 6.5;
     }
 
-    if (robotNumber_ == 1)
+    else if (robotNumber_ == 2)
     {
       heuristicsThresh[4] = 6.5;
       heuristicsThresh[5] = 6.5;
@@ -310,7 +303,15 @@ void Robot::landmarkDataCallback(
       heuristicsThresh[9] = 6.5;
     }
 
-    if (robotNumber_ == 5)
+    else if (robotNumber_ == 3)
+    {
+      heuristicsThresh[4] = 6.5;
+      heuristicsThresh[5] = 6.5;
+      heuristicsThresh[8] = 6.5;
+      heuristicsThresh[9] = 6.5;
+    }
+
+    else if (robotNumber_ == 4)
     {
       heuristicsThresh[4] = 3.5;
       heuristicsThresh[5] = 3.5;
@@ -424,7 +425,8 @@ int main(int argc, char* argv[])
   readParam<bool>(nh, "/USE_CUSTOM_VALUES", USE_CUSTOM_VALUES);
   readParam<int>(nh, "/MY_ID", MY_ID);
 
-  uint total_size = MAX_ROBOTS * STATES_PER_ROBOT + NUM_TARGETS * STATES_PER_TARGET;
+  uint total_size =
+      MAX_ROBOTS * STATES_PER_ROBOT + NUM_TARGETS * STATES_PER_TARGET;
 
   if (USE_CUSTOM_VALUES)
   {
