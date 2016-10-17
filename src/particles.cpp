@@ -93,7 +93,7 @@ void ParticleFilter::fuseRobots()
 
   for (uint p = 0; p < nParticles_; ++p)
   {
-    std::vector<float> probabilities(nRobots_, 1.0);
+    std::vector<pdata_t> probabilities(nRobots_, 1.0);
     std::vector<uint> landmarksUsed(nRobots_, 0);
 
     for (uint l = 0; l < nLandmarks_; ++l)
@@ -109,19 +109,19 @@ void ParticleFilter::fuseRobots()
         LandmarkObservation& m = bufLandmarkObservations_[r][l];
 
         // Observation in robot frame
-        Eigen::Vector2f Zrobot(m.x, m.y);
+        Eigen::Vector2d Zrobot(m.x, m.y);
 
         // Transformation to global frame
-        Eigen::Rotation2Df Rrobot(particles_[o_robot + O_THETA][p]);
-        Eigen::Vector2f Srobot(particles_[o_robot + O_X][p],
+        Eigen::Rotation2Dd Rrobot(particles_[o_robot + O_THETA][p]);
+        Eigen::Vector2d Srobot(particles_[o_robot + O_X][p],
                                particles_[o_robot + O_Y][p]);
-        Eigen::Vector2f Zglobal = Srobot + Rrobot * Zrobot;
+        Eigen::Vector2d Zglobal = Srobot + Rrobot * Zrobot;
 
         // Error in observation
-        Eigen::Vector2f LM(landmarksMap_[l].x, landmarksMap_[l].y);
+        Eigen::Vector2d LM(landmarksMap_[l].x, landmarksMap_[l].y);
 
-        Eigen::Vector2f Zglobal_err = LM - Zglobal;
-        Eigen::Vector2f Z_Zcap = Zrobot - Zglobal_err;
+        Eigen::Vector2d Zglobal_err = LM - Zglobal;
+        Eigen::Vector2d Z_Zcap = Zrobot - Zglobal_err;
 
         // The values of interest to the particle weights
         // Note: using Eigen wasn't of particular interest here since it does
@@ -133,7 +133,7 @@ void ParticleFilter::fuseRobots()
         probabilities[r] *= detValue * exp(expArg);
         landmarksUsed[r]++;
 
-        ROS_DEBUG("OMNI%d sees landmark %d with certainty %f%%", r+1, l, 100*(detValue * exp(expArg)));
+        //ROS_DEBUG("OMNI%d sees landmark %d with certainty %f%%", r+1, l, 100*(detValue * exp(expArg)));
       }
     }
 
@@ -233,14 +233,14 @@ void ParticleFilter::fuseTarget()
   for (uint m = 0; m < nParticles_; ++m)
   {
     // Keep track of the maximum contributed weight and that particle's index
-    float maxTargetSubParticleWeight = 0.0;
+    pdata_t maxTargetSubParticleWeight = 0.0;
     uint mStar = 0;
 
     // Find the particle m* in the set [m:M] for which the weight contribution
     // by the target subparticle to the full weight is maximum
     for (uint p = 0; p < nParticles_; ++p)
     {
-      std::vector<float> probabilities(nRobots_, 1.0);
+      std::vector<pdata_t> probabilities(nRobots_, 1.0);
 
       // Observations of the target by all robots
       for (uint r = 0; r < nRobots_; ++r)
@@ -253,24 +253,24 @@ void ParticleFilter::fuseTarget()
         TargetObservation& obs = bufTargetObservations_[r];
 
         // Observation in robot frame
-        Eigen::Vector3f Zrobot(obs.x, obs.y, obs.z);
+        Eigen::Vector3d Zrobot(obs.x, obs.y, obs.z);
 
         // Transformation to global frame
         // Affine creates a (Dim+1) * (Dim+1) matrix and sets
         // last row to [0 0 ... 1]
-        Eigen::Transform<float, 2, Eigen::Affine> toGlobal(
-            Eigen::Rotation2Df(particles_[o_robot + O_THETA][m]));
-        Eigen::Vector3f Srobot(particles_[o_robot + O_X][m],
+        Eigen::Transform<pdata_t, 2, Eigen::Affine> toGlobal(
+            Eigen::Rotation2Dd(particles_[o_robot + O_THETA][m]));
+        Eigen::Vector3d Srobot(particles_[o_robot + O_X][m],
                                particles_[o_robot + O_Y][m], 0.0);
-        Eigen::Vector3f Zglobal = Srobot + toGlobal * Zrobot;
+        Eigen::Vector3d Zglobal = Srobot + toGlobal * Zrobot;
 
         // Error in observation
-        Eigen::Vector3f Target(particles_[O_TARGET + O_TX][p],
+        Eigen::Vector3d Target(particles_[O_TARGET + O_TX][p],
                                particles_[O_TARGET + O_TY][p],
                                particles_[O_TARGET + O_TZ][p]);
 
         // TODO should the Y frame be inverted?
-        Eigen::Vector3f Z_Zcap = Zrobot - (Target - Zglobal);
+        Eigen::Vector3d Z_Zcap = Zrobot - (Target - Zglobal);
 
         // The values of interest to the particle weights
         // Note: using Eigen wasn't of particular interest here since it does
@@ -290,7 +290,7 @@ void ParticleFilter::fuseTarget()
       }
 
       // Calculate total weight contributed by this particle
-      float totalWeight =
+      pdata_t totalWeight =
           std::accumulate(probabilities.begin(), probabilities.end(), 0.0);
 
       // If the weight is the maximum as of now, update the maximum and set
@@ -353,9 +353,11 @@ void ParticleFilter::modifiedMultinomialResampler()
   }
 
   // Every particle with the same weight
-  resetWeights(1/nParticles_);
+  resetWeights(1.0/nParticles_);
 
-  ROS_DEBUG("End of myResampler()");
+  printWeights("After resampling");
+
+  ROS_DEBUG("End of modifiedMultinomialResampler()");
 }
 
 void ParticleFilter::resample()
@@ -471,8 +473,6 @@ void ParticleFilter::estimate()
             particles_[o_robot + g][p] * normalizedWeights[p];
       }
     }
-
-    //std::cout << weightedMeans[4] << std::endl;
 
     // Normalize the angle
     weightedMeans[O_THETA] = angles::normalize_angle(weightedMeans[O_THETA]);
@@ -632,12 +632,12 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
             alpha[0], alpha[1], alpha[2], alpha[3]);
 
   // Determining the propagation of the robot state through odometry
-  float deltaRot =
+  pdata_t deltaRot =
       atan2(odom.y, odom.x) -
       state_.robots[robotNumber]
           .pose[O_THETA]; // Uses the previous overall belief of orientation
-  float deltaTrans = sqrt(odom.x * odom.x + odom.y * odom.y);
-  float deltaFinalRot = odom.theta - deltaRot;
+  pdata_t deltaTrans = sqrt(odom.x * odom.x + odom.y * odom.y);
+  pdata_t deltaFinalRot = odom.theta - deltaRot;
 
   // Create an error model based on a gaussian distribution
   normal_distribution<> deltaRotEffective(deltaRot, alpha[0] * fabs(deltaRot) +
@@ -662,7 +662,7 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
     // Rotate to final position
     particles_[O_THETA + robot_offset][i] += deltaRotEffective(seed_);
 
-    float sampleTrans = deltaTransEffective(seed_);
+    pdata_t sampleTrans = deltaTransEffective(seed_);
 
     // Translate to final position
     particles_[O_X + robot_offset][i] +=

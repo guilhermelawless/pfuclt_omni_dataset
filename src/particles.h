@@ -46,13 +46,16 @@
 
 namespace pfuclt_ptcls
 {
+
+typedef double pdata_t;
+
 using namespace pfuclt_aux;
 
 typedef double (*estimatorFunc)(const std::vector<double>&, const std::vector<double>&);
 
 typedef struct odometry_s
 {
-  float x, y, theta;
+  pdata_t x, y, theta;
 } Odometry;
 
 typedef struct landmarkObs_s
@@ -75,7 +78,6 @@ typedef struct targetObs_s
 } TargetObservation;
 
 // Apply concept of subparticles (the particle set for each dimension)
-typedef float pdata_t;
 typedef std::vector<pdata_t> subparticles_t;
 typedef std::vector<subparticles_t> particles_t;
 
@@ -92,6 +94,7 @@ protected:
   struct State
   {
     uint nRobots;
+    uint nStatesPerRobot;
     const std::vector<bool>& robotsUsed;
     std::vector<bool> predicted;
     std::vector<bool> landmarkMeasurementsDone;
@@ -181,11 +184,10 @@ protected:
 
     /**
      * @brief State - constructor
-     * @param numberRobots
      */
-    State(const uint nStatesPerRobot, const uint numberRobots,
+    State(const uint nStatesPerRobot_, const uint numberRobots,
           const std::vector<bool>& robotsBeingUsed)
-      : nRobots(numberRobots), predicted(nRobots, false),
+      : nStatesPerRobot(nStatesPerRobot_), nRobots(numberRobots), predicted(nRobots, false),
         landmarkMeasurementsDone(nRobots, false),
         targetMeasurementsDone(nRobots, false), robotsUsed(robotsBeingUsed),
         targetVelocityEstimator(STATES_PER_TARGET, MAX_ESTIMATOR_STACK_SIZE,
@@ -214,24 +216,19 @@ protected:
     void print()
     {
       std::ostringstream oss;
-      oss << "PF State:";
-      oss << std::endl
-          << "-predicted = ";
-      print(oss, predicted);
-      oss << std::endl
-          << "-landmarkMeasurementsDone = ";
-      print(oss, landmarkMeasurementsDone);
-      oss << std::endl
-          << "-targetMeasurementsDone = ";
-      print(oss, targetMeasurementsDone);
-      oss << std::endl
-          << "-targetPredicted = " << targetPredicted;
-      oss << std::endl
-          << "-robotsFused = " << robotsFused;
-      oss << std::endl
-          << "-targetFused = " << targetFused;
-      oss << std::endl
-          << "-resampled = " << resampled;
+      oss << "PF State:" << std::endl;
+      for(uint r=0; r<nRobots; ++r)
+      {
+        oss << "OMNI " << r+1 << "[ ";
+        for(uint k=0; k<nStatesPerRobot; ++k)
+          oss << robots[r].pose[k] << " ";
+        oss << "]" << std::endl;
+      }
+
+      oss << "Target [ ";
+      for(uint k=0; k<STATES_PER_TARGET; ++k)
+        oss << target.pos[k] << " ";
+      oss << "]" << std::endl;
 
       ROS_DEBUG("%s", oss.str().c_str());
     }
