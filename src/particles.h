@@ -411,7 +411,7 @@ protected:
   /**
    * @brief modifiedMultinomialResampler - a costly resampler that keeps 50% of the particles and implements the multinomial resampler on the rest
    */
-  void modifiedMultinomialResampler();
+  void modifiedMultinomialResampler(uint startAt);
 
   /**
    * @brief resample - the resampling step

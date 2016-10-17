@@ -13,7 +13,9 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/PointCloud.h>
 
-#define DONT_FUSE_TARGET true
+//#define DONT_FUSE_LANDMARKS true
+//#define USE_ALTERNATIVE_LANDMARK_FUSE true
+//#define DONT_FUSE_TARGET true
 #define BROADCAST_TF_AND_POSES true
 #define PUBLISH_PTCLS true
 
@@ -91,6 +93,7 @@ void ParticleFilter::fuseRobots()
 
   state_.robotsFused = true;
 
+#ifndef DONT_FUSE_LANDMARKS
   for (uint p = 0; p < nParticles_; ++p)
   {
     std::vector<pdata_t> probabilities(nRobots_, 1.0);
@@ -108,6 +111,33 @@ void ParticleFilter::fuseRobots()
 
         LandmarkObservation& m = bufLandmarkObservations_[r][l];
 
+#ifdef USE_ALTERNATIVE_LANDMARK_FUSE
+        // Copy from old version to compare
+        pdata_t Z[2], Zcap[2], Q[2][2], Q_inv[2][2], Z_Zcap[2];
+        Z[0] = m.x;
+        Z[1] = m.y;
+        Zcap[0] = (landmarksMap_[l].x - particles_[o_robot + O_X][p]) *
+            (cos(particles_[o_robot + O_THETA][p])) +
+            (landmarksMap_[l].y - particles_[o_robot + O_Y][p]) *
+            (sin(particles_[o_robot + O_THETA][p]));
+        Zcap[1] = -(landmarksMap_[l].x - particles_[o_robot + O_X][p]) *
+            (sin(particles_[o_robot + O_THETA][p])) +
+            (landmarksMap_[l].y - particles_[o_robot + O_Y][p]) *
+            (cos(particles_[o_robot + O_THETA][p]));
+        Z_Zcap[0] = Z[0] - Zcap[0];
+        Z_Zcap[1] = Z[1] - Zcap[1];
+        Q[0][0] = m.covXX;
+        Q[0][1] = 0.0;
+        Q[1][0] = 0.0;
+        Q[1][1] = m.covYY;
+        Q_inv[0][0] = 1.0 / m.covXX;
+        Q_inv[0][1] = 0.0;
+        Q_inv[1][0] = 0.0;
+        Q_inv[1][1] = 1.0 / m.covYY;
+        float expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] * Q_inv[0][0] +
+            Z_Zcap[1] * Z_Zcap[1] * Q_inv[1][1]);
+        float detValue = 1.0; //pow( (2*M_PI*Q[0][0]*Q[1][1]),-0.5);
+#else
         // Observation in robot frame
         Eigen::Vector2d Zrobot(m.x, m.y);
 
@@ -121,16 +151,15 @@ void ParticleFilter::fuseRobots()
         Eigen::Vector2d LM(landmarksMap_[l].x, landmarksMap_[l].y);
 
         Eigen::Vector2d Zglobal_err = LM - Zglobal;
+        Eigen::Vector2d Z_Zcap = Zrobot - Zglobal_err;
 
         // The values of interest to the particle weights
         // Note: using Eigen wasn't of particular interest here since it does
         // not allow for transposing a non-dynamic matrix
-        float expArg = -0.5 * (Zglobal_err(0) * Zglobal_err(0) / m.covXX +
-                               Zglobal_err(1) * Zglobal_err(1) / m.covYY);
+        float expArg = -0.5 * (Z_Zcap(0) * Z_Zcap(0) / m.covXX +
+                               Z_Zcap(1) * Z_Zcap(1) / m.covYY);
         float detValue = 1.0; // pow( (2*M_PI*m.covXX*m.covYY),-0.5);
 
-        probabilities[r] *= detValue * exp(expArg);
-        landmarksUsed[r]++;
 
         ROS_DEBUG_COND(
             p == 0,
@@ -140,6 +169,11 @@ void ParticleFilter::fuseRobots()
             r + 1, particles_[o_robot + O_X][p], particles_[o_robot + O_Y][p],
             particles_[o_robot + O_THETA][p], l, 100 * (detValue * exp(expArg)),
             Zglobal(0), Zglobal(1), LM(0), LM(1));
+#endif
+
+
+        probabilities[r] *= detValue * exp(expArg);
+        landmarksUsed[r]++;
       }
     }
 
@@ -153,6 +187,7 @@ void ParticleFilter::fuseRobots()
         weightComponents_[r][p] = probabilities[r];
     }
   }
+#endif
 
   // Reset weights to 1.0 - later we will multiply by the various weight
   // components
@@ -317,10 +352,10 @@ void ParticleFilter::fuseTarget()
   resample();
 }
 
-void ParticleFilter::modifiedMultinomialResampler()
+void ParticleFilter::modifiedMultinomialResampler(uint startAt)
 {
   // Implementing a very basic resampler... a particle gets selected
-  // proportional to its weight and 50% of the top particles are kept
+  // proportional to its weight and startAt% of the top particles are kept
 
   particles_t duplicate(particles_);
 
@@ -333,7 +368,7 @@ void ParticleFilter::modifiedMultinomialResampler()
         cumulativeWeights[par - 1] + duplicate[O_WEIGHT][par];
   }
 
-  int halfParticles = nParticles_ * 0.5;
+  int halfParticles = nParticles_ * startAt;
 
   // Resample the rest of the set
   for (int par = halfParticles; par < nParticles_; par++)
@@ -405,7 +440,7 @@ void ParticleFilter::resample()
     for (uint p = 0; p < nParticles_; ++p)
       particles_[O_WEIGHT][p] = particles_[O_WEIGHT][p] / weightSum;
 
-    modifiedMultinomialResampler();
+    modifiedMultinomialResampler(0.5);
 
     // printWeights("after resampling: ");
   }
