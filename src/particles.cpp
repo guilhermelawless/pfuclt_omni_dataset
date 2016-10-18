@@ -13,6 +13,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/PointCloud.h>
 
+#define DONT_RESAMPLE
 //#define DONT_FUSE_LANDMARKS true
 #define USE_ALTERNATIVE_LANDMARK_FUSE true
 #define DONT_FUSE_TARGET true
@@ -137,6 +138,8 @@ void ParticleFilter::fuseRobots()
         float expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] * Q_inv[0][0] +
             Z_Zcap[1] * Z_Zcap[1] * Q_inv[1][1]);
         float detValue = 1.0; // pow( (2*M_PI*Q[0][0]*Q[1][1]),-0.5);
+
+        //ROS_INFO("LM[%d] = {%.2f,%.2f} measured with x,y = {%f,%f}", l, landmarksMap_[l].x, landmarksMap_[l].y, m.x, m.y);
 #else
         // Observation in robot frame
         Eigen::Matrix<pdata_t, 2, 1> Zrobot(m.x, m.y);
@@ -392,6 +395,7 @@ void ParticleFilter::resample()
   *iteration_oss << "resample() -> ";
   ROS_DEBUG("Resampling");
 
+#ifndef DONT_RESAMPLE
   for (uint r = 0; r < nRobots_; ++r)
   {
     if (false == robotsUsed_[r])
@@ -436,6 +440,7 @@ void ParticleFilter::resample()
 
     // printWeights("after resampling: ");
   }
+#endif
 
   // Resampling done, find the current state belief
   estimate();
@@ -449,6 +454,12 @@ void ParticleFilter::estimate()
                                       particles_[O_WEIGHT].end(), 0.0);
 
   // ROS_DEBUG("WeightSum when estimating = %f", weightSum);
+
+  subparticles_t normalizedWeights(particles_[O_WEIGHT]);
+
+  // Normalize the weights
+  for (uint i = 0; i < nParticles_; ++i)
+    normalizedWeights[i] = normalizedWeights[i] / weightSum;
 
   if (weightSum < MIN_WEIGHTSUM)
   {
@@ -465,12 +476,6 @@ void ParticleFilter::estimate()
     // Start next iteration
     return nextIteration();
   }
-
-  subparticles_t normalizedWeights(particles_[O_WEIGHT]);
-
-  // Normalize the weights
-  for (uint i = 0; i < nParticles_; ++i)
-    normalizedWeights[i] = normalizedWeights[i] / weightSum;
 
   // For each robot
   for (uint r = 0; r < nRobots_; ++r)

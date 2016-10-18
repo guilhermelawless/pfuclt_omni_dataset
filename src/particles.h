@@ -47,7 +47,7 @@
 namespace pfuclt_ptcls
 {
 
-typedef double pdata_t;
+typedef float pdata_t;
 
 using namespace pfuclt_aux;
 
@@ -571,7 +571,7 @@ public:
    * @param landmarkNumber - the landmark serial id
    * @param obs - the observation data as a structure defined in this file
    */
-  void saveLandmarkObservation(const uint robotNumber,
+  inline void saveLandmarkObservation(const uint robotNumber,
                                const uint landmarkNumber,
                                const LandmarkObservation obs)
   {
@@ -583,7 +583,7 @@ public:
    * @param robotNumber - the robot number in the team
    * @param _found - whether this landmark has been found
    */
-  void saveLandmarkObservation(const uint robotNumber,
+  inline void saveLandmarkObservation(const uint robotNumber,
                                const uint landmarkNumber, const bool _found)
   {
     bufLandmarkObservations_[robotNumber][landmarkNumber].found = _found;
@@ -603,7 +603,7 @@ public:
    * @param robotNumber - the robot number in the team
    * @param obs - the observation data as a structure defined in this file
    */
-  void saveTargetObservation(const uint robotNumber,
+  inline void saveTargetObservation(const uint robotNumber,
                              const TargetObservation obs)
   {
     bufTargetObservations_[robotNumber] = obs;
@@ -614,7 +614,7 @@ public:
    * @param robotNumber - the robot number in the team
    * @param _found - whether the target has been found
    */
-  void saveTargetObservation(const uint robotNumber, const bool _found)
+  inline void saveTargetObservation(const uint robotNumber, const bool _found)
   {
     bufTargetObservations_[robotNumber].found = _found;
   }
