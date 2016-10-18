@@ -378,7 +378,7 @@ protected:
   const uint nSubParticleSets_;
   const uint nLandmarks_;
   particles_t particles_;
-  particles_t weightComponents_;
+  //particles_t weightComponents_;
   RNGType seed_;
   std::vector<float> alpha_;
   bool initialized_;
