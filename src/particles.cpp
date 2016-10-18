@@ -117,13 +117,13 @@ void ParticleFilter::fuseRobots()
         Z[0] = m.x;
         Z[1] = m.y;
         Zcap[0] = (landmarksMap_[l].x - particles_[o_robot + O_X][p]) *
-            (cos(particles_[o_robot + O_THETA][p])) +
-            (landmarksMap_[l].y - particles_[o_robot + O_Y][p]) *
-            (sin(particles_[o_robot + O_THETA][p]));
+                      (cos(particles_[o_robot + O_THETA][p])) +
+                  (landmarksMap_[l].y - particles_[o_robot + O_Y][p]) *
+                      (sin(particles_[o_robot + O_THETA][p]));
         Zcap[1] = -(landmarksMap_[l].x - particles_[o_robot + O_X][p]) *
-            (sin(particles_[o_robot + O_THETA][p])) +
-            (landmarksMap_[l].y - particles_[o_robot + O_Y][p]) *
-            (cos(particles_[o_robot + O_THETA][p]));
+                      (sin(particles_[o_robot + O_THETA][p])) +
+                  (landmarksMap_[l].y - particles_[o_robot + O_Y][p]) *
+                      (cos(particles_[o_robot + O_THETA][p]));
         Z_Zcap[0] = Z[0] - Zcap[0];
         Z_Zcap[1] = Z[1] - Zcap[1];
         Q[0][0] = m.covXX;
@@ -135,8 +135,8 @@ void ParticleFilter::fuseRobots()
         Q_inv[1][0] = 0.0;
         Q_inv[1][1] = 1.0 / m.covYY;
         float expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] * Q_inv[0][0] +
-            Z_Zcap[1] * Z_Zcap[1] * Q_inv[1][1]);
-        float detValue = 1.0; //pow( (2*M_PI*Q[0][0]*Q[1][1]),-0.5);
+                               Z_Zcap[1] * Z_Zcap[1] * Q_inv[1][1]);
+        float detValue = 1.0; // pow( (2*M_PI*Q[0][0]*Q[1][1]),-0.5);
 #else
         // Observation in robot frame
         Eigen::Vector2d Zrobot(m.x, m.y);
@@ -160,7 +160,6 @@ void ParticleFilter::fuseRobots()
                                Z_Zcap(1) * Z_Zcap(1) / m.covYY);
         float detValue = 1.0; // pow( (2*M_PI*m.covXX*m.covYY),-0.5);
 
-
         ROS_DEBUG_COND(
             p == 0,
             "OMNI%d's particle 0 is at {%f;%f;%f}, sees landmark %d with "
@@ -170,7 +169,6 @@ void ParticleFilter::fuseRobots()
             particles_[o_robot + O_THETA][p], l, 100 * (detValue * exp(expArg)),
             Zglobal(0), Zglobal(1), LM(0), LM(1));
 #endif
-
 
         probabilities[r] *= detValue * exp(expArg);
         landmarksUsed[r]++;
@@ -213,8 +211,9 @@ void ParticleFilter::fuseRobots()
       // Re-order the particle subsets of this robot
       uint sort_index = sorted[p];
 
-      for (uint s = 0; s < nStatesPerRobot_; ++s)
-        particles_[o_robot + s][p] = dupParticles[o_robot + s][sort_index];
+      // Copy this subparticle set from dupParticles' sort_index particle
+      copyParticle(particles_, dupParticles, p, sort_index, o_robot,
+                   o_robot + nStatesPerRobot_ - 1);
 
       // Update the particle weight (will get multiplied nRobots times and get a
       // lower value)
@@ -380,8 +379,7 @@ void ParticleFilter::modifiedMultinomialResampler(uint startAt)
     while (randNo > cumulativeWeights[m])
       m++;
 
-    for (int k = 0; k < nSubParticleSets_; k++)
-      particles_[k][par] = duplicate[k][m];
+    copyParticle(particles_, duplicate, par, m);
   }
 
   // Every particle with the same weight

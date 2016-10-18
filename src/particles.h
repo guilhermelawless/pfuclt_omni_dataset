@@ -51,7 +51,8 @@ typedef double pdata_t;
 
 using namespace pfuclt_aux;
 
-typedef double (*estimatorFunc)(const std::vector<double>&, const std::vector<double>&);
+typedef double (*estimatorFunc)(const std::vector<double>&,
+                                const std::vector<double>&);
 
 typedef struct odometry_s
 {
@@ -148,8 +149,8 @@ protected:
 
       targetVelocityEstimator_s(const uint _numberVels, const uint _maxDataSize,
                                 estimatorFunc ptrFunc)
-        : numberVels(_numberVels), posVec(_numberVels, std::vector<double>()),
-          maxDataSize(_maxDataSize)
+          : numberVels(_numberVels), posVec(_numberVels, std::vector<double>()),
+            maxDataSize(_maxDataSize)
       {
         estimateVelocity = ptrFunc;
       }
@@ -187,11 +188,11 @@ protected:
      */
     State(const uint nStatesPerRobot_, const uint numberRobots,
           const std::vector<bool>& robotsBeingUsed)
-      : nStatesPerRobot(nStatesPerRobot_), nRobots(numberRobots), predicted(nRobots, false),
-        landmarkMeasurementsDone(nRobots, false),
-        targetMeasurementsDone(nRobots, false), robotsUsed(robotsBeingUsed),
-        targetVelocityEstimator(STATES_PER_TARGET, MAX_ESTIMATOR_STACK_SIZE,
-                                pfuclt_aux::linearRegressionSlope)
+        : nStatesPerRobot(nStatesPerRobot_), nRobots(numberRobots),
+          predicted(nRobots, false), landmarkMeasurementsDone(nRobots, false),
+          targetMeasurementsDone(nRobots, false), robotsUsed(robotsBeingUsed),
+          targetVelocityEstimator(STATES_PER_TARGET, MAX_ESTIMATOR_STACK_SIZE,
+                                  pfuclt_aux::linearRegressionSlope)
     {
       reset();
 
@@ -217,16 +218,16 @@ protected:
     {
       std::ostringstream oss;
       oss << "PF State:" << std::endl;
-      for(uint r=0; r<nRobots; ++r)
+      for (uint r = 0; r < nRobots; ++r)
       {
-        oss << "OMNI " << r+1 << "[ ";
-        for(uint k=0; k<nStatesPerRobot; ++k)
+        oss << "OMNI " << r + 1 << "[ ";
+        for (uint k = 0; k < nStatesPerRobot; ++k)
           oss << robots[r].pose[k] << " ";
         oss << "]" << std::endl;
       }
 
       oss << "Target [ ";
-      for(uint k=0; k<STATES_PER_TARGET; ++k)
+      for (uint k = 0; k < STATES_PER_TARGET; ++k)
         oss << target.pos[k] << " ";
       oss << "]" << std::endl;
 
@@ -338,10 +339,10 @@ public:
                const uint _nLandmarks, const std::vector<bool>& _robotsUsed,
                const std::vector<Landmark>& _landmarksMap,
                const std::vector<float> _alpha = std::vector<float>())
-      : nParticles(_nParticles), nTargets(_nTargets),
-        statesPerRobot(_statesPerRobot), nRobots(_nRobots),
-        nLandmarks(_nLandmarks), alpha(_alpha), robotsUsed(_robotsUsed),
-        landmarksMap(_landmarksMap)
+        : nParticles(_nParticles), nTargets(_nTargets),
+          statesPerRobot(_statesPerRobot), nRobots(_nRobots),
+          nLandmarks(_nLandmarks), alpha(_alpha), robotsUsed(_robotsUsed),
+          landmarksMap(_landmarksMap)
     {
       // If vector alpha is not provided, use a default one
       if (alpha.empty())
@@ -359,9 +360,9 @@ public:
       if (alpha.size() != 4 * nRobots)
       {
         ROS_ERROR(
-              "The provided vector alpha is not of the correct size. Returning "
-              "without particle filter! (should have %d=nRobots*4 elements)",
-              nRobots * 4);
+            "The provided vector alpha is not of the correct size. Returning "
+            "without particle filter! (should have %d=nRobots*4 elements)",
+            nRobots * 4);
         return;
       }
     }
@@ -388,9 +389,42 @@ protected:
   struct State state_;
 
   /**
+   * @brief copyParticle - copies a whole particle from one particle set to
+   * another
+   * @param p_To - the destination particle set
+   * @param p_From - the origin particle set
+   * @param i_To - the index of the particle to copy to
+   * @param i_From - the index of the particle to copy from
+   * @remark Make sure the sizes of p_To and p_From are the same
+   */
+  inline void copyParticle(particles_t& p_To, particles_t& p_From, uint i_To,
+                           uint i_From)
+  {
+    copyParticle(p_To, p_From, i_To, i_From, 0, p_To.size());
+  }
+
+  /**
+   * @brief copyParticle - copies some subparticle sets of a particle from one
+   * particle set to another
+   * @param p_To - the destination particle set
+   * @param p_From - the origin particle set
+   * @param i_To - the index of the particle to copy to
+   * @param i_From - the index of the particle to copy from
+   * @param subFirst - the first subparticle set index
+   * @param subLast - the last subparticle set index
+   * @remark Make sure the sizes of p_To and p_From are the same
+   */
+  inline void copyParticle(particles_t& p_To, particles_t& p_From, uint i_To,
+                           uint i_From, uint subFirst, uint subLast)
+  {
+    for (uint k = subFirst; k <= subLast; ++k)
+      p_To[k][i_To] = p_From[k][i_From];
+  }
+
+  /**
    * @brief resetWeights - assign the value val to all particle weights
    */
-  void resetWeights(pdata_t val) { assign(val, O_WEIGHT); }
+  inline void resetWeights(pdata_t val) { assign(val, O_WEIGHT); }
 
   /**
    * @brief predictTarget - predict target state step
@@ -409,7 +443,8 @@ protected:
   void fuseTarget();
 
   /**
-   * @brief modifiedMultinomialResampler - a costly resampler that keeps 50% of the particles and implements the multinomial resampler on the rest
+   * @brief modifiedMultinomialResampler - a costly resampler that keeps 50% of
+   * the particles and implements the multinomial resampler on the rest
    */
   void modifiedMultinomialResampler(uint startAt);
 
@@ -419,7 +454,8 @@ protected:
   void resample();
 
   /**
-   * @brief resample - state estimation through weighted means, and linear regression for the target velocity
+   * @brief resample - state estimation through weighted means, and linear
+   * regression for the target velocity
    */
   void estimate();
 
@@ -476,7 +512,7 @@ public:
    * @param index - the subparticle set index number to access
    * @return the subparticles_t object reference located at particles_[index]
    */
-  subparticles_t& operator[](int index) { return particles_[index]; }
+  inline subparticles_t& operator[](int index) { return particles_[index]; }
 
   /**
    * @brief operator [] - const version of the array subscripting access, when
@@ -485,7 +521,7 @@ public:
    * @return a const subparticles_t object reference located at
    * particles_[index]
    */
-  const subparticles_t& operator[](int index) const
+  inline const subparticles_t& operator[](int index) const
   {
     return particles_[index];
   }
@@ -611,7 +647,7 @@ public:
      * @param _robotHeight - the fixed robot height
      */
     PublishData(ros::NodeHandle& _nh, float _robotHeight)
-      : nh(_nh), robotHeight(_robotHeight)
+        : nh(_nh), robotHeight(_robotHeight)
     {
     }
   };
@@ -619,8 +655,8 @@ public:
 private:
   ros::Subscriber GT_sub_;
   ros::Publisher robotStatePublisher_, targetStatePublisher_,
-  particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_,
-  targetGTPublisher_, targetParticlePublisher_;
+      particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_,
+      targetGTPublisher_, targetParticlePublisher_;
   std::vector<ros::Publisher> particleStdPublishers_;
   std::vector<ros::Publisher> robotGTPublishers_;
   std::vector<ros::Publisher> robotEstimatePublishers_;
