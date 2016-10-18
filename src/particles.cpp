@@ -120,7 +120,8 @@ void ParticleFilter::fuseRobots()
                                             particles_[o_robot + O_Y][p]);
 
         // Landmark in global frame
-        Eigen::Matrix<pdata_t, 2, 1> LMglobal(landmarksMap_[l].x, landmarksMap_[l].y);
+        Eigen::Matrix<pdata_t, 2, 1> LMglobal(landmarksMap_[l].x,
+                                              landmarksMap_[l].y);
 
         // Landmark to robot frame
         Eigen::Matrix<pdata_t, 2, 1> LMrobot = Rrobot * (LMglobal - Srobot);
@@ -133,7 +134,7 @@ void ParticleFilter::fuseRobots()
         // not allow for transposing a non-dynamic matrix
         float expArg = -0.5 * (Zerr(O_X) * Zerr(O_X) / m.covXX +
                                Zerr(O_Y) * Zerr(O_Y) / m.covYY);
-        float detValue = pow((2 * M_PI * m.covXX * m.covYY), -0.5);
+        float detValue = 1.0; // pow((2 * M_PI * m.covXX * m.covYY), -0.5);
 
         ROS_DEBUG_COND(
             p == 0,
@@ -259,22 +260,24 @@ void ParticleFilter::fuseTarget()
         // Observation in robot frame
         Eigen::Matrix<pdata_t, 3, 1> Zrobot(obs.x, obs.y, obs.z);
 
-        // Transformation to global frame
+        // Robot pose <=> frame
         // Affine creates a (Dim+1) * (Dim+1) matrix and sets
         // last row to [0 0 ... 1]
-        Eigen::Transform<pdata_t, 2, Eigen::Affine> toGlobal(
+        Eigen::Transform<pdata_t, 2, Eigen::Affine> Rrobot(
             Eigen::Rotation2D<pdata_t>(-particles_[o_robot + O_THETA][m]));
         Eigen::Matrix<pdata_t, 3, 1> Srobot(particles_[o_robot + O_X][m],
                                             particles_[o_robot + O_Y][m], 0.0);
-        Eigen::Matrix<pdata_t, 3, 1> Zglobal = Srobot + toGlobal * Zrobot;
+
+        // Target in global frame
+        Eigen::Matrix<pdata_t, 3, 1> Tglobal(particles_[O_TARGET + O_TX][p],
+                                             particles_[O_TARGET + O_TY][p],
+                                             particles_[O_TARGET + O_TZ][p]);
+
+        // Target to local frame
+        Eigen::Matrix<pdata_t, 3, 1> Trobot = Rrobot * (Tglobal - Srobot);
 
         // Error in observation
-        Eigen::Matrix<pdata_t, 3, 1> Target(particles_[O_TARGET + O_TX][p],
-                                            particles_[O_TARGET + O_TY][p],
-                                            particles_[O_TARGET + O_TZ][p]);
-
-        // TODO should the Y frame be inverted?
-        Eigen::Matrix<pdata_t, 3, 1> Z_Zcap = Zrobot - (Target - Zglobal);
+        Eigen::Matrix<pdata_t, 3, 1> Zerr = Trobot - Zrobot;
 
         // The values of interest to the particle weights
         // Note: using Eigen wasn't of particular interest here since it does
@@ -284,11 +287,12 @@ void ParticleFilter::fuseTarget()
         // Qinv - inverse of the diagonal matrix, consists of inverting each
         // value in the diagonal
 
-        float expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / obs.covXX +
-                               Z_Zcap[1] * Z_Zcap[1] / obs.covYY +
-                               Z_Zcap[2] * Z_Zcap[2] / 0.1);
+        float expArg =
+            -0.5 * (Zerr[0] * Zerr[0] / obs.covXX +
+                    Zerr[1] * Zerr[1] / obs.covYY + Zerr[2] * Zerr[2] / 0.1);
 
-        float detValue = 1.0;
+        float detValue =
+            1.0; // pow((2 * M_PI * obs.covXX * obs.covYY * 0.1), -0.5);
 
         probabilities[r] *= detValue * exp(expArg);
       }
@@ -647,9 +651,6 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
   float alpha[4] = { alpha_[robotNumber * 4 + 0], alpha_[robotNumber * 4 + 1],
                      alpha_[robotNumber * 4 + 2], alpha_[robotNumber * 4 + 3] };
 
-  ROS_DEBUG("Predicting for OMNI%d with alphas [%f,%f,%f,%f]", robotNumber + 1,
-            alpha[0], alpha[1], alpha[2], alpha[3]);
-
   // Determining the propagation of the robot state through odometry
   pdata_t deltaRot = atan2(odom.y, odom.x);
   pdata_t deltaTrans = sqrt(odom.x * odom.x + odom.y * odom.y);
@@ -665,13 +666,6 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
 
   normal_distribution<> deltaFinalRotEffective(
       deltaFinalRot, alpha[0] * fabs(deltaFinalRot) + alpha[1] * deltaTrans);
-
-  ROS_DEBUG("When predicting for OMNI%d used means [%f,%f,%f] and stdDevs "
-            "[%f,%f,%f] for Rot, Trans and FinalRot",
-            robotNumber + 1, deltaRotEffective.mean(),
-            deltaTransEffective.mean(), deltaFinalRotEffective.mean(),
-            deltaRotEffective.sigma(), deltaTransEffective.sigma(),
-            deltaFinalRotEffective.sigma());
 
   for (int i = 0; i < nParticles_; i++)
   {
