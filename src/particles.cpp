@@ -16,6 +16,7 @@
 //#define DONT_RESAMPLE
 //#define DONT_FUSE_LANDMARKS true
 //#define DONT_FUSE_TARGET true
+#define ALTERNATIVE_TARGET_FUSE true
 #define BROADCAST_TF_AND_POSES true
 #define PUBLISH_PTCLS true
 
@@ -245,7 +246,7 @@ void ParticleFilter::fuseTarget()
     // by the target subparticle to the full weight is maximum
     for (uint p = 0; p < nParticles_; ++p)
     {
-      std::vector<pdata_t> probabilities(nRobots_, 1.0);
+      std::vector<pdata_t> probabilities(nRobots_, 0.0);
 
       // Observations of the target by all robots
       for (uint r = 0; r < nRobots_; ++r)
@@ -257,6 +258,32 @@ void ParticleFilter::fuseTarget()
 
         TargetObservation& obs = bufTargetObservations_[r];
 
+#ifdef ALTERNATIVE_TARGET_FUSE
+        float Z[3], Zcap[3], Q[3][3], Q_inv[3][3], Z_Zcap[3];
+        Z[0] = obs.x;
+        Z[1] = obs.y;
+        Z[2] = obs.z;
+        Zcap[0] =
+            (particles_[O_TARGET + O_TX][p] - particles_[o_robot + O_X][m]) *
+                (cos(particles_[o_robot + O_THETA][m])) +
+            (particles_[O_TARGET + O_TY][p] - particles_[o_robot + O_Y][m]) *
+                (sin(particles_[o_robot + O_THETA][m]));
+        Zcap[1] =
+            -(particles_[O_TARGET + O_TX][p] - particles_[o_robot + O_X][m]) *
+                (sin(particles_[o_robot + O_THETA][m])) +
+            (particles_[O_TARGET + O_TY][p] - particles_[o_robot + O_Y][m]) *
+                (cos(particles_[o_robot + O_THETA][m]));
+        Zcap[2] = particles_[O_TARGET + O_TZ][p];
+        Z_Zcap[0] = Z[0] - Zcap[0];
+        Z_Zcap[1] = Z[1] - Zcap[1];
+        Z_Zcap[2] = Z[2] - Zcap[2];
+
+        float expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / obs.covXX +
+                               Z_Zcap[1] * Z_Zcap[1] / obs.covYY +
+                               Z_Zcap[2] * Z_Zcap[2] * 10.0);
+        float detValue = 1.0; // powf( (2*PI*Q[0][0]*Q[1][1]*Q[2][2]),-0.5);
+
+#else
         // Observation in robot frame
         Eigen::Matrix<pdata_t, 3, 1> Zrobot(obs.x, obs.y, obs.z);
 
@@ -293,8 +320,8 @@ void ParticleFilter::fuseTarget()
 
         float detValue =
             1.0; // pow((2 * M_PI * obs.covXX * obs.covYY * 0.1), -0.5);
-
-        probabilities[r] *= detValue * exp(expArg);
+#endif
+        probabilities[r] = detValue * exp(expArg);
       }
 
       // Calculate total weight contributed by this particle
