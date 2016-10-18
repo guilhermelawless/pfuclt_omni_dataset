@@ -14,7 +14,7 @@
 #include <sensor_msgs/PointCloud.h>
 
 //#define DONT_FUSE_LANDMARKS true
-//#define USE_ALTERNATIVE_LANDMARK_FUSE true
+#define USE_ALTERNATIVE_LANDMARK_FUSE true
 #define DONT_FUSE_TARGET true
 #define BROADCAST_TF_AND_POSES true
 #define PUBLISH_PTCLS true
@@ -182,6 +182,8 @@ void ParticleFilter::fuseRobots()
 
       if (landmarksUsed[r] > 0)
         weightComponents_[r][p] = probabilities[r];
+      else
+        ROS_WARN("No landmarks used in this timestep for OMNI%d", r+1);
     }
   }
 #endif
