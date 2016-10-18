@@ -36,7 +36,7 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
       data.nRobots, std::vector<LandmarkObservation>(data.nLandmarks)),
     bufTargetObservations_(data.nRobots), prevTime_(ros::Time::now()),
     newTime_(ros::Time::now()), iterationTime_(ITERATION_TIME_DEFAULT),
-    //weightComponents_(data.nRobots, subparticles_t(data.nParticles, 0.0)),
+    weightComponents_(data.nRobots, subparticles_t(data.nParticles, 0.0)),
     state_(data.statesPerRobot, data.nRobots, data.robotsUsed)
 {
 
@@ -92,8 +92,6 @@ void ParticleFilter::fuseRobots()
   ROS_DEBUG("Fusing Robots");
 
   state_.robotsFused = true;
-
-  std::vector<subparticles_t> weightComponents(nRobots_, particles_[O_WEIGHT]);
 
 #ifndef DONT_FUSE_LANDMARKS
   for (uint p = 0; p < nParticles_; ++p)
@@ -183,7 +181,7 @@ void ParticleFilter::fuseRobots()
         continue;
 
       if (landmarksUsed[r] > 0)
-        weightComponents[r][p] = probabilities[r];
+        weightComponents_[r][p] = probabilities[r];
     }
   }
 #endif
@@ -200,7 +198,7 @@ void ParticleFilter::fuseRobots()
 
     // Create a vector of indexes according to a descending order of the weights
     // components of robot r
-    std::vector<uint> sorted = order_index<pdata_t>(weightComponents[r], DESC);
+    std::vector<uint> sorted = order_index<pdata_t>(weightComponents_[r], DESC);
 
     // For every particle
     for (uint p = 0; p < nParticles_; ++p)
@@ -214,7 +212,7 @@ void ParticleFilter::fuseRobots()
 
       // Update the particle weight (will get multiplied nRobots times and get a
       // lower value)
-      particles_[O_WEIGHT][p] *= weightComponents[r][sort_index];
+      particles_[O_WEIGHT][p] *= weightComponents_[r][sort_index];
     }
   }
 
