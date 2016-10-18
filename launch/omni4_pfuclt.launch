@@ -64,6 +64,6 @@
         type="play"
         name="player"
         output="screen"
-        args="--clock --quiet $(arg path)/OMNI1_odomballLandmarks.bag $(arg path)/OMNI3_odomballLandmarks.bag $(arg path)/OMNI4_odomballLandmarks.bag $(arg path)/OMNI5_odomballLandmarks.bag $(arg path)/four_robot_experiment_GT.bag"
+        args="--quiet $(arg path)/OMNI1_odomballLandmarks.bag $(arg path)/OMNI3_odomballLandmarks.bag $(arg path)/OMNI4_odomballLandmarks.bag $(arg path)/OMNI5_odomballLandmarks.bag $(arg path)/four_robot_experiment_GT.bag"
     />
 </launch>
