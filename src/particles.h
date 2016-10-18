@@ -149,8 +149,8 @@ protected:
 
       targetVelocityEstimator_s(const uint _numberVels, const uint _maxDataSize,
                                 estimatorFunc ptrFunc)
-          : numberVels(_numberVels), posVec(_numberVels, std::vector<double>()),
-            maxDataSize(_maxDataSize)
+        : numberVels(_numberVels), posVec(_numberVels, std::vector<double>()),
+          maxDataSize(_maxDataSize)
       {
         estimateVelocity = ptrFunc;
       }
@@ -188,11 +188,11 @@ protected:
      */
     State(const uint nStatesPerRobot_, const uint numberRobots,
           const std::vector<bool>& robotsBeingUsed)
-        : nStatesPerRobot(nStatesPerRobot_), nRobots(numberRobots),
-          predicted(nRobots, false), landmarkMeasurementsDone(nRobots, false),
-          targetMeasurementsDone(nRobots, false), robotsUsed(robotsBeingUsed),
-          targetVelocityEstimator(STATES_PER_TARGET, MAX_ESTIMATOR_STACK_SIZE,
-                                  pfuclt_aux::linearRegressionSlope)
+      : nStatesPerRobot(nStatesPerRobot_), nRobots(numberRobots),
+        predicted(nRobots, false), landmarkMeasurementsDone(nRobots, false),
+        targetMeasurementsDone(nRobots, false), robotsUsed(robotsBeingUsed),
+        targetVelocityEstimator(STATES_PER_TARGET, MAX_ESTIMATOR_STACK_SIZE,
+                                pfuclt_aux::linearRegressionSlope)
     {
       reset();
 
@@ -339,10 +339,10 @@ public:
                const uint _nLandmarks, const std::vector<bool>& _robotsUsed,
                const std::vector<Landmark>& _landmarksMap,
                const std::vector<float> _alpha = std::vector<float>())
-        : nParticles(_nParticles), nTargets(_nTargets),
-          statesPerRobot(_statesPerRobot), nRobots(_nRobots),
-          nLandmarks(_nLandmarks), alpha(_alpha), robotsUsed(_robotsUsed),
-          landmarksMap(_landmarksMap)
+      : nParticles(_nParticles), nTargets(_nTargets),
+        statesPerRobot(_statesPerRobot), nRobots(_nRobots),
+        nLandmarks(_nLandmarks), alpha(_alpha), robotsUsed(_robotsUsed),
+        landmarksMap(_landmarksMap)
     {
       // If vector alpha is not provided, use a default one
       if (alpha.empty())
@@ -360,9 +360,9 @@ public:
       if (alpha.size() != 4 * nRobots)
       {
         ROS_ERROR(
-            "The provided vector alpha is not of the correct size. Returning "
-            "without particle filter! (should have %d=nRobots*4 elements)",
-            nRobots * 4);
+              "The provided vector alpha is not of the correct size. Returning "
+              "without particle filter! (should have %d=nRobots*4 elements)",
+              nRobots * 4);
         return;
       }
     }
@@ -400,7 +400,7 @@ protected:
   inline void copyParticle(particles_t& p_To, particles_t& p_From, uint i_To,
                            uint i_From)
   {
-    copyParticle(p_To, p_From, i_To, i_From, 0, p_To.size());
+    copyParticle(p_To, p_From, i_To, i_From, 0, p_To.size()-1);
   }
 
   /**
@@ -647,7 +647,7 @@ public:
      * @param _robotHeight - the fixed robot height
      */
     PublishData(ros::NodeHandle& _nh, float _robotHeight)
-        : nh(_nh), robotHeight(_robotHeight)
+      : nh(_nh), robotHeight(_robotHeight)
     {
     }
   };
@@ -655,8 +655,8 @@ public:
 private:
   ros::Subscriber GT_sub_;
   ros::Publisher robotStatePublisher_, targetStatePublisher_,
-      particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_,
-      targetGTPublisher_, targetParticlePublisher_;
+  particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_,
+  targetGTPublisher_, targetParticlePublisher_;
   std::vector<ros::Publisher> particleStdPublishers_;
   std::vector<ros::Publisher> robotGTPublishers_;
   std::vector<ros::Publisher> robotEstimatePublishers_;
