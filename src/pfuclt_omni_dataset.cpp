@@ -340,7 +340,7 @@ void Robot::landmarkDataCallback(
       pfuclt_ptcls::LandmarkObservation obs;
       obs.found = true;
       obs.x = landmarkData->x[i];
-      obs.y = -landmarkData->y[i]; // TODO check if correct to invert Y frame
+      obs.y = landmarkData->y[i];
       obs.d = sqrt(obs.x * obs.x + obs.y * obs.y);
       obs.phi = atan2(obs.y, obs.x);
       obs.covDD =
