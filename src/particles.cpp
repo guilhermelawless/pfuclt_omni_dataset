@@ -150,22 +150,25 @@ void ParticleFilter::fuseRobots()
         // Observation in robot frame
         Eigen::Matrix<pdata_t, 2, 1> Zrobot(m.x, m.y);
 
-        // Transformation to global frame
-        Eigen::Rotation2D<pdata_t> Rrobot(particles_[o_robot + O_THETA][p]);
+        // Robot pose <=> frame
+        Eigen::Rotation2D<pdata_t> Rrobot(-particles_[o_robot + O_THETA][p]);
         Eigen::Matrix<pdata_t, 2, 1> Srobot(particles_[o_robot + O_X][p],
                                             particles_[o_robot + O_Y][p]);
-        Eigen::Matrix<pdata_t, 2, 1> Zglobal = Srobot + Rrobot * Zrobot;
+
+        // Landmark in global frame
+        Eigen::Matrix<pdata_t, 2, 1> LMglobal(landmarksMap_[l].x, landmarksMap_[l].y);
+
+        // Landmark to robot frame
+        Eigen::Matrix<pdata_t, 2, 1> LMrobot = Rrobot * (LMglobal - Srobot);
 
         // Error in observation
-        Eigen::Matrix<pdata_t, 2, 1> LM(landmarksMap_[l].x, landmarksMap_[l].y);
-
-        Eigen::Matrix<pdata_t, 2, 1> Zglobal_err = LM - Zglobal;
+        Eigen::Matrix<pdata_t, 2, 1> Zerr = LMrobot - Zrobot;
 
         // The values of interest to the particle weights
         // Note: using Eigen wasn't of particular interest here since it does
         // not allow for transposing a non-dynamic matrix
-        float expArg = -0.5 * (Zglobal_err(O_X) * Zglobal_err(O_X) / m.covXX +
-                               Zglobal_err(O_Y) * Zglobal_err(O_Y) / m.covYY);
+        float expArg = -0.5 * (Zerr(O_X) * Zerr(O_X) / m.covXX +
+                               Zerr(O_Y) * Zerr(O_Y) / m.covYY);
         float detValue = pow((2 * M_PI * m.covXX * m.covYY), -0.5);
 
         ROS_DEBUG_COND(
@@ -174,7 +177,7 @@ void ParticleFilter::fuseRobots()
             "certainty %f%%, and error {%f;%f}",
             r + 1, particles_[o_robot + O_X][p], particles_[o_robot + O_Y][p],
             particles_[o_robot + O_THETA][p], l, 100 * (detValue * exp(expArg)),
-            Zglobal_err(0), Zglobal_err(1));
+            Zerr(0), Zerr(1));
 #endif
 
         probabilities[r] *= detValue * exp(expArg);
