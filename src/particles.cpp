@@ -139,19 +139,19 @@ void ParticleFilter::fuseRobots()
         float detValue = 1.0; // pow( (2*M_PI*Q[0][0]*Q[1][1]),-0.5);
 #else
         // Observation in robot frame
-        Eigen::Vector2d Zrobot(m.x, m.y);
+        Eigen::Matrix<pdata_t, 2, 1> Zrobot(m.x, m.y);
 
         // Transformation to global frame
-        Eigen::Rotation2Dd Rrobot(-particles_[o_robot + O_THETA][p]);
-        Eigen::Vector2d Srobot(particles_[o_robot + O_X][p],
-                               particles_[o_robot + O_Y][p]);
-        Eigen::Vector2d Zglobal = Srobot + Rrobot * Zrobot;
+        Eigen::Rotation2D<pdata_t> Rrobot(-particles_[o_robot + O_THETA][p]);
+        Eigen::Matrix<pdata_t, 2, 1> Srobot(particles_[o_robot + O_X][p],
+                                            particles_[o_robot + O_Y][p]);
+        Eigen::Matrix<pdata_t, 2, 1> Zglobal = Srobot + Rrobot * Zrobot;
 
         // Error in observation
-        Eigen::Vector2d LM(landmarksMap_[l].x, landmarksMap_[l].y);
+        Eigen::Matrix<pdata_t, 2, 1> LM(landmarksMap_[l].x, landmarksMap_[l].y);
 
-        Eigen::Vector2d Zglobal_err = LM - Zglobal;
-        Eigen::Vector2d Z_Zcap = Zrobot - Zglobal_err;
+        Eigen::Matrix<pdata_t, 2, 1> Zglobal_err = LM - Zglobal;
+        Eigen::Matrix<pdata_t, 2, 1> Z_Zcap = Zrobot - Zglobal_err;
 
         // The values of interest to the particle weights
         // Note: using Eigen wasn't of particular interest here since it does
@@ -283,24 +283,24 @@ void ParticleFilter::fuseTarget()
         TargetObservation& obs = bufTargetObservations_[r];
 
         // Observation in robot frame
-        Eigen::Vector3d Zrobot(obs.x, obs.y, obs.z);
+        Eigen::Matrix<pdata_t, 3, 1> Zrobot(obs.x, obs.y, obs.z);
 
         // Transformation to global frame
         // Affine creates a (Dim+1) * (Dim+1) matrix and sets
         // last row to [0 0 ... 1]
         Eigen::Transform<pdata_t, 2, Eigen::Affine> toGlobal(
-            Eigen::Rotation2Dd(-particles_[o_robot + O_THETA][m]));
-        Eigen::Vector3d Srobot(particles_[o_robot + O_X][m],
-                               particles_[o_robot + O_Y][m], 0.0);
-        Eigen::Vector3d Zglobal = Srobot + toGlobal * Zrobot;
+            Eigen::Rotation2D<pdata_t>(-particles_[o_robot + O_THETA][m]));
+        Eigen::Matrix<pdata_t, 3, 1> Srobot(particles_[o_robot + O_X][m],
+                                            particles_[o_robot + O_Y][m], 0.0);
+        Eigen::Matrix<pdata_t, 3, 1> Zglobal = Srobot + toGlobal * Zrobot;
 
         // Error in observation
-        Eigen::Vector3d Target(particles_[O_TARGET + O_TX][p],
-                               particles_[O_TARGET + O_TY][p],
-                               particles_[O_TARGET + O_TZ][p]);
+        Eigen::Matrix<pdata_t, 3, 1> Target(particles_[O_TARGET + O_TX][p],
+                                            particles_[O_TARGET + O_TY][p],
+                                            particles_[O_TARGET + O_TZ][p]);
 
         // TODO should the Y frame be inverted?
-        Eigen::Vector3d Z_Zcap = Zrobot - (Target - Zglobal);
+        Eigen::Matrix<pdata_t, 3, 1> Z_Zcap = Zrobot - (Target - Zglobal);
 
         // The values of interest to the particle weights
         // Note: using Eigen wasn't of particular interest here since it does
