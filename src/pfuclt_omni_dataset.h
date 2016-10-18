@@ -108,7 +108,7 @@ public:
    * @param pf - reference to the particle filter to be used for this robot
    * @param robotNumber - the assigned number in the team
    */
-  Robot(ros::NodeHandle& nh, RobotFactory* parent, Eigen::Isometry2d initPose,
+  Robot(ros::NodeHandle& nh, RobotFactory* parent,
         ParticleFilter* pf, uint robotNumber);
 
   /**

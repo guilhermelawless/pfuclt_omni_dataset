@@ -149,8 +149,8 @@ protected:
 
       targetVelocityEstimator_s(const uint _numberVels, const uint _maxDataSize,
                                 estimatorFunc ptrFunc)
-        : numberVels(_numberVels), posVec(_numberVels, std::vector<double>()),
-          maxDataSize(_maxDataSize)
+          : numberVels(_numberVels), posVec(_numberVels, std::vector<double>()),
+            maxDataSize(_maxDataSize)
       {
         estimateVelocity = ptrFunc;
       }
@@ -188,11 +188,11 @@ protected:
      */
     State(const uint nStatesPerRobot_, const uint numberRobots,
           const std::vector<bool>& robotsBeingUsed)
-      : nStatesPerRobot(nStatesPerRobot_), nRobots(numberRobots),
-        predicted(nRobots, false), landmarkMeasurementsDone(nRobots, false),
-        targetMeasurementsDone(nRobots, false), robotsUsed(robotsBeingUsed),
-        targetVelocityEstimator(STATES_PER_TARGET, MAX_ESTIMATOR_STACK_SIZE,
-                                pfuclt_aux::linearRegressionSlope)
+        : nStatesPerRobot(nStatesPerRobot_), nRobots(numberRobots),
+          predicted(nRobots, false), landmarkMeasurementsDone(nRobots, false),
+          targetMeasurementsDone(nRobots, false), robotsUsed(robotsBeingUsed),
+          targetVelocityEstimator(STATES_PER_TARGET, MAX_ESTIMATOR_STACK_SIZE,
+                                  pfuclt_aux::linearRegressionSlope)
     {
       reset();
 
@@ -339,10 +339,10 @@ public:
                const uint _nLandmarks, const std::vector<bool>& _robotsUsed,
                const std::vector<Landmark>& _landmarksMap,
                const std::vector<float> _alpha = std::vector<float>())
-      : nParticles(_nParticles), nTargets(_nTargets),
-        statesPerRobot(_statesPerRobot), nRobots(_nRobots),
-        nLandmarks(_nLandmarks), alpha(_alpha), robotsUsed(_robotsUsed),
-        landmarksMap(_landmarksMap)
+        : nParticles(_nParticles), nTargets(_nTargets),
+          statesPerRobot(_statesPerRobot), nRobots(_nRobots),
+          nLandmarks(_nLandmarks), alpha(_alpha), robotsUsed(_robotsUsed),
+          landmarksMap(_landmarksMap)
     {
       // If vector alpha is not provided, use a default one
       if (alpha.empty())
@@ -360,9 +360,9 @@ public:
       if (alpha.size() != 4 * nRobots)
       {
         ROS_ERROR(
-              "The provided vector alpha is not of the correct size. Returning "
-              "without particle filter! (should have %d=nRobots*4 elements)",
-              nRobots * 4);
+            "The provided vector alpha is not of the correct size. Returning "
+            "without particle filter! (should have %d=nRobots*4 elements)",
+            nRobots * 4);
         return;
       }
     }
@@ -400,7 +400,7 @@ protected:
   inline void copyParticle(particles_t& p_To, particles_t& p_From, uint i_To,
                            uint i_From)
   {
-    copyParticle(p_To, p_From, i_To, i_From, 0, p_To.size()-1);
+    copyParticle(p_To, p_From, i_To, i_From, 0, p_To.size() - 1);
   }
 
   /**
@@ -424,7 +424,10 @@ protected:
   /**
    * @brief resetWeights - assign the value val to all particle weights
    */
-  inline void resetWeights(pdata_t val) { assign(val, O_WEIGHT); }
+  inline void resetWeights(pdata_t val)
+  {
+    particles_[O_WEIGHT].assign(particles_[O_WEIGHT].size(), val);
+  }
 
   /**
    * @brief predictTarget - predict target state step
@@ -534,12 +537,16 @@ public:
 
   /**
    * @brief init - initialize the particle filter set with custom values
-   * @param custom - vector of doubles with the following form: <lvalue, rvalue,
+   * @param customRandInit - vector of doubles with the following form: <lvalue,
+   * rvalue,
    * lvalue, rvalue, ...>
    * which will be used as the limits of the uniform distribution.
    * This vector should have a size equal to twice the number of dimensions
+   * @param customPosInit - vector of doubles with the following form
+   * <x,y,theta,x,y,theta,...> with size equal to nStatesPerRobot*nRobots
    */
-  void init(const std::vector<double> custom);
+  void init(const std::vector<double>& customRandInit,
+            const std::vector<double>& customPosInit);
 
   /**
    * @brief predict - prediction step in the particle filter set with the
@@ -572,8 +579,8 @@ public:
    * @param obs - the observation data as a structure defined in this file
    */
   inline void saveLandmarkObservation(const uint robotNumber,
-                               const uint landmarkNumber,
-                               const LandmarkObservation obs)
+                                      const uint landmarkNumber,
+                                      const LandmarkObservation obs)
   {
     bufLandmarkObservations_[robotNumber][landmarkNumber] = obs;
   }
@@ -584,7 +591,8 @@ public:
    * @param _found - whether this landmark has been found
    */
   inline void saveLandmarkObservation(const uint robotNumber,
-                               const uint landmarkNumber, const bool _found)
+                                      const uint landmarkNumber,
+                                      const bool _found)
   {
     bufLandmarkObservations_[robotNumber][landmarkNumber].found = _found;
   }
@@ -604,7 +612,7 @@ public:
    * @param obs - the observation data as a structure defined in this file
    */
   inline void saveTargetObservation(const uint robotNumber,
-                             const TargetObservation obs)
+                                    const TargetObservation obs)
   {
     bufTargetObservations_[robotNumber] = obs;
   }
@@ -647,7 +655,7 @@ public:
      * @param _robotHeight - the fixed robot height
      */
     PublishData(ros::NodeHandle& _nh, float _robotHeight)
-      : nh(_nh), robotHeight(_robotHeight)
+        : nh(_nh), robotHeight(_robotHeight)
     {
     }
   };
@@ -655,8 +663,8 @@ public:
 private:
   ros::Subscriber GT_sub_;
   ros::Publisher robotStatePublisher_, targetStatePublisher_,
-  particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_,
-  targetGTPublisher_, targetParticlePublisher_;
+      particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_,
+      targetGTPublisher_, targetParticlePublisher_;
   std::vector<ros::Publisher> particleStdPublishers_;
   std::vector<ros::Publisher> robotGTPublishers_;
   std::vector<ros::Publisher> robotEstimatePublishers_;

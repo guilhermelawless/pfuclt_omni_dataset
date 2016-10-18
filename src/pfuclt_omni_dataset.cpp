@@ -64,12 +64,12 @@ ros::Time timeInit;
 RobotFactory::RobotFactory(ros::NodeHandle& nh) : nh_(nh)
 {
   ParticleFilter::PFinitData initData(
-        N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS, NUM_LANDMARKS,
-        PLAYING_ROBOTS, landmarks, CUSTOM_RANDOM_ALPHA);
+      N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS, NUM_LANDMARKS,
+      PLAYING_ROBOTS, landmarks, CUSTOM_RANDOM_ALPHA);
 
   if (PUBLISH)
     pf = boost::shared_ptr<PFPublisher>(
-          new PFPublisher(initData, PFPublisher::PublishData(nh, ROB_HT)));
+        new PFPublisher(initData, PFPublisher::PublishData(nh, ROB_HT)));
   else
     pf = boost::shared_ptr<ParticleFilter>(new ParticleFilter(initData));
 
@@ -80,13 +80,8 @@ RobotFactory::RobotFactory(ros::NodeHandle& nh) : nh_(nh)
   {
     if (PLAYING_ROBOTS[rn])
     {
-      Eigen::Isometry2d initialRobotPose(
-            Eigen::Rotation2Dd(-M_PI).toRotationMatrix());
-      initialRobotPose.translation() =
-          Eigen::Vector2d(POS_INIT[2 * rn + 0], POS_INIT[2 * rn + 1]);
-
-      robots_.push_back(Robot_ptr(
-                          new Robot(nh_, this, initialRobotPose, pf->getPFReference(), rn)));
+      robots_.push_back(
+          Robot_ptr(new Robot(nh_, this, pf->getPFReference(), rn)));
     }
   }
 }
@@ -97,7 +92,7 @@ void RobotFactory::tryInitializeParticles()
     return;
 
   if (USE_CUSTOM_VALUES)
-    pf->init(CUSTOM_PARTICLE_INIT);
+    pf->init(CUSTOM_PARTICLE_INIT, POS_INIT);
   else
     pf->init();
 }
@@ -149,26 +144,25 @@ void Robot::startNow()
            ROS_TDIFF(timeStarted_));
 }
 
-Robot::Robot(ros::NodeHandle& nh, RobotFactory* parent,
-             Eigen::Isometry2d initPose, ParticleFilter* pf, uint robotNumber)
-  : parent_(parent), initPose_(initPose), pf_(pf), started_(false),
-    robotNumber_(robotNumber)
+Robot::Robot(ros::NodeHandle& nh, RobotFactory* parent, ParticleFilter* pf,
+             uint robotNumber)
+    : parent_(parent), pf_(pf), started_(false), robotNumber_(robotNumber)
 {
   std::string robotNamespace("/omni" +
                              boost::lexical_cast<std::string>(robotNumber + 1));
 
   // Subscribe to topics
   sOdom_ = nh.subscribe<nav_msgs::Odometry>(
-        robotNamespace + "/odometry", 10,
-        boost::bind(&Robot::odometryCallback, this, _1));
+      robotNamespace + "/odometry", 10,
+      boost::bind(&Robot::odometryCallback, this, _1));
 
   sBall_ = nh.subscribe<read_omni_dataset::BallData>(
-        robotNamespace + "/orangeball3Dposition", 10,
-        boost::bind(&Robot::targetCallback, this, _1));
+      robotNamespace + "/orangeball3Dposition", 10,
+      boost::bind(&Robot::targetCallback, this, _1));
 
   sLandmark_ = nh.subscribe<read_omni_dataset::LRMLandmarksData>(
-        robotNamespace + "/landmarkspositions", 10,
-        boost::bind(&Robot::landmarkDataCallback, this, _1));
+      robotNamespace + "/landmarkspositions", 10,
+      boost::bind(&Robot::landmarkDataCallback, this, _1));
 
   ROS_INFO("Created robot OMNI%d", robotNumber + 1);
 }
@@ -187,7 +181,8 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   odomStruct.theta = tf2::getYaw(odometry->pose.pose.orientation);
 
   ROS_DEBUG("OMNI%d odometry at time %d = {%f;%f;%f}", robotNumber_ + 1,
-            odometry->header.stamp.sec, odomStruct.x, odomStruct.y, odomStruct.theta);
+            odometry->header.stamp.sec, odomStruct.x, odomStruct.y,
+            odomStruct.theta);
 
   // Call the particle filter predict step for this robot
   pf_->predict(robotNumber_, odomStruct);
@@ -214,16 +209,16 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
     obs.phi = atan2(target->y, target->x);
 
     obs.covDD = (double)(1 / target->mismatchFactor) *
-        (K3 * obs.d + K4 * (obs.d * obs.d));
+                (K3 * obs.d + K4 * (obs.d * obs.d));
 
     obs.covPP = K5 * (1 / (obs.d + 1));
 
     obs.covXX = pow(cos(obs.phi), 2) * obs.covDD +
-        pow(sin(obs.phi), 2) *
-        (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
+                pow(sin(obs.phi), 2) *
+                    (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
     obs.covYY = pow(sin(obs.phi), 2) * obs.covDD +
-        pow(cos(obs.phi), 2) *
-        (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
+                pow(cos(obs.phi), 2) *
+                    (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
 
     // Save this observation
     pf_->saveTargetObservation(robotNumber_, obs);
@@ -349,11 +344,11 @@ void Robot::landmarkDataCallback(
           (obs.d * obs.d);
       obs.covPP = NUM_LANDMARKS * K2 * (1 / (obs.d + 1));
       obs.covXX = pow(cos(obs.phi), 2) * obs.covDD +
-          pow(sin(obs.phi), 2) *
-          (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
+                  pow(sin(obs.phi), 2) *
+                      (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
       obs.covYY = pow(sin(obs.phi), 2) * obs.covDD +
-          pow(cos(obs.phi), 2) *
-          (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
+                  pow(cos(obs.phi), 2) *
+                      (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
 
       pf_->saveLandmarkObservation(robotNumber_, i, obs);
     }

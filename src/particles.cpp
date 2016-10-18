@@ -13,9 +13,9 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/PointCloud.h>
 
-#define DONT_RESAMPLE
+//#define DONT_RESAMPLE
 //#define DONT_FUSE_LANDMARKS true
-#define USE_ALTERNATIVE_LANDMARK_FUSE true
+//#define USE_ALTERNATIVE_LANDMARK_FUSE true
 #define DONT_FUSE_TARGET true
 #define BROADCAST_TF_AND_POSES true
 #define PUBLISH_PTCLS true
@@ -139,13 +139,14 @@ void ParticleFilter::fuseRobots()
             Z_Zcap[1] * Z_Zcap[1] * Q_inv[1][1]);
         float detValue = 1.0; // pow( (2*M_PI*Q[0][0]*Q[1][1]),-0.5);
 
-        //ROS_INFO("LM[%d] = {%.2f,%.2f} measured with x,y = {%f,%f}", l, landmarksMap_[l].x, landmarksMap_[l].y, m.x, m.y);
+        // ROS_INFO("LM[%d] = {%.2f,%.2f} measured with x,y = {%f,%f}", l,
+        // landmarksMap_[l].x, landmarksMap_[l].y, m.x, m.y);
 #else
         // Observation in robot frame
         Eigen::Matrix<pdata_t, 2, 1> Zrobot(m.x, m.y);
 
         // Transformation to global frame
-        Eigen::Rotation2D<pdata_t> Rrobot(-particles_[o_robot + O_THETA][p]);
+        Eigen::Rotation2D<pdata_t> Rrobot(particles_[o_robot + O_THETA][p]);
         Eigen::Matrix<pdata_t, 2, 1> Srobot(particles_[o_robot + O_X][p],
             particles_[o_robot + O_Y][p]);
         Eigen::Matrix<pdata_t, 2, 1> Zglobal = Srobot + Rrobot * Zrobot;
@@ -186,10 +187,13 @@ void ParticleFilter::fuseRobots()
       if (landmarksUsed[r] > 0)
         weightComponents_[r][p] = probabilities[r];
       else
-        ROS_WARN("No landmarks used in this timestep for OMNI%d", r+1);
+        ROS_WARN("No landmarks used in this timestep for OMNI%d", r + 1);
     }
   }
 #endif
+
+  // Reset weights, later will be multiplied by weightComponents of each robot
+  resetWeights(1.0);
 
   // Duplicate particles
   particles_t dupParticles(particles_);
@@ -458,8 +462,8 @@ void ParticleFilter::estimate()
   subparticles_t normalizedWeights(particles_[O_WEIGHT]);
 
   // Normalize the weights
-  for (uint i = 0; i < nParticles_; ++i)
-    normalizedWeights[i] = normalizedWeights[i] / weightSum;
+  for (uint p = 0; p < nParticles_; ++p)
+    normalizedWeights[p] = normalizedWeights[p] / weightSum;
 
   if (weightSum < MIN_WEIGHTSUM)
   {
@@ -576,17 +580,6 @@ void ParticleFilter::printWeights(std::string pre)
   ROS_DEBUG("%s", debug.str().c_str());
 }
 
-void ParticleFilter::assign(const pdata_t value)
-{
-  for (int i = 0; i < nSubParticleSets_; ++i)
-    assign(value, i);
-}
-
-void ParticleFilter::assign(const pdata_t value, const uint index)
-{
-  particles_[index].assign(nParticles_, value);
-}
-
 // TODO set different values for position and orientation, targets, etc
 // Simple version, use default values - randomize all values between [-10,10]
 void ParticleFilter::init()
@@ -597,20 +590,23 @@ void ParticleFilter::init()
   int lvalue = -10;
   int rvalue = 10;
 
-  std::vector<double> def((nSubParticleSets_ - 1) * 2);
+  std::vector<double> defRand((nSubParticleSets_ - 1) * 2);
 
-  for (int i = 0; i < def.size(); i += 2)
+  for (int i = 0; i < defRand.size(); i += 2)
   {
-    def[i] = lvalue;
-    def[i + 1] = rvalue;
+    defRand[i] = lvalue;
+    defRand[i + 1] = rvalue;
   }
 
+  std::vector<double> defPos((nRobots_ * 2), 0.0);
+
   // Call the custom function with these values
-  init(def);
+  init(defRand, defPos);
 }
 
 // Overloaded function when using custom values
-void ParticleFilter::init(const std::vector<double> custom)
+void ParticleFilter::init(const std::vector<double>& customRandInit,
+                          const std::vector<double>& customPosInit)
 {
   if (initialized_)
     return;
@@ -620,19 +616,17 @@ void ParticleFilter::init(const std::vector<double> custom)
 
   ROS_INFO("Initializing particle filter");
 
-  ROS_WARN_COND(custom.size() != ((nSubParticleSets_ - 1) * 2),
-                "The provided vector for initilization does not have the "
+  ROS_WARN_COND(customRandInit.size() != ((nSubParticleSets_ - 1) * 2),
+                "The provided vector for particle initilization does not have the "
                 "correct size (should have %d elements",
                 (nSubParticleSets_ - 1) * 2);
 
   // For all subparticle sets except the particle weights
-  for (int i = 0; i < custom.size() / 2; ++i)
+  for (int i = 0; i < customRandInit.size() / 2; ++i)
   {
-    ROS_DEBUG("Values for distribution: %.4f %.4f", custom[2 * i],
-        custom[2 * i + 1]);
+    ROS_DEBUG("Values for distribution: %.4f %.4f", customRandInit[2 * i], customRandInit[2 * i + 1]);
 
-    boost::random::uniform_real_distribution<> dist(custom[2 * i],
-        custom[2 * i + 1]);
+    boost::random::uniform_real_distribution<> dist(customRandInit[2 * i], customRandInit[2 * i + 1]);
 
     // Sample a value from the uniform distribution for each particle
     for (uint p = 0; p < nParticles_; ++p)
@@ -644,6 +638,18 @@ void ParticleFilter::init(const std::vector<double> custom)
 
   // Reset PF state
   state_.reset();
+
+  // Initialize pose with initial belief
+
+  ROS_WARN_COND(customPosInit.size() != (nRobots_ * 2), "The provided vector for initial state belief does not have the correct size");
+
+  for(uint r = 0; r < nRobots_; ++r)
+  {
+    pdata_t tmp[] = {customPosInit[2 * r + O_X], customPosInit[2 * r + O_Y], -M_PI};
+    state_.robots[r].pose = std::vector<pdata_t>(tmp, tmp+nStatesPerRobot_);
+  }
+
+  // State should have the initial belief
 
   ROS_INFO("Particle filter initialized");
 }
@@ -669,10 +675,7 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
             alpha[0], alpha[1], alpha[2], alpha[3]);
 
   // Determining the propagation of the robot state through odometry
-  pdata_t deltaRot =
-      atan2(odom.y, odom.x) -
-      state_.robots[robotNumber]
-      .pose[O_THETA]; // Uses the previous overall belief of orientation
+  pdata_t deltaRot = atan2(odom.y, odom.x);
   pdata_t deltaTrans = sqrt(odom.x * odom.x + odom.y * odom.y);
   pdata_t deltaFinalRot = odom.theta - deltaRot;
 
@@ -954,17 +957,29 @@ void PFPublisher::publishGTData()
   gtPoint.header.stamp = ros::Time::now();
   gtPoint.header.frame_id = "world";
 
-  gtPoint.point = msg_GT_.poseOMNI1.pose.position;
-  robotGTPublishers_[0].publish(gtPoint);
+  if (true == state_.robotsUsed[0])
+  {
+    gtPoint.point = msg_GT_.poseOMNI1.pose.position;
+    robotGTPublishers_[0].publish(gtPoint);
+  }
 
-  gtPoint.point = msg_GT_.poseOMNI3.pose.position;
-  robotGTPublishers_[2].publish(gtPoint);
+  if (true == state_.robotsUsed[2])
+  {
+    gtPoint.point = msg_GT_.poseOMNI3.pose.position;
+    robotGTPublishers_[2].publish(gtPoint);
+  }
 
-  gtPoint.point = msg_GT_.poseOMNI4.pose.position;
-  robotGTPublishers_[3].publish(gtPoint);
+  if (true == state_.robotsUsed[3])
+  {
+    gtPoint.point = msg_GT_.poseOMNI4.pose.position;
+    robotGTPublishers_[3].publish(gtPoint);
+  }
 
-  gtPoint.point = msg_GT_.poseOMNI5.pose.position;
-  robotGTPublishers_[4].publish(gtPoint);
+  if (true == state_.robotsUsed[4])
+  {
+    gtPoint.point = msg_GT_.poseOMNI5.pose.position;
+    robotGTPublishers_[4].publish(gtPoint);
+  }
 
   // Publish for the target as well
   if (msg_GT_.orangeBall3DGTposition.found)
