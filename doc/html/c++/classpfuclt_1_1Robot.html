@@ -52,9 +52,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac002cc9f11e8e2cdf93c65725f201486"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html#ac002cc9f11e8e2cdf93c65725f201486">odometryCallback</a> (const nav_msgs::Odometry::ConstPtr &amp;)</td></tr>
 <tr class="memdesc:ac002cc9f11e8e2cdf93c65725f201486"><td class="mdescLeft">&#160;</td><td class="mdescRight">odometryCallback - event-driven function which should be called when new odometry data is received  <a href="#ac002cc9f11e8e2cdf93c65725f201486">More...</a><br/></td></tr>
 <tr class="separator:ac002cc9f11e8e2cdf93c65725f201486"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aef54510ce49fa0b415b832c4c14fe538"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html#aef54510ce49fa0b415b832c4c14fe538">Robot</a> (ros::NodeHandle &amp;nh, <a class="el" href="classpfuclt_1_1RobotFactory.html">RobotFactory</a> *parent, Eigen::Isometry2d initPose, <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a> *pf, uint robotNumber)</td></tr>
-<tr class="memdesc:aef54510ce49fa0b415b832c4c14fe538"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classpfuclt_1_1Robot.html" title="The Robot class - Has the common variables and methods of all robots, and is the base class of any sp...">Robot</a> - constructor, creates a new <a class="el" href="classpfuclt_1_1Robot.html" title="The Robot class - Has the common variables and methods of all robots, and is the base class of any sp...">Robot</a> instance.  <a href="#aef54510ce49fa0b415b832c4c14fe538">More...</a><br/></td></tr>
-<tr class="separator:aef54510ce49fa0b415b832c4c14fe538"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77e004e7bfd5f66232b0355b01aff606"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html#a77e004e7bfd5f66232b0355b01aff606">Robot</a> (ros::NodeHandle &amp;nh, <a class="el" href="classpfuclt_1_1RobotFactory.html">RobotFactory</a> *parent, <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a> *pf, uint robotNumber)</td></tr>
+<tr class="memdesc:a77e004e7bfd5f66232b0355b01aff606"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classpfuclt_1_1Robot.html" title="The Robot class - Has the common variables and methods of all robots, and is the base class of any sp...">Robot</a> - constructor, creates a new <a class="el" href="classpfuclt_1_1Robot.html" title="The Robot class - Has the common variables and methods of all robots, and is the base class of any sp...">Robot</a> instance.  <a href="#a77e004e7bfd5f66232b0355b01aff606">More...</a><br/></td></tr>
+<tr class="separator:a77e004e7bfd5f66232b0355b01aff606"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d9ad825ce06b3c55746c129a3ed707a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt_1_1Robot.html#a0d9ad825ce06b3c55746c129a3ed707a">targetCallback</a> (const read_omni_dataset::BallData::ConstPtr &amp;)</td></tr>
 <tr class="memdesc:a0d9ad825ce06b3c55746c129a3ed707a"><td class="mdescLeft">&#160;</td><td class="mdescRight">targetCallBack - event-driven function which should be called when new target data is received  <a href="#a0d9ad825ce06b3c55746c129a3ed707a">More...</a><br/></td></tr>
 <tr class="separator:a0d9ad825ce06b3c55746c129a3ed707a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -89,9 +89,9 @@ Protected Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The <a class="el" href="classpfuclt_1_1Robot.html" title="The Robot class - Has the common variables and methods of all robots, and is the base class of any sp...">Robot</a> class - Has the common variables and methods of all robots, and is the base class of any specialized robots who may derive from it. Teammates should be instances of this class. </p>
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00088">88</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00086">86</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="aef54510ce49fa0b415b832c4c14fe538"></a>
+<a class="anchor" id="a77e004e7bfd5f66232b0355b01aff606"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -106,12 +106,6 @@ Protected Attributes</h2></td></tr>
           <td></td>
           <td class="paramtype"><a class="el" href="classpfuclt_1_1RobotFactory.html">RobotFactory</a> *&#160;</td>
           <td class="paramname"><em>parent</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Eigen::Isometry2d&#160;</td>
-          <td class="paramname"><em>initPose</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -145,7 +139,7 @@ Protected Attributes</h2></td></tr>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00151">151</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00147">147</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -174,7 +168,7 @@ Protected Attributes</h2></td></tr>
 <p>hasStarted </p>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00139">139</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00137">137</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -194,7 +188,7 @@ Protected Attributes</h2></td></tr>
 
 <p>landmarkDataCallback - event-driven function which should be called when new landmark data is received </p>
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00245">245</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00241">241</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -214,7 +208,7 @@ Protected Attributes</h2></td></tr>
 
 <p>odometryCallback - event-driven function which should be called when new odometry data is received </p>
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00175">175</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00170">170</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -241,7 +235,7 @@ Protected Attributes</h2></td></tr>
 
 <p>startNow - starts the robot </p>
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00143">143</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00139">139</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -261,7 +255,7 @@ Protected Attributes</h2></td></tr>
 
 <p>targetCallBack - event-driven function which should be called when new target data is received </p>
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00195">195</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8cpp_source.html#l00191">191</a> of file <a class="el" href="pfuclt__omni__dataset_8cpp_source.html">pfuclt_omni_dataset.cpp</a>.</p>
 
 </div>
 </div>
@@ -284,7 +278,7 @@ Protected Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00097">97</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00095">95</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -306,7 +300,7 @@ Protected Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00091">91</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00089">89</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -328,7 +322,7 @@ Protected Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00092">92</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00090">90</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -350,7 +344,7 @@ Protected Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00096">96</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00094">94</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -372,7 +366,7 @@ Protected Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00095">95</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00093">93</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -394,7 +388,7 @@ Protected Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00095">95</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00093">93</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -416,7 +410,7 @@ Protected Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00095">95</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00093">93</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -438,7 +432,7 @@ Protected Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00093">93</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00091">91</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -460,7 +454,7 @@ Protected Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00094">94</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__omni__dataset_8h_source.html#l00092">92</a> of file <a class="el" href="pfuclt__omni__dataset_8h_source.html">pfuclt_omni_dataset.h</a>.</p>
 
 </div>
 </div>
@@ -474,7 +468,7 @@ Protected Attributes</h2></td></tr>
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Fri Oct 7 2016 12:08:30</small>
+<small>autogenerated on Wed Oct 19 2016 11:19:56</small>
 </div>
 </body>
 </html>

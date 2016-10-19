@@ -55,13 +55,26 @@
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <span class="keywordflow">return</span> lm_vec;</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;}</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="comment">// end of namespace</span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;}</div>
+<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="namespacepfuclt__aux.html#a2ac2e95ac2cd55a6d4e57f4c6de43b27">   27</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="namespacepfuclt__aux.html#a2ac2e95ac2cd55a6d4e57f4c6de43b27">linearRegressionSlope</a>(<span class="keyword">const</span> std::vector&lt;double&gt;&amp; x, <span class="keyword">const</span> std::vector&lt;double&gt;&amp; y)</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;{</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">size_t</span> size = x.size();</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">double</span> s_y = std::accumulate(y.begin(), y.end(), 0.0);</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">double</span> s_x = std::accumulate(x.begin(), x.end(), 0.0);</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">double</span> s_xx = std::inner_product(x.begin(), x.end(), x.begin(), 0.0);</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">double</span> s_xy = std::inner_product(x.begin(), x.end(), y.begin(), 0.0);</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">double</span> slope = (size*s_xy - s_x*s_y) / (size*s_xx - s_x*s_x);</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <span class="keywordflow">return</span> slope;</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;}</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">// end of namespace</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;}</div>
 <div class="ttc" id="structpfuclt__aux_1_1landmark__s_html_a7b81810a3fc99c463cdcce59d33682c2"><div class="ttname"><a href="structpfuclt__aux_1_1landmark__s.html#a7b81810a3fc99c463cdcce59d33682c2">pfuclt_aux::landmark_s::y</a></div><div class="ttdeci">float y</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__aux_8h_source.html#l00033">pfuclt_aux.h:33</a></div></div>
 <div class="ttc" id="structpfuclt__aux_1_1landmark__s_html_ae09536ced3b00d374d8b971e8b9281f4"><div class="ttname"><a href="structpfuclt__aux_1_1landmark__s.html#ae09536ced3b00d374d8b971e8b9281f4">pfuclt_aux::landmark_s::serial</a></div><div class="ttdeci">int serial</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__aux_8h_source.html#l00032">pfuclt_aux.h:32</a></div></div>
 <div class="ttc" id="structpfuclt__aux_1_1landmark__s_html"><div class="ttname"><a href="structpfuclt__aux_1_1landmark__s.html">pfuclt_aux::landmark_s</a></div><div class="ttdoc">The Landmark struct - used to store a landmark, defined by its serial number, and its position {x...</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__aux_8h_source.html#l00030">pfuclt_aux.h:30</a></div></div>
 <div class="ttc" id="namespacepfuclt__aux_html_a4611b0d375e3e97111f5038a68a45e25"><div class="ttname"><a href="namespacepfuclt__aux.html#a4611b0d375e3e97111f5038a68a45e25">pfuclt_aux::getLandmarks</a></div><div class="ttdeci">std::vector&lt; Landmark &gt; getLandmarks(const char *filename)</div><div class="ttdoc">getLandmarks - read landmark configuration from CSV file </div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__aux_8cpp_source.html#l00007">pfuclt_aux.cpp:7</a></div></div>
 <div class="ttc" id="structpfuclt__aux_1_1landmark__s_html_a3445742ec85600bce4a0155607b89af7"><div class="ttname"><a href="structpfuclt__aux_1_1landmark__s.html#a3445742ec85600bce4a0155607b89af7">pfuclt_aux::landmark_s::x</a></div><div class="ttdeci">float x</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__aux_8h_source.html#l00033">pfuclt_aux.h:33</a></div></div>
+<div class="ttc" id="namespacepfuclt__aux_html_a2ac2e95ac2cd55a6d4e57f4c6de43b27"><div class="ttname"><a href="namespacepfuclt__aux.html#a2ac2e95ac2cd55a6d4e57f4c6de43b27">pfuclt_aux::linearRegressionSlope</a></div><div class="ttdeci">double linearRegressionSlope(const std::vector&lt; double &gt; &amp;x, const std::vector&lt; double &gt; &amp;y)</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__aux_8cpp_source.html#l00027">pfuclt_aux.cpp:27</a></div></div>
 <div class="ttc" id="pfuclt__aux_8h_html"><div class="ttname"><a href="pfuclt__aux_8h.html">pfuclt_aux.h</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 
@@ -69,7 +82,7 @@
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Fri Oct 7 2016 12:08:30</small>
+<small>autogenerated on Wed Oct 19 2016 11:19:56</small>
 </div>
 </body>
 </html>

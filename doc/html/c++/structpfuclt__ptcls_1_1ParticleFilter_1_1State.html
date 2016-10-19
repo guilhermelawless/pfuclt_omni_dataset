@@ -50,6 +50,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1targetState__s.html">targetState_s</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1targetState__s.html" title="The targetState_s struct - saves information on the belief of the target&#39;s state. ...">targetState_s</a> struct - saves information on the belief of the target's state.  <a href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1targetState__s.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1targetVelocityEstimator__s.html">targetVelocityEstimator_s</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1targetVelocityEstimator__s.html" title="The targetVelocityEstimator_s struct - will estimate the velocity of a target using a custom function...">targetVelocityEstimator_s</a> struct - will estimate the velocity of a target using a custom function. The struct keeps vectors with the latest avilable information, up until a max data amount is reached.  <a href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1targetVelocityEstimator__s.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -67,9 +70,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a950f52ffb885b20ca65b1a33649dc32b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#a950f52ffb885b20ca65b1a33649dc32b">reset</a> ()</td></tr>
 <tr class="memdesc:a950f52ffb885b20ca65b1a33649dc32b"><td class="mdescLeft">&#160;</td><td class="mdescRight">reset - set the state's bools to false after the PF's last step. If any robot is not used, sets those variables to true  <a href="#a950f52ffb885b20ca65b1a33649dc32b">More...</a><br/></td></tr>
 <tr class="separator:a950f52ffb885b20ca65b1a33649dc32b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac32f9332b465abd0abeed4c857b4cc16"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#ac32f9332b465abd0abeed4c857b4cc16">State</a> (const uint numberRobots, const std::vector&lt; bool &gt; &amp;robotsBeingUsed)</td></tr>
-<tr class="memdesc:ac32f9332b465abd0abeed4c857b4cc16"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html" title="The state_s struct - defines a structure to hold state information for the particle filter class...">State</a> - constructor.  <a href="#ac32f9332b465abd0abeed4c857b4cc16">More...</a><br/></td></tr>
-<tr class="separator:ac32f9332b465abd0abeed4c857b4cc16"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab889247d8009256d91ad34d113a82856"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#ab889247d8009256d91ad34d113a82856">State</a> (const uint <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#a54ef93fb3b82b6d88d166548edfd55dc">nStatesPerRobot</a>, const uint numberRobots, const std::vector&lt; bool &gt; &amp;robotsBeingUsed)</td></tr>
+<tr class="memdesc:ab889247d8009256d91ad34d113a82856"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html" title="The state_s struct - defines a structure to hold state information for the particle filter class...">State</a> - constructor.  <a href="#ab889247d8009256d91ad34d113a82856">More...</a><br/></td></tr>
+<tr class="separator:ab889247d8009256d91ad34d113a82856"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -77,6 +80,8 @@ Public Attributes</h2></td></tr>
 <tr class="separator:a45576ca94b88a2c2c70847949e3505d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae10b5b3d7499984b59d08ca3c9a44f5f"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#ae10b5b3d7499984b59d08ca3c9a44f5f">nRobots</a></td></tr>
 <tr class="separator:ae10b5b3d7499984b59d08ca3c9a44f5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54ef93fb3b82b6d88d166548edfd55dc"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#a54ef93fb3b82b6d88d166548edfd55dc">nStatesPerRobot</a></td></tr>
+<tr class="separator:a54ef93fb3b82b6d88d166548edfd55dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae07339097a58e93b0d2f0bc11c4ae240"><td class="memItemLeft" align="right" valign="top">std::vector&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#ae07339097a58e93b0d2f0bc11c4ae240">predicted</a></td></tr>
 <tr class="separator:ae07339097a58e93b0d2f0bc11c4ae240"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7dfd77c0904b9abdf0125134d12d0ad"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#ad7dfd77c0904b9abdf0125134d12d0ad">resampled</a></td></tr>
@@ -96,6 +101,9 @@ Public Attributes</h2></td></tr>
 <tr class="separator:af3678f11386565ed4f07b4fa77341197"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:addcf3f0a210f3f7137db7f1e572a8207"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#addcf3f0a210f3f7137db7f1e572a8207">targetPredicted</a></td></tr>
 <tr class="separator:addcf3f0a210f3f7137db7f1e572a8207"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40593ee04fd9c1507c8b07b6f6a9bfa0"><td class="memItemLeft" align="right" valign="top">struct <br class="typebreak"/>
+<a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1targetVelocityEstimator__s.html">pfuclt_ptcls::ParticleFilter::State::targetVelocityEstimator_s</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#a40593ee04fd9c1507c8b07b6f6a9bfa0">targetVelocityEstimator</a></td></tr>
+<tr class="separator:a40593ee04fd9c1507c8b07b6f6a9bfa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
@@ -105,9 +113,9 @@ Private Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The state_s struct - defines a structure to hold state information for the particle filter class. </p>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00083">83</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00098">98</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="ac32f9332b465abd0abeed4c857b4cc16"></a>
+<a class="anchor" id="ab889247d8009256d91ad34d113a82856"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -117,6 +125,12 @@ Private Member Functions</h2></td></tr>
         <tr>
           <td class="memname">pfuclt_ptcls::ParticleFilter::State::State </td>
           <td>(</td>
+          <td class="paramtype">const uint&#160;</td>
+          <td class="paramname"><em>nStatesPerRobot</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">const uint&#160;</td>
           <td class="paramname"><em>numberRobots</em>, </td>
         </tr>
@@ -140,14 +154,8 @@ Private Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html" title="The state_s struct - defines a structure to hold state information for the particle filter class...">State</a> - constructor. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">numberRobots</td><td></td></tr>
-  </table>
-  </dd>
-</dl>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00120">120</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00208">208</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -176,7 +184,7 @@ Private Member Functions</h2></td></tr>
 <p>allLandmarkMeasurementsDone - call to find out if all the robots have sent their landmark measurements to the PF in this iteration </p>
 <dl class="section return"><dt>Returns</dt><dd>true if all measurements are present, false otherwise </dd></dl>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00212">212</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00301">301</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -204,7 +212,7 @@ Private Member Functions</h2></td></tr>
 <p>allPredicted - call to find out if the PF has predicted each robot's state </p>
 <dl class="section return"><dt>Returns</dt><dd>true if the PF has predicted all robots in this iteration, false otherwise </dd></dl>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00195">195</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00284">284</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -232,7 +240,7 @@ Private Member Functions</h2></td></tr>
 <p>allTargetMeasurementsDone - call to find out if all the robots have sent their target measurements to the PF in this iteration </p>
 <dl class="section return"><dt>Returns</dt><dd>true if all measurements are present, false otherwise </dd></dl>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00229">229</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00318">318</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -268,7 +276,7 @@ Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00130">130</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00224">224</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -293,7 +301,7 @@ Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00142">142</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00236">236</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -320,7 +328,7 @@ Private Member Functions</h2></td></tr>
 
 <p>reset - set the state's bools to false after the PF's last step. If any robot is not used, sets those variables to true </p>
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00171">171</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00260">260</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -335,7 +343,7 @@ Private Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00088">88</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00104">104</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -349,7 +357,21 @@ Private Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00085">85</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00100">100</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a54ef93fb3b82b6d88d166548edfd55dc"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint pfuclt_ptcls::ParticleFilter::State::nStatesPerRobot</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00101">101</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -363,7 +385,7 @@ Private Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00087">87</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00103">103</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -377,7 +399,7 @@ Private Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00093">93</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00109">109</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -391,7 +413,7 @@ Private Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00104">104</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00122">122</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -405,7 +427,7 @@ Private Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00091">91</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00107">107</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -419,7 +441,7 @@ Private Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00086">86</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00102">102</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -445,7 +467,7 @@ Private Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00092">92</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00108">108</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -459,7 +481,7 @@ Private Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00089">89</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00105">105</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
 
 </div>
 </div>
@@ -473,7 +495,19 @@ Private Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="particles_8h_source.html#l00090">90</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+<p>Definition at line <a class="el" href="particles_8h_source.html#l00106">106</a> of file <a class="el" href="particles_8h_source.html">particles.h</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a40593ee04fd9c1507c8b07b6f6a9bfa0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1targetVelocityEstimator__s.html">pfuclt_ptcls::ParticleFilter::State::targetVelocityEstimator_s</a>  pfuclt_ptcls::ParticleFilter::State::targetVelocityEstimator</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -486,7 +520,7 @@ Private Member Functions</h2></td></tr>
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Fri Oct 7 2016 12:08:30</small>
+<small>autogenerated on Wed Oct 19 2016 11:19:56</small>
 </div>
 </body>
 </html>
