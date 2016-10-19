@@ -16,7 +16,7 @@
 //#define DONT_RESAMPLE
 //#define DONT_FUSE_LANDMARKS true
 //#define DONT_FUSE_TARGET true
-#define ALTERNATIVE_TARGET_FUSE true
+//#define ALTERNATIVE_TARGET_FUSE true
 #define BROADCAST_TF_AND_POSES true
 #define PUBLISH_PTCLS true
 
@@ -441,7 +441,7 @@ void ParticleFilter::resample()
     for (uint p = 0; p < nParticles_; ++p)
       particles_[O_WEIGHT][p] = particles_[O_WEIGHT][p] / weightSum;
 
-    modifiedMultinomialResampler(0.5);
+    modifiedMultinomialResampler(RESAMPLE_START_AT);
 
     // printWeights("after resampling: ");
   }

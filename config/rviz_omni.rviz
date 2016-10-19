@@ -6,6 +6,8 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /OMNI41
+        - /OMNI41/Estimate1
         - /OMNI51/Estimate1/Status1
       Splitter Ratio: 0.5
     Tree Height: 438
@@ -54,7 +56,13 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        OMNI1:
+          Value: true
+        OMNI3:
+          Value: true
         OMNI4:
+          Value: true
+        OMNI5:
           Value: true
         world:
           Value: true
@@ -65,7 +73,13 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
+          OMNI1:
+            {}
+          OMNI3:
+            {}
           OMNI4:
+            {}
+          OMNI5:
             {}
       Update Interval: 0
       Value: true
@@ -275,7 +289,7 @@ Visualization Manager:
   Global Options:
     Background Color: 90; 90; 90
     Fixed Frame: world
-    Frame Rate: 60
+    Frame Rate: 40
   Name: root
   Tools:
     - Class: rviz/Interact
@@ -295,22 +309,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 15.259
+      Distance: 11.8902
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 2.03438
-        Y: -2.78983
-        Z: 1.17514
+        X: 2.71785
+        Y: -2.676
+        Z: 1.78889
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 1.3202
+      Pitch: 1.2548
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.72032
+      Yaw: 4.67528
     Saved: ~
 Window Geometry:
   Displays:
@@ -328,5 +342,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1215
-  X: 1974
-  Y: -14
+  X: 1985
+  Y: 24

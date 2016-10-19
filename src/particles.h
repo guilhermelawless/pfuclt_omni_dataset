@@ -34,7 +34,7 @@
 // target motion model and estimator
 #define MAX_ESTIMATOR_STACK_SIZE 25
 #define TARGET_RAND_MEAN 0
-#define TARGET_RAND_STDDEV 5.0
+#define TARGET_RAND_STDDEV 10.0
 
 // concerning time
 #define ITERATION_TIME_DEFAULT 0.0333
@@ -42,7 +42,8 @@
 #define ITERATION_TIME_MAX (1)
 
 // others
-#define MIN_WEIGHTSUM 1e-7
+#define MIN_WEIGHTSUM 1e-10
+#define RESAMPLE_START_AT 0.5
 
 namespace pfuclt_ptcls
 {
@@ -56,7 +57,7 @@ typedef double (*estimatorFunc)(const std::vector<double>&,
 
 typedef struct odometry_s
 {
-  pdata_t x, y, theta;
+  double x, y, theta;
 } Odometry;
 
 typedef struct landmarkObs_s
@@ -147,10 +148,10 @@ protected:
       uint timeInit;
       uint numberVels;
 
-      targetVelocityEstimator_s(const uint _numberVels, const uint _maxDataSize,
+      targetVelocityEstimator_s(const uint numberVels, const uint maxDataSize,
                                 estimatorFunc ptrFunc)
-          : numberVels(_numberVels), posVec(_numberVels, std::vector<double>()),
-            maxDataSize(_maxDataSize)
+          : numberVels(numberVels), posVec(numberVels, std::vector<double>()),
+            maxDataSize(maxDataSize)
       {
         estimateVelocity = ptrFunc;
       }
@@ -186,9 +187,9 @@ protected:
     /**
      * @brief State - constructor
      */
-    State(const uint nStatesPerRobot_, const uint numberRobots,
+    State(const uint nStatesPerRobot, const uint numberRobots,
           const std::vector<bool>& robotsBeingUsed)
-        : nStatesPerRobot(nStatesPerRobot_), nRobots(numberRobots),
+        : nStatesPerRobot(nStatesPerRobot), nRobots(numberRobots),
           predicted(nRobots, false), landmarkMeasurementsDone(nRobots, false),
           targetMeasurementsDone(nRobots, false), robotsUsed(robotsBeingUsed),
           targetVelocityEstimator(STATES_PER_TARGET, MAX_ESTIMATOR_STACK_SIZE,
@@ -334,30 +335,30 @@ public:
      * on the landmark locations
      * @param _vector with values to be used in the RNG for the model sampling
      */
-    PFinitData(const uint _nParticles, const uint _nTargets,
-               const uint _statesPerRobot, const uint _nRobots,
-               const uint _nLandmarks, const std::vector<bool>& _robotsUsed,
-               const std::vector<Landmark>& _landmarksMap,
-               const std::vector<float> _alpha = std::vector<float>())
-        : nParticles(_nParticles), nTargets(_nTargets),
-          statesPerRobot(_statesPerRobot), nRobots(_nRobots),
-          nLandmarks(_nLandmarks), alpha(_alpha), robotsUsed(_robotsUsed),
-          landmarksMap(_landmarksMap)
+    PFinitData(const uint nParticles, const uint nTargets,
+               const uint statesPerRobot, const uint nRobots,
+               const uint nLandmarks, const std::vector<bool>& robotsUsed,
+               const std::vector<Landmark>& landmarksMap,
+               const std::vector<float>& alpha = std::vector<float>())
+        : nParticles(nParticles), nTargets(nTargets),
+          statesPerRobot(statesPerRobot), nRobots(nRobots),
+          nLandmarks(nLandmarks), alpha(alpha), robotsUsed(robotsUsed),
+          landmarksMap(landmarksMap)
     {
       // If vector alpha is not provided, use a default one
-      if (alpha.empty())
+      if (this->alpha.empty())
       {
         for (int r = 0; r < nRobots; ++r)
         {
-          alpha.push_back(0.015);
-          alpha.push_back(0.1);
-          alpha.push_back(0.5);
-          alpha.push_back(0.001);
+          this->alpha.push_back(0.015);
+          this->alpha.push_back(0.1);
+          this->alpha.push_back(0.5);
+          this->alpha.push_back(0.001);
         }
       }
 
       // Check size of vector alpha
-      if (alpha.size() != 4 * nRobots)
+      if (this->alpha.size() != 4 * nRobots)
       {
         ROS_ERROR(
             "The provided vector alpha is not of the correct size. Returning "
@@ -588,13 +589,13 @@ public:
   /**
    * @brief saveLandmarkObservation - change the measurement buffer state
    * @param robotNumber - the robot number in the team
-   * @param _found - whether this landmark has been found
+   * @param found - whether this landmark has been found
    */
   inline void saveLandmarkObservation(const uint robotNumber,
                                       const uint landmarkNumber,
-                                      const bool _found)
+                                      const bool found)
   {
-    bufLandmarkObservations_[robotNumber][landmarkNumber].found = _found;
+    bufLandmarkObservations_[robotNumber][landmarkNumber].found = found;
   }
 
   /**
@@ -620,11 +621,11 @@ public:
   /**
    * @brief saveTargetObservation - change the measurement buffer state
    * @param robotNumber - the robot number in the team
-   * @param _found - whether the target has been found
+   * @param found - whether the target has been found
    */
-  inline void saveTargetObservation(const uint robotNumber, const bool _found)
+  inline void saveTargetObservation(const uint robotNumber, const bool found)
   {
-    bufTargetObservations_[robotNumber].found = _found;
+    bufTargetObservations_[robotNumber].found = found;
   }
 
   /**
@@ -651,11 +652,11 @@ public:
     /**
      * @brief PublishData - contains information necessary for the PFPublisher
      * class
-     * @param _nh - the node handle object
-     * @param _robotHeight - the fixed robot height
+     * @param nh - the node handle object
+     * @param robotHeight - the fixed robot height
      */
-    PublishData(ros::NodeHandle& _nh, float _robotHeight)
-        : nh(_nh), robotHeight(_robotHeight)
+    PublishData(ros::NodeHandle& nh, float robotHeight)
+        : nh(nh), robotHeight(robotHeight)
     {
     }
   };
