@@ -66,10 +66,8 @@ void ParticleFilter::predictTarget(uint robotNumber)
   if (iterationTime_ > ITERATION_TIME_MAX)
     iterationTime_ = ITERATION_TIME_DEFAULT;
 
-  for (int i = 0; i < nParticles_; i++)
+  for (int p = 0; p < nParticles_; p++)
   {
-    // TODO what exactly should happen to ball velocity?
-
     // Get random accelerations
     pdata_t accel[STATES_PER_TARGET] = { targetAcceleration(seed_),
                                          targetAcceleration(seed_),
@@ -77,8 +75,14 @@ void ParticleFilter::predictTarget(uint robotNumber)
 
     for (uint s = 0; s < STATES_PER_TARGET; ++s)
     {
-      particles_[O_TARGET + s][i] += state_.target.vel[s] * iterationTime_ +
-                                     0.5 * accel[s] * pow(iterationTime_, 2);
+      pdata_t diff = state_.target.vel[s] * iterationTime_ +
+                     0.5 * accel[s] * pow(iterationTime_, 2);
+
+      particles_[O_TARGET + s][p] += diff;
+
+      ROS_DEBUG_COND(p == 0, "Target[%d] predicted as %fm after iterationTime "
+                             "= %fs and velocity %fm/s",
+                     s, diff, iterationTime_, state_.target.vel[s]);
     }
   }
 }
@@ -244,7 +248,7 @@ void ParticleFilter::fuseTarget()
 
     // Find the particle m* in the set [m:M] for which the weight contribution
     // by the target subparticle to the full weight is maximum
-    for (uint p = 0; p < nParticles_; ++p)
+    for (uint p = m; p < nParticles_; ++p)
     {
       std::vector<pdata_t> probabilities(nRobots_, 0.0);
 
@@ -351,6 +355,8 @@ void ParticleFilter::fuseTarget()
 // The target subparticles are now reordered according to their weight
 // contribution
 #endif
+
+  printWeights("After fuseTarget()");
 
   // Start resampling
   resample();
@@ -556,6 +562,9 @@ void ParticleFilter::estimate()
     state_.target.vel[O_TY] = state_.targetVelocityEstimator.estimate(O_TY);
     state_.target.vel[O_TZ] = state_.targetVelocityEstimator.estimate(O_TZ);
   }
+  else
+    state_.target.vel[O_TX] = state_.target.vel[O_TY] =
+        state_.target.vel[O_TZ] = 0.0;
 
   // Print iteration and state information
   *iteration_oss << "DONE!";
