@@ -1,6 +1,7 @@
 #include "pfuclt_aux.h"
 #include "particles.h"
 #include "pfuclt_omni_dataset.h"
+#include <tf2/utils.h>
 
 #define ROS_TDIFF(t) (t.toSec() - timeInit.toSec())
 
@@ -79,13 +80,8 @@ RobotFactory::RobotFactory(ros::NodeHandle& nh) : nh_(nh)
   {
     if (PLAYING_ROBOTS[rn])
     {
-      Eigen::Isometry2d initialRobotPose(
-          Eigen::Rotation2Dd(-M_PI).toRotationMatrix());
-      initialRobotPose.translation() =
-          Eigen::Vector2d(POS_INIT[2 * rn + 0], POS_INIT[2 * rn + 1]);
-
-      robots_.push_back(Robot_ptr(
-          new Robot(nh_, this, initialRobotPose, pf->getPFReference(), rn)));
+      robots_.push_back(
+          Robot_ptr(new Robot(nh_, this, pf->getPFReference(), rn)));
     }
   }
 }
@@ -96,7 +92,7 @@ void RobotFactory::tryInitializeParticles()
     return;
 
   if (USE_CUSTOM_VALUES)
-    pf->init(CUSTOM_PARTICLE_INIT);
+    pf->init(CUSTOM_PARTICLE_INIT, POS_INIT);
   else
     pf->init();
 }
@@ -148,10 +144,9 @@ void Robot::startNow()
            ROS_TDIFF(timeStarted_));
 }
 
-Robot::Robot(ros::NodeHandle& nh, RobotFactory* parent,
-             Eigen::Isometry2d initPose, ParticleFilter* pf, uint robotNumber)
-    : parent_(parent), initPose_(initPose), pf_(pf), started_(false),
-      robotNumber_(robotNumber)
+Robot::Robot(ros::NodeHandle& nh, RobotFactory* parent, ParticleFilter* pf,
+             uint robotNumber)
+    : parent_(parent), pf_(pf), started_(false), robotNumber_(robotNumber)
 {
   std::string robotNamespace("/omni" +
                              boost::lexical_cast<std::string>(robotNumber + 1));
@@ -180,13 +175,14 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   if (!pf_->isInitialized())
     parent_->tryInitializeParticles();
 
-  pfuclt_ptcls::Odometry odomStruct = {
-    odometry->pose.pose.position.x, odometry->pose.pose.position.y,
-    tf::getYaw(odometry->pose.pose.orientation)
-  };
+  pfuclt_ptcls::Odometry odomStruct;
+  odomStruct.x = odometry->pose.pose.position.x;
+  odomStruct.y = odometry->pose.pose.position.y;
+  odomStruct.theta = tf2::getYaw(odometry->pose.pose.orientation);
 
-  ROS_DEBUG("OMNI%d odometry at time %d", robotNumber_ + 1,
-            odometry->header.stamp.sec);
+  ROS_DEBUG("OMNI%d odometry at time %d = {%f;%f;%f}", robotNumber_ + 1,
+            odometry->header.stamp.sec, odomStruct.x, odomStruct.y,
+            odomStruct.theta);
 
   // Call the particle filter predict step for this robot
   pf_->predict(robotNumber_, odomStruct);
@@ -286,15 +282,7 @@ void Robot::landmarkDataCallback(
 
     float heuristicsThresh[] = HEURISTICS_THRESH_DEFAULT;
 
-    if (robotNumber_ == 4)
-    {
-      heuristicsThresh[4] = 3.0;
-      heuristicsThresh[5] = 3.0;
-      heuristicsThresh[8] = 3.0;
-      heuristicsThresh[9] = 3.0;
-    }
-
-    if (robotNumber_ == 3)
+    if (robotNumber_ == 0)
     {
       heuristicsThresh[4] = 6.5;
       heuristicsThresh[5] = 6.5;
@@ -302,7 +290,7 @@ void Robot::landmarkDataCallback(
       heuristicsThresh[9] = 6.5;
     }
 
-    if (robotNumber_ == 1)
+    else if (robotNumber_ == 2)
     {
       heuristicsThresh[4] = 6.5;
       heuristicsThresh[5] = 6.5;
@@ -310,7 +298,15 @@ void Robot::landmarkDataCallback(
       heuristicsThresh[9] = 6.5;
     }
 
-    if (robotNumber_ == 5)
+    else if (robotNumber_ == 3)
+    {
+      heuristicsThresh[4] = 6.5;
+      heuristicsThresh[5] = 6.5;
+      heuristicsThresh[8] = 6.5;
+      heuristicsThresh[9] = 6.5;
+    }
+
+    else if (robotNumber_ == 4)
     {
       heuristicsThresh[4] = 3.5;
       heuristicsThresh[5] = 3.5;
@@ -339,7 +335,7 @@ void Robot::landmarkDataCallback(
       pfuclt_ptcls::LandmarkObservation obs;
       obs.found = true;
       obs.x = landmarkData->x[i];
-      obs.y = -landmarkData->y[i]; // TODO check if correct to invert Y frame
+      obs.y = landmarkData->y[i];
       obs.d = sqrt(obs.x * obs.x + obs.y * obs.y);
       obs.phi = atan2(obs.y, obs.x);
       obs.covDD =
@@ -412,7 +408,6 @@ int main(int argc, char* argv[])
   readParam<int>(nh, "/MAX_ROBOTS", MAX_ROBOTS);
   readParam<float>(nh, "/ROB_HT", ROB_HT);
   readParam<int>(nh, "/N_PARTICLES", N_PARTICLES);
-  readParam<int>(nh, "/NUM_SENSORS_PER_ROBOT", NUM_SENSORS_PER_ROBOT);
   readParam<int>(nh, "/NUM_TARGETS", NUM_TARGETS);
   readParam<int>(nh, "/NUM_LANDMARKS", NUM_LANDMARKS);
   readParam<float>(nh, "/LANDMARK_COV/K1", K1);
@@ -425,7 +420,8 @@ int main(int argc, char* argv[])
   readParam<bool>(nh, "/USE_CUSTOM_VALUES", USE_CUSTOM_VALUES);
   readParam<int>(nh, "/MY_ID", MY_ID);
 
-  uint total_size = (MAX_ROBOTS + NUM_TARGETS) * STATES_PER_ROBOT;
+  uint total_size =
+      MAX_ROBOTS * STATES_PER_ROBOT + NUM_TARGETS * STATES_PER_TARGET;
 
   if (USE_CUSTOM_VALUES)
   {
