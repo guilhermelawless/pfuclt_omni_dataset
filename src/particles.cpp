@@ -14,7 +14,6 @@
 #include <sensor_msgs/PointCloud.h>
 
 //#define DONT_RESAMPLE
-//#define DONT_FUSE_LANDMARKS true
 //#define DONT_FUSE_TARGET true
 //#define ALTERNATIVE_TARGET_FUSE true
 #define BROADCAST_TF_AND_POSES true
@@ -98,35 +97,48 @@ void ParticleFilter::fuseRobots()
 
   state_.robotsFused = true;
 
-#ifndef DONT_FUSE_LANDMARKS
-  for (uint p = 0; p < nParticles_; ++p)
-  {
-    std::vector<pdata_t> probabilities(nRobots_, 1.0);
-    std::vector<uint> landmarksUsed(nRobots_, 0);
+  // Keeps track of number of landmarks seen for each robot
+  std::vector<uint> landmarksSeen(nRobots_, 0);
 
+  // Will track the probability propagation based on the landmark observations for each robot
+  std::vector<subparticles_t> probabilities(nRobots_, subparticles_t(nParticles_, 1.0));
+
+  // For every robot
+  for (uint r = 0; r < nRobots_; ++r)
+  {
+    // If not used, skip
+    if (false == robotsUsed_[r])
+      continue;
+
+    // Index offset for this robot in the particles vector
+    uint o_robot = r * nStatesPerRobot_;
+
+    // For every landmark
     for (uint l = 0; l < nLandmarks_; ++l)
     {
-      for (uint r = 0; r < nRobots_; ++r)
+      // If landmark not seen, skip
+      if (false == bufLandmarkObservations_[r][l].found)
+        continue;
+      else
+        ++(landmarksSeen[r]);
+
+      // Reference to the observation for easier access
+      LandmarkObservation& m = bufLandmarkObservations_[r][l];
+
+      // Observation in robot frame
+      Eigen::Matrix<pdata_t, 2, 1> Zrobot(m.x, m.y);
+
+      // Landmark in global frame
+      Eigen::Matrix<pdata_t, 2, 1> LMglobal(landmarksMap_[l].x,
+                                            landmarksMap_[l].y);
+
+      for (uint p = 0; p < nParticles_; ++p)
       {
-        if (false == robotsUsed_[r] ||
-            false == bufLandmarkObservations_[r][l].found)
-          continue;
-
-        uint o_robot = r * nStatesPerRobot_;
-
-        LandmarkObservation& m = bufLandmarkObservations_[r][l];
-
-        // Observation in robot frame
-        Eigen::Matrix<pdata_t, 2, 1> Zrobot(m.x, m.y);
 
         // Robot pose <=> frame
         Eigen::Rotation2D<pdata_t> Rrobot(-particles_[o_robot + O_THETA][p]);
         Eigen::Matrix<pdata_t, 2, 1> Srobot(particles_[o_robot + O_X][p],
                                             particles_[o_robot + O_Y][p]);
-
-        // Landmark in global frame
-        Eigen::Matrix<pdata_t, 2, 1> LMglobal(landmarksMap_[l].x,
-                                              landmarksMap_[l].y);
 
         // Landmark to robot frame
         Eigen::Matrix<pdata_t, 2, 1> LMrobot = Rrobot * (LMglobal - Srobot);
@@ -149,24 +161,11 @@ void ParticleFilter::fuseRobots()
             particles_[o_robot + O_THETA][p], l, 100 * (detValue * exp(expArg)),
             Zerr(0), Zerr(1));
 
-        probabilities[r] *= detValue * exp(expArg);
-        landmarksUsed[r]++;
+        // Update weight component for this robot and particular particle
+        probabilities[r][p] *= detValue * exp(expArg);
       }
     }
-
-    // Update mean error vector
-    for (uint r = 0; r < nRobots_; ++r)
-    {
-      if (false == robotsUsed_[r])
-        continue;
-
-      if (landmarksUsed[r] > 0)
-        weightComponents_[r][p] = probabilities[r];
-      else
-        ROS_WARN("No landmarks used in this timestep for OMNI%d", r + 1);
-    }
   }
-#endif
 
   // Reset weights, later will be multiplied by weightComponents of each robot
   resetWeights(1.0);
@@ -176,9 +175,19 @@ void ParticleFilter::fuseRobots()
 
   for (uint r = 0; r < nRobots_; ++r)
   {
+    // Again, if robot not used, skip
     if (false == robotsUsed_[r])
       continue;
 
+    // Check that at least one landmark was seen, if not send warning
+    // Update the weight component otherwise, to the previously calculated probability accumulation
+    // But.. fuse anyway since the weight component will be the value from last time it saw some landmark
+    if (0 == landmarksSeen[r])
+      ROS_WARN("In this iteration, OMNI%d didn't see any landmarks, so the fusing will be skipped for it", r+1);
+    else
+      weightComponents_[r] = probabilities[r];
+
+    // Index offset for this robot in the particles vector
     uint o_robot = r * nStatesPerRobot_;
 
     // Create a vector of indexes according to a descending order of the weights

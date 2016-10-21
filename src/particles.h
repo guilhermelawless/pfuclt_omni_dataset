@@ -45,7 +45,7 @@
 #define MIN_WEIGHTSUM 1e-10
 #define RESAMPLE_START_AT 0.5
 
-//#define DEBUG_ESTIMATOR true
+//#define MORE_DEBUG true
 
 namespace pfuclt_ptcls
 {
@@ -182,7 +182,7 @@ protected:
         double velEst = estimateVelocity(timeVec, posVec[velType]);
         ROS_DEBUG("Estimated velocity type %d = %f", velType, velEst);
 
-#ifdef DEBUG_ESTIMATOR
+#ifdef MORE_DEBUG
         std::ostringstream oss_time;
         oss_time << "timeVec = [ ";
         for(uint i=0; i < timeVec.size(); ++i)
