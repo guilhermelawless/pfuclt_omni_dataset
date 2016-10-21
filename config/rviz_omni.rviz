@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /OMNI41
         - /OMNI41/Estimate1
         - /OMNI51/Estimate1/Status1
       Splitter Ratio: 0.5
@@ -48,12 +47,12 @@ Visualization Manager:
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 10
+      Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
       Value: true
     - Class: rviz/TF
       Enabled: true
-      Frame Timeout: 15
+      Frame Timeout: 99999
       Frames:
         All Enabled: false
         OMNI1:
@@ -66,7 +65,7 @@ Visualization Manager:
           Value: true
         world:
           Value: true
-      Marker Scale: 1
+      Marker Scale: 2
       Name: TF
       Show Arrows: true
       Show Axes: true
@@ -309,22 +308,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 11.8902
+      Distance: 13
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 2.71785
-        Y: -2.676
-        Z: 1.78889
+        X: 2.80409
+        Y: -1.36183
+        Z: 0.434927
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 1.2548
+      Pitch: 1.5698
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.67528
+      Yaw: 4.71028
     Saved: ~
 Window Geometry:
   Displays:
