@@ -20,24 +20,24 @@
 	<param name="LANDMARKS_CONFIG" value="$(find pfuclt_omni_dataset)/config/landmarks.csv"/>
     <param name="USE_CUSTOM_VALUES" value="true"/>
     <rosparam param="CUSTOM_PARTICLE_INIT">
-        [0,6.0,
-         -4.5,4.5,
+        [4.5,5.5,
+         -3.0,-2.0,
          -3.14159,3.14159,
 
          0,6.0,
          -4.5,4.5,
          -3.14159,3.14159,
 
-         0,6.0,
-         -4.5,4.5,
+         1.0,2.0,
+         -2.5,-1.5,
          -3.14159,3.14159,
 
          2.76839,3.76839,
          -4.074936,-3.074936,
          3.14059, 3.14259,
 
-         0,6.0,
-         -4.5,4.5,
+         3.6,4.6,
+         -0.5,0.5,
          -3.14159,3.14159,
 
          0,6.0,
