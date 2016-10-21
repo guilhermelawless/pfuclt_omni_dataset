@@ -23,8 +23,9 @@ namespace pfuclt_ptcls
 {
 
 ParticleFilter::ParticleFilter(struct PFinitData& data)
-    : nParticles_(data.nParticles), nTargets_(data.nTargets),
-      nStatesPerRobot_(data.statesPerRobot), nRobots_(data.nRobots),
+    : mainRobotID_(data.mainRobotID), nParticles_(data.nParticles),
+      nTargets_(data.nTargets), nStatesPerRobot_(data.statesPerRobot),
+      nRobots_(data.nRobots),
       nSubParticleSets_(data.nTargets * STATES_PER_TARGET +
                         data.nRobots * data.statesPerRobot + 1),
       nLandmarks_(data.nLandmarks), alpha_(data.alpha),
@@ -35,7 +36,8 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
       bufLandmarkObservations_(
           data.nRobots, std::vector<LandmarkObservation>(data.nLandmarks)),
       bufTargetObservations_(data.nRobots), prevTime_(ros::Time::now()),
-      newTime_(ros::Time::now()), iterationTime_(ITERATION_TIME_DEFAULT),
+      newTime_(ros::Time::now()),
+      targetIterationTime_(TARGET_ITERATION_TIME_DEFAULT),
       weightComponents_(data.nRobots, subparticles_t(data.nParticles, 0.0)),
       state_(data.statesPerRobot, data.nRobots, data.robotsUsed)
 {
@@ -62,8 +64,8 @@ void ParticleFilter::predictTarget(uint robotNumber)
                                            TARGET_RAND_STDDEV);
 
   // If the iterationTime is too high, consider the default value
-  if (iterationTime_ > ITERATION_TIME_MAX)
-    iterationTime_ = ITERATION_TIME_DEFAULT;
+  if (targetIterationTime_ > TARGET_ITERATION_TIME_MAX)
+    targetIterationTime_ = TARGET_ITERATION_TIME_DEFAULT;
 
   for (int p = 0; p < nParticles_; p++)
   {
@@ -74,14 +76,14 @@ void ParticleFilter::predictTarget(uint robotNumber)
 
     for (uint s = 0; s < STATES_PER_TARGET; ++s)
     {
-      pdata_t diff = state_.target.vel[s] * iterationTime_ +
-                     0.5 * accel[s] * pow(iterationTime_, 2);
+      pdata_t diff = state_.target.vel[s] * targetIterationTime_ +
+                     0.5 * accel[s] * pow(targetIterationTime_, 2);
 
       particles_[O_TARGET + s][p] += diff;
 
       ROS_DEBUG_COND(p == 0, "Target[%d] predicted as %fm after iterationTime "
                              "= %fs and velocity %fm/s",
-                     s, diff, iterationTime_, state_.target.vel[s]);
+                     s, diff, targetIterationTime_, state_.target.vel[s]);
     }
   }
 }
@@ -100,8 +102,10 @@ void ParticleFilter::fuseRobots()
   // Keeps track of number of landmarks seen for each robot
   std::vector<uint> landmarksSeen(nRobots_, 0);
 
-  // Will track the probability propagation based on the landmark observations for each robot
-  std::vector<subparticles_t> probabilities(nRobots_, subparticles_t(nParticles_, 1.0));
+  // Will track the probability propagation based on the landmark observations
+  // for each robot
+  std::vector<subparticles_t> probabilities(nRobots_,
+                                            subparticles_t(nParticles_, 1.0));
 
   // For every robot
   for (uint r = 0; r < nRobots_; ++r)
@@ -180,10 +184,14 @@ void ParticleFilter::fuseRobots()
       continue;
 
     // Check that at least one landmark was seen, if not send warning
-    // Update the weight component otherwise, to the previously calculated probability accumulation
-    // But.. fuse anyway since the weight component will be the value from last time it saw some landmark
+    // Update the weight component otherwise, to the previously calculated
+    // probability accumulation
+    // But.. fuse anyway since the weight component will be the value from last
+    // time it saw some landmark
     if (0 == landmarksSeen[r])
-      ROS_WARN("In this iteration, OMNI%d didn't see any landmarks, so the fusing will be skipped for it", r+1);
+      ROS_WARN("In this iteration, OMNI%d didn't see any landmarks, so the "
+               "fusing will be skipped for it",
+               r + 1);
     else
       weightComponents_[r] = probabilities[r];
 

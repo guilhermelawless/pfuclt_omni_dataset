@@ -64,8 +64,8 @@ ros::Time timeInit;
 RobotFactory::RobotFactory(ros::NodeHandle& nh) : nh_(nh)
 {
   ParticleFilter::PFinitData initData(
-      N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS, NUM_LANDMARKS,
-      PLAYING_ROBOTS, landmarks, CUSTOM_RANDOM_ALPHA);
+      MY_ID, N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS,
+      NUM_LANDMARKS, PLAYING_ROBOTS, landmarks, CUSTOM_RANDOM_ALPHA);
 
   if (PUBLISH)
     pf = boost::shared_ptr<PFPublisher>(
@@ -235,7 +235,7 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
 
   // If this is the "self robot", update the iteration time
   if (MY_ID == robotNumber_ + 1)
-    pf_->updateIterationTime(target->header.stamp);
+    pf_->updateTargetIterationTime(target->header.stamp);
 }
 
 void Robot::landmarkDataCallback(

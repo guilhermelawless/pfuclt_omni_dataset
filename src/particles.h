@@ -37,9 +37,9 @@
 #define TARGET_RAND_STDDEV 20.0
 
 // concerning time
-#define ITERATION_TIME_DEFAULT 0.0333
-#define ITERATION_TIME_NA (-1)
-#define ITERATION_TIME_MAX (1)
+#define TARGET_ITERATION_TIME_DEFAULT 0.0333
+#define TARGET_ITERATION_TIME_NA (-1)
+#define TARGET_ITERATION_TIME_MAX (1)
 
 // others
 #define MIN_WEIGHTSUM 1e-10
@@ -185,13 +185,13 @@ protected:
 #ifdef MORE_DEBUG
         std::ostringstream oss_time;
         oss_time << "timeVec = [ ";
-        for(uint i=0; i < timeVec.size(); ++i)
+        for (uint i = 0; i < timeVec.size(); ++i)
           oss_time << timeVec[i] << " ";
         oss_time << "]";
 
         std::ostringstream oss_pos;
         oss_pos << "posVec[" << velType << "] = [ ";
-        for(uint i=0; i < posVec[velType].size(); ++i)
+        for (uint i = 0; i < posVec[velType].size(); ++i)
           oss_pos << posVec[velType][i] << " ";
         oss_pos << "]";
 
@@ -335,30 +335,34 @@ public:
    */
   struct PFinitData
   {
-    const uint nParticles, nTargets, statesPerRobot, nRobots, nLandmarks;
+    const uint mainRobotID, nParticles, nTargets, statesPerRobot, nRobots,
+        nLandmarks;
     const std::vector<bool>& robotsUsed;
     const std::vector<Landmark>& landmarksMap;
     std::vector<float> alpha;
 
     /**
-     * @brief _PFinitData
-     * @param _nParticles - the number of particles to be in the particle filter
-     * @param _nTargets - the number of targets to consider
-     * @param _statesPerRobot - the state space dimension for each robot
-     * @param _nRobots - number of robots
-     * @param _nLandmarks - number of landmarks
-     * @param _robotsUsed - vector of bools mentioning if robots are being used,
+     * @brief PFinitData
+     * @param mainRobotID - the robot number where this algorithm will run on -
+     * affects the timings of iteration and estimation updates
+     * @param nParticles - the number of particles to be in the particle filter
+     * @param nTargets - the number of targets to consider
+     * @param statesPerRobot - the state space dimension for each robot
+     * @param nRobots - number of robots
+     * @param nLandmarks - number of landmarks
+     * @param robotsUsed - vector of bools mentioning if robots are being used,
      * according to the standard robot ordering
-     * @param _landmarksMap - vector of Landmark structs containing information
+     * @param landmarksMap - vector of Landmark structs containing information
      * on the landmark locations
-     * @param _vector with values to be used in the RNG for the model sampling
+     * @param vector with values to be used in the RNG for the model sampling
      */
-    PFinitData(const uint nParticles, const uint nTargets,
-               const uint statesPerRobot, const uint nRobots,
-               const uint nLandmarks, const std::vector<bool>& robotsUsed,
+    PFinitData(const uint mainRobotID, const uint nParticles,
+               const uint nTargets, const uint statesPerRobot,
+               const uint nRobots, const uint nLandmarks,
+               const std::vector<bool>& robotsUsed,
                const std::vector<Landmark>& landmarksMap,
                const std::vector<float>& alpha = std::vector<float>())
-        : nParticles(nParticles), nTargets(nTargets),
+        : mainRobotID(mainRobotID), nParticles(nParticles), nTargets(nTargets),
           statesPerRobot(statesPerRobot), nRobots(nRobots),
           nLandmarks(nLandmarks), alpha(alpha), robotsUsed(robotsUsed),
           landmarksMap(landmarksMap)
@@ -388,6 +392,7 @@ public:
   };
 
 protected:
+  const uint mainRobotID_;
   const std::vector<Landmark>& landmarksMap_;
   const std::vector<bool>& robotsUsed_;
   const uint nParticles_;
@@ -403,7 +408,7 @@ protected:
   bool initialized_;
   std::vector<std::vector<LandmarkObservation> > bufLandmarkObservations_;
   std::vector<TargetObservation> bufTargetObservations_;
-  double iterationTime_;
+  double targetIterationTime_;
   ros::Time prevTime_, newTime_;
   struct State state_;
 
@@ -496,17 +501,17 @@ public:
    */
   ParticleFilter(struct PFinitData& data);
 
-  void updateIterationTime(ros::Time tRos)
+  void updateTargetIterationTime(ros::Time tRos)
   {
     prevTime_ = newTime_;
     newTime_ = tRos;
-    iterationTime_ = (newTime_ - prevTime_).toNSec() * 1e-9;
-    if (fabs(iterationTime_) > 10)
+    targetIterationTime_ = (newTime_ - prevTime_).toNSec() * 1e-9;
+    if (fabs(targetIterationTime_) > 10)
     {
       // Something is wrong, set to default iteration time
-      iterationTime_ = ITERATION_TIME_DEFAULT;
+      targetIterationTime_ = TARGET_ITERATION_TIME_DEFAULT;
     }
-    ROS_DEBUG("Target tracking iteration time: %f", iterationTime_);
+    ROS_DEBUG("Target tracking iteration time: %f", targetIterationTime_);
   }
 
   ParticleFilter* getPFReference() { return this; }
