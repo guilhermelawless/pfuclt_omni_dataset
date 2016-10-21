@@ -15,9 +15,9 @@
 
 //#define DONT_RESAMPLE
 //#define DONT_FUSE_TARGET true
-//#define ALTERNATIVE_TARGET_FUSE true
 #define BROADCAST_TF_AND_POSES true
 #define PUBLISH_PTCLS true
+#define EVALUATE_TIME_PERFORMANCE true
 
 namespace pfuclt_ptcls
 {
@@ -35,13 +35,12 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
       seed_(time(0)), initialized_(false),
       bufLandmarkObservations_(
           data.nRobots, std::vector<LandmarkObservation>(data.nLandmarks)),
-      bufTargetObservations_(data.nRobots), prevTime_(ros::Time::now()),
-      newTime_(ros::Time::now()),
-      targetIterationTime_(TARGET_ITERATION_TIME_DEFAULT),
+      bufTargetObservations_(data.nRobots),
       weightComponents_(data.nRobots, subparticles_t(data.nParticles, 0.0)),
-      state_(data.statesPerRobot, data.nRobots)
+      state_(data.statesPerRobot, data.nRobots),
+      targetIterationTime_(), odometryTime_(), iterationTime_(),
+      mutex_()
 {
-
   ROS_INFO("Created particle filter with dimensions %d, %d",
            (int)particles_.size(), (int)particles_[0].size());
 }
@@ -56,10 +55,6 @@ void ParticleFilter::predictTarget()
   normal_distribution<> targetAcceleration(TARGET_RAND_MEAN,
                                            TARGET_RAND_STDDEV);
 
-  // If the iterationTime is too high, consider the default value
-  if (targetIterationTime_ > TARGET_ITERATION_TIME_MAX)
-    targetIterationTime_ = TARGET_ITERATION_TIME_DEFAULT;
-
   for (int p = 0; p < nParticles_; p++)
   {
     // Get random accelerations
@@ -69,8 +64,8 @@ void ParticleFilter::predictTarget()
 
     for (uint s = 0; s < STATES_PER_TARGET; ++s)
     {
-      pdata_t diff = state_.target.vel[s] * targetIterationTime_ +
-                     0.5 * accel[s] * pow(targetIterationTime_, 2);
+      pdata_t diff = state_.target.vel[s] * targetIterationTime_.diff +
+                     0.5 * accel[s] * pow(targetIterationTime_.diff, 2);
 
       particles_[O_TARGET + s][p] += diff;
 
@@ -78,7 +73,7 @@ void ParticleFilter::predictTarget()
           p == 0,
           "Target[%d] predicted a difference of %fm after iterationTime "
           "= %fs and velocity %fm/s",
-          s, diff, targetIterationTime_, state_.target.vel[s]);
+          s, diff, targetIterationTime_.diff, state_.target.vel[s]);
     }
   }
 }
@@ -238,29 +233,6 @@ void ParticleFilter::fuseTarget()
     pdata_t maxTargetSubParticleWeight = -1.0;
     uint mStar = m;
 
-#ifndef ALTERNATIVE_FUSE_TARGET
-    // Vectors with the matrixes concerning this particle
-    std::vector<Eigen::Transform<pdata_t, 2, Eigen::Affine> > Rrobot(nRobots_);
-    std::vector<Eigen::Matrix<pdata_t, 3, 1> > Srobot(nRobots_);
-
-    for (uint r = 0; r < nRobots_; ++r)
-    {
-      if (false == robotsUsed_[r])
-        continue;
-
-      uint o_robot = r * nStatesPerRobot_;
-
-      // Robot pose <=> frame
-      // Affine creates a (Dim+1) * (Dim+1) matrix and sets
-      // last row to [0 0 ... 1]
-      Rrobot[r] = Eigen::Transform<pdata_t, 2, Eigen::Affine>(
-          Eigen::Rotation2D<pdata_t>(-particles_[o_robot + O_THETA][m]));
-
-      Srobot[r] = Eigen::Matrix<pdata_t, 3, 1>(
-          particles_[o_robot + O_X][m], particles_[o_robot + O_Y][m], 0.0);
-    }
-#endif
-
     // Find the particle m* in the set [m:M] for which the weight contribution
     // by the target subparticle to the full weight is maximum
     for (uint p = m; p < nParticles_; ++p)
@@ -268,13 +240,6 @@ void ParticleFilter::fuseTarget()
       // Vector with probabilities for each robot, starting at 0.0 in case the
       // robot hasn't seen the ball
       std::vector<pdata_t> probabilities(nRobots_, 0.0);
-
-#ifndef ALTERNATIVE_FUSE_TARGET
-      // Target in global frame
-      Eigen::Matrix<pdata_t, 3, 1> Tglobal(particles_[O_TARGET + O_TX][p],
-                                           particles_[O_TARGET + O_TY][p],
-                                           particles_[O_TARGET + O_TZ][p]);
-#endif
 
       // Observations of the target by all robots
       for (uint r = 0; r < nRobots_; ++r)
@@ -284,14 +249,10 @@ void ParticleFilter::fuseTarget()
 
         TargetObservation& obs = bufTargetObservations_[r];
 
-#ifdef ALTERNATIVE_TARGET_FUSE
-
         uint o_robot = r * nStatesPerRobot_;
 
-        float Z[3], Zcap[3], Q[3][3], Q_inv[3][3], Z_Zcap[3];
-        Z[0] = obs.x;
-        Z[1] = obs.y;
-        Z[2] = obs.z;
+        float Z[3] = {obs.x, obs.y, obs.z}, Zcap[3], Z_Zcap[3];
+
         Zcap[0] =
             (particles_[O_TARGET + O_TX][p] - particles_[o_robot + O_X][m]) *
                 (cos(particles_[o_robot + O_THETA][m])) +
@@ -311,32 +272,6 @@ void ParticleFilter::fuseTarget()
                                Z_Zcap[1] * Z_Zcap[1] / obs.covYY +
                                Z_Zcap[2] * Z_Zcap[2] * 10.0);
         float detValue = 1.0; // powf( (2*PI*Q[0][0]*Q[1][1]*Q[2][2]),-0.5);
-
-#else
-        // Observation in robot frame
-        Eigen::Matrix<pdata_t, 3, 1> Zrobot(obs.x, obs.y, obs.z);
-
-        // Target to local frame
-        Eigen::Matrix<pdata_t, 3, 1> Trobot = Rrobot[r] * (Tglobal - Srobot[r]);
-
-        // Error in observation
-        Eigen::Matrix<pdata_t, 3, 1> Zerr = Trobot - Zrobot;
-
-        // The values of interest to the particle weights
-        // Note: using Eigen wasn't of particular interest here since it does
-        // not allow for transposing a non-dynamic matrix
-
-        // Q - diagonal matrix where the diagonal is ( covXX, covYY, 0.1 )
-        // Qinv - inverse of the diagonal matrix, consists of inverting each
-        // value in the diagonal
-
-        float expArg =
-            -0.5 * (Zerr[0] * Zerr[0] / obs.covXX +
-                    Zerr[1] * Zerr[1] / obs.covYY + Zerr[2] * Zerr[2] / 0.1);
-
-        float detValue =
-            1.0; // pow((2 * M_PI * obs.covXX * obs.covYY * 0.1), -0.5);
-#endif
 
         // Probability value for this robot and this particle
         probabilities[r] = detValue * exp(expArg);
@@ -662,7 +597,7 @@ void ParticleFilter::init(const std::vector<double>& customRandInit,
   ROS_INFO("Particle filter initialized");
 }
 
-void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
+void ParticleFilter::predict(const uint robotNumber, const Odometry odom, const ros::Time stamp)
 {
   if (!initialized_)
     return;
@@ -713,8 +648,20 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
   // If this is the main robot, perform one PF-UCLT iteration
   if (mainRobotID_ == robotNumber)
   {
-// All the PF-UCLT steps
-// predictTarget() is done when the target iteration time is updated
+#ifdef EVALUATE_TIME_PERFORMANCE
+    odometryTime_.updateTime(stamp);
+    ROS_INFO("Odometry IF NOT slowed down deltaT = %fs :::::::::: %fHz", odometryTime_.diff, 1.0/odometryTime_.diff);
+#endif
+
+    // Lock mutex
+    boost::mutex::scoped_lock(mutex_);
+
+#ifdef EVALUATE_TIME_PERFORMANCE
+    iterationTime_.updateTime(ros::Time::now());
+#endif
+
+    // All the PF-UCLT steps
+    // predictTarget() is done when the target iteration time is updated
 
 #ifndef DONT_FUSE_ROBOTS
     fuseRobots();
@@ -729,6 +676,11 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
 #endif
 
     estimate();
+
+#ifdef EVALUATE_TIME_PERFORMANCE
+    iterationTime_.updateTime(ros::Time::now());
+    ROS_INFO("Iteration deltaT = %fs :::::::::: %fHz", iterationTime_.diff, 1.0/iterationTime_.diff);
+#endif
 
     ROS_DEBUG("Iteration: %s", iteration_oss->str().c_str());
     // Clear ostringstream

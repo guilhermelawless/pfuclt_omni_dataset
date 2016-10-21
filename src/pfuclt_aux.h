@@ -153,7 +153,44 @@ bool readParam(ros::NodeHandle& nh, const std::string name,
     ROS_ERROR("Failed to receive parameter %s", name.c_str());
 }
 
+/**
+ * @brief linearRegressionSlope - applies linear regression to a set of data and calculates the slope
+ * @param x - vector of time (or other) data
+ * @param y - vector of data
+ * @return slope of the linear regression affine function
+ */
 double linearRegressionSlope(const std::vector<double>& x, const std::vector<double>& y);
+
+/**
+ * @brief The timeEval_s struct - takes care of time difference evaluation through the ros::Time methods
+ */
+typedef struct timeEval_s
+{
+  ros::Time rosPrev, rosNew;
+  double diff;
+
+  timeEval_s()
+  {
+    rosPrev = rosNew = ros::Time::now();
+    diff = 0.0;
+  }
+
+  /**
+   * @brief updateTime - adds the newest time available to the struct and returns the time difference
+   * @param t - the new time in ros::Time format
+   * @return
+   */
+  double updateTime(ros::Time t)
+  {
+    rosPrev = rosNew;
+    rosNew = t;
+
+    diff = (rosNew-rosPrev).toNSec() * 1e-9;
+
+    return diff;
+  }
+
+}TimeEval;
 
 // end of namespace
 }

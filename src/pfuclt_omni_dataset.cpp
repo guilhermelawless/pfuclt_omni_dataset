@@ -185,7 +185,7 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   //            odomStruct.theta);
 
   // Call the particle filter predict step for this robot
-  pf_->predict(robotNumber_, odomStruct);
+  pf_->predict(robotNumber_, odomStruct, odometry->header.stamp);
 }
 
 void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)

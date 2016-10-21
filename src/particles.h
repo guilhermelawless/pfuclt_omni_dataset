@@ -38,8 +38,10 @@
 
 // concerning time
 #define TARGET_ITERATION_TIME_DEFAULT 0.0333
-#define TARGET_ITERATION_TIME_NA (-1)
+#define ITERATION_TIME_NA (-1)
 #define TARGET_ITERATION_TIME_MAX (1)
+#define PREV 0
+#define NEW 1
 
 // others
 #define MIN_WEIGHTSUM 1e-10
@@ -90,6 +92,9 @@ typedef boost::random::mt19937 RNGType;
 
 class ParticleFilter
 {
+private:
+  boost::mutex mutex_;
+
 protected:
   /**
    * @brief The state_s struct - defines a structure to hold state information
@@ -322,8 +327,7 @@ protected:
   bool initialized_;
   std::vector<std::vector<LandmarkObservation> > bufLandmarkObservations_;
   std::vector<TargetObservation> bufTargetObservations_;
-  double targetIterationTime_;
-  ros::Time prevTime_, newTime_;
+  TimeEval targetIterationTime_, odometryTime_, iterationTime_;
   struct State state_;
 
   /**
@@ -417,15 +421,14 @@ public:
 
   void updateTargetIterationTime(ros::Time tRos)
   {
-    prevTime_ = newTime_;
-    newTime_ = tRos;
-    targetIterationTime_ = (newTime_ - prevTime_).toNSec() * 1e-9;
-    if (fabs(targetIterationTime_) > 10)
+    targetIterationTime_.updateTime(tRos);
+
+    if (fabs(targetIterationTime_.diff) > TARGET_ITERATION_TIME_MAX)
     {
       // Something is wrong, set to default iteration time
-      targetIterationTime_ = TARGET_ITERATION_TIME_DEFAULT;
+      targetIterationTime_.diff = TARGET_ITERATION_TIME_DEFAULT;
     }
-    ROS_DEBUG("Target tracking iteration time: %f", targetIterationTime_);
+    ROS_DEBUG("Target tracking iteration time: %f", targetIterationTime_.diff);
 
     // After this the target state is predicted
     predictTarget();
@@ -494,9 +497,10 @@ public:
    * received odometry
    * @param robotNumber - the robot number [0,N]
    * @param odometry - a structure containing the latest odometry readings
+   * @param time - a ros::Time structure with the timestamp for this data
    * @warning only for the omni dataset configuration
    */
-  void predict(const uint robotNumber, const Odometry odom);
+  void predict(const uint robotNumber, const Odometry odom, const ros::Time stamp);
 
   /**
    * @brief isInitialized - simple interface to access private member
