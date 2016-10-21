@@ -99,14 +99,6 @@ protected:
   {
     uint nRobots;
     uint nStatesPerRobot;
-    const std::vector<bool>& robotsUsed;
-    std::vector<bool> predicted;
-    std::vector<bool> landmarkMeasurementsDone;
-    std::vector<bool> targetMeasurementsDone;
-    bool targetPredicted;
-    bool robotsFused;
-    bool targetFused;
-    bool resampled;
 
     /**
      * @brief The robotState_s struct - saves information on the belief of a
@@ -205,16 +197,11 @@ protected:
     /**
      * @brief State - constructor
      */
-    State(const uint nStatesPerRobot, const uint numberRobots,
-          const std::vector<bool>& robotsBeingUsed)
-        : nStatesPerRobot(nStatesPerRobot), nRobots(numberRobots),
-          predicted(nRobots, false), landmarkMeasurementsDone(nRobots, false),
-          targetMeasurementsDone(nRobots, false), robotsUsed(robotsBeingUsed),
+    State(const uint nStatesPerRobot, const uint nRobots)
+        : nStatesPerRobot(nStatesPerRobot), nRobots(nRobots),
           targetVelocityEstimator(STATES_PER_TARGET, MAX_ESTIMATOR_STACK_SIZE,
                                   pfuclt_aux::linearRegressionSlope)
     {
-      reset();
-
       // Create and initialize the robots vector
       for (uint r = 0; r < nRobots; ++r)
         robots.push_back(robotState_s(nStatesPerRobot));
@@ -252,80 +239,6 @@ protected:
 
       ROS_DEBUG("%s", oss.str().c_str());
     }
-
-    /**
-     * @brief reset - set the state's bools to false after the PF's last step.
-     * If any robot is not used, sets those variables to true
-     */
-    void reset()
-    {
-      predicted.assign(nRobots, false);
-      landmarkMeasurementsDone.assign(nRobots, false);
-      targetMeasurementsDone.assign(nRobots, false);
-      robotsFused = targetFused = resampled = targetPredicted = false;
-
-      for (uint r = 0; r < nRobots; ++r)
-      {
-        if (!robotsUsed[r])
-        {
-          predicted[r] = true;
-          landmarkMeasurementsDone[r] = true;
-          targetMeasurementsDone[r] = true;
-        }
-      }
-    }
-
-    /**
-     * @brief allPredicted - call to find out if the PF has predicted each
-     * robot's state
-     * @return true if the PF has predicted all robots in this iteration, false
-     * otherwise
-     */
-    bool allPredicted()
-    {
-      for (std::vector<bool>::iterator it = predicted.begin();
-           it != predicted.end(); ++it)
-      {
-        if (false == *it)
-          return false;
-      }
-
-      return true;
-    }
-
-    /**
-     * @brief allLandmarkMeasurementsDone - call to find out if all the robots
-     * have sent their landmark measurements to the PF in this iteration
-     * @return true if all measurements are present, false otherwise
-     */
-    bool allLandmarkMeasurementsDone()
-    {
-      for (std::vector<bool>::iterator it = landmarkMeasurementsDone.begin();
-           it != landmarkMeasurementsDone.end(); ++it)
-      {
-        if (false == *it)
-          return false;
-      }
-
-      return true;
-    }
-
-    /**
-     * @brief allTargetMeasurementsDone - call to find out if all the robots
-     * have sent their target measurements to the PF in this iteration
-     * @return true if all measurements are present, false otherwise
-     */
-    bool allTargetMeasurementsDone()
-    {
-      for (std::vector<bool>::iterator it = targetMeasurementsDone.begin();
-           it != targetMeasurementsDone.end(); ++it)
-      {
-        if (false == *it)
-          return false;
-      }
-
-      return true;
-    }
   };
 
 public:
@@ -344,7 +257,8 @@ public:
     /**
      * @brief PFinitData
      * @param mainRobotID - the robot number where this algorithm will run on -
-     * affects the timings of iteration and estimation updates
+     * affects the timings of iteration and estimation updates - consider that
+     * OMNI1 is ID1
      * @param nParticles - the number of particles to be in the particle filter
      * @param nTargets - the number of targets to consider
      * @param statesPerRobot - the state space dimension for each robot
@@ -457,7 +371,7 @@ protected:
    * @brief predictTarget - predict target state step
    * @param robotNumber - the robot performing, for debugging purposes
    */
-  void predictTarget(uint robotNumber);
+  void predictTarget();
 
   /**
    * @brief fuseRobots - fuse robot states step
@@ -487,9 +401,9 @@ protected:
   void estimate();
 
   /**
-   * @brief nextIteration - perform final steps and reset the PF state
+   * @brief nextIteration - perform final steps before next iteration
    */
-  virtual void nextIteration() { state_.reset(); }
+  virtual void nextIteration() {}
 
 public:
   boost::shared_ptr<std::ostringstream> iteration_oss;
@@ -512,6 +426,9 @@ public:
       targetIterationTime_ = TARGET_ITERATION_TIME_DEFAULT;
     }
     ROS_DEBUG("Target tracking iteration time: %f", targetIterationTime_);
+
+    // After this the target state is predicted
+    predictTarget();
   }
 
   ParticleFilter* getPFReference() { return this; }

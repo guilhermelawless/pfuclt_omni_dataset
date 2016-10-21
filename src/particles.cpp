@@ -14,7 +14,7 @@
 #include <sensor_msgs/PointCloud.h>
 
 //#define DONT_RESAMPLE
-//#define DONT_FUSE_TARGET true
+#define DONT_FUSE_TARGET true
 //#define ALTERNATIVE_TARGET_FUSE true
 #define BROADCAST_TF_AND_POSES true
 #define PUBLISH_PTCLS true
@@ -23,7 +23,7 @@ namespace pfuclt_ptcls
 {
 
 ParticleFilter::ParticleFilter(struct PFinitData& data)
-    : mainRobotID_(data.mainRobotID), nParticles_(data.nParticles),
+    : mainRobotID_(data.mainRobotID - 1), nParticles_(data.nParticles),
       nTargets_(data.nTargets), nStatesPerRobot_(data.statesPerRobot),
       nRobots_(data.nRobots),
       nSubParticleSets_(data.nTargets * STATES_PER_TARGET +
@@ -39,25 +39,18 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
       newTime_(ros::Time::now()),
       targetIterationTime_(TARGET_ITERATION_TIME_DEFAULT),
       weightComponents_(data.nRobots, subparticles_t(data.nParticles, 0.0)),
-      state_(data.statesPerRobot, data.nRobots, data.robotsUsed)
+      state_(data.statesPerRobot, data.nRobots)
 {
 
   ROS_INFO("Created particle filter with dimensions %d, %d",
            (int)particles_.size(), (int)particles_[0].size());
 }
 
-void ParticleFilter::predictTarget(uint robotNumber)
+void ParticleFilter::predictTarget()
 {
-  if (!initialized_)
-    return;
-
-  state_.targetPredicted = true;
-
-  *iteration_oss << "predictTarget(OMNI" << robotNumber + 1 << ") -> ";
+  *iteration_oss << "predictTarget() -> ";
 
   using namespace boost::random;
-
-  ROS_DEBUG("OMNI%d is predicting the target state.", robotNumber + 1);
 
   // Random acceleration model
   normal_distribution<> targetAcceleration(TARGET_RAND_MEAN,
@@ -81,23 +74,18 @@ void ParticleFilter::predictTarget(uint robotNumber)
 
       particles_[O_TARGET + s][p] += diff;
 
-      ROS_DEBUG_COND(p == 0, "Target[%d] predicted as %fm after iterationTime "
-                             "= %fs and velocity %fm/s",
-                     s, diff, targetIterationTime_, state_.target.vel[s]);
+      ROS_DEBUG_COND(
+          p == 0,
+          "Target[%d] predicted a difference of %fm after iterationTime "
+          "= %fs and velocity %fm/s",
+          s, diff, targetIterationTime_, state_.target.vel[s]);
     }
   }
 }
 
 void ParticleFilter::fuseRobots()
 {
-  if (!initialized_ || state_.robotsFused)
-    return;
-
   *iteration_oss << "fuseRobots() -> ";
-
-  ROS_DEBUG("Fusing Robots");
-
-  state_.robotsFused = true;
 
   // Keeps track of number of landmarks seen for each robot
   std::vector<uint> landmarksSeen(nRobots_, 0);
@@ -217,25 +205,12 @@ void ParticleFilter::fuseRobots()
       particles_[O_WEIGHT][p] *= weightComponents_[r][sort_index];
     }
   }
-
-  // If the target measurements were performed prior to this function ending,
-  // then we should call the target fusion step here
-  if (!state_.targetFused && state_.allTargetMeasurementsDone())
-    fuseTarget();
 }
 
 void ParticleFilter::fuseTarget()
 {
-  if (!initialized_ || state_.targetFused)
-    return;
-
   *iteration_oss << "fuseTarget() -> ";
 
-  ROS_DEBUG("Fusing Target");
-
-  state_.targetFused = true;
-
-#ifndef DONT_FUSE_TARGET
   // If ball not seen by any robot, just skip all of this
   bool ballSeen = false;
   for (std::vector<TargetObservation>::iterator it =
@@ -247,11 +222,11 @@ void ParticleFilter::fuseTarget()
       break;
     }
 
-  // resample and exit if ball not seen by any robot
+  // exit if ball not seen by any robot
   if (!ballSeen)
   {
     *iteration_oss << "Ball not seen ";
-    return resample();
+    return;
   }
 
   // If program is here, at least one robot saw the ball
@@ -369,14 +344,10 @@ void ParticleFilter::fuseTarget()
     particles_[O_WEIGHT][m] *= maxTargetSubParticleWeight;
   }
 
-// The target subparticles are now reordered according to their weight
-// contribution
-#endif
+  // The target subparticles are now reordered according to their weight
+  // contribution
 
-  printWeights("After fuseTarget()");
-
-  // Start resampling
-  resample();
+  // printWeights("After fuseTarget()");
 }
 
 void ParticleFilter::modifiedMultinomialResampler(uint startAt)
@@ -415,15 +386,8 @@ void ParticleFilter::modifiedMultinomialResampler(uint startAt)
 
 void ParticleFilter::resample()
 {
-  if (!initialized_ || state_.resampled)
-    return;
-
-  state_.resampled = true;
-
   *iteration_oss << "resample() -> ";
-  ROS_DEBUG("Resampling");
 
-#ifndef DONT_RESAMPLE
   for (uint r = 0; r < nRobots_; ++r)
   {
     if (false == robotsUsed_[r])
@@ -456,22 +420,17 @@ void ParticleFilter::resample()
 
     // Print iteration and state information
     *iteration_oss << "FAIL! -> ";
+
+    return;
   }
 
-  else
-  {
-    // All resamplers use normalized weights
-    for (uint p = 0; p < nParticles_; ++p)
-      particles_[O_WEIGHT][p] = particles_[O_WEIGHT][p] / weightSum;
+  // All resamplers use normalized weights
+  for (uint p = 0; p < nParticles_; ++p)
+    particles_[O_WEIGHT][p] = particles_[O_WEIGHT][p] / weightSum;
 
-    modifiedMultinomialResampler(RESAMPLE_START_AT);
+  modifiedMultinomialResampler(RESAMPLE_START_AT);
 
-    // printWeights("after resampling: ");
-  }
-#endif
-
-  // Resampling done, find the current state belief
-  estimate();
+  // printWeights("after resampling: ");
 }
 
 void ParticleFilter::estimate()
@@ -493,16 +452,9 @@ void ParticleFilter::estimate()
   {
     // Print iteration and state information
     *iteration_oss << "DONE without estimating!";
-    ROS_DEBUG("Iteration: %s", iteration_oss->str().c_str());
 
-    state_.print();
-
-    // Clear ostringstream
-    iteration_oss->str("");
-    iteration_oss->clear();
-
-    // Start next iteration
-    return nextIteration();
+    // Don't estimate
+    return;
   }
 
   // For each robot
@@ -583,18 +535,7 @@ void ParticleFilter::estimate()
     state_.target.vel[O_TX] = state_.target.vel[O_TY] =
         state_.target.vel[O_TZ] = 0.0;
 
-  // Print iteration and state information
   *iteration_oss << "DONE!";
-  ROS_DEBUG("Iteration: %s", iteration_oss->str().c_str());
-
-  state_.print();
-
-  // Clear ostringstream
-  iteration_oss->str("");
-  iteration_oss->clear();
-
-  // Start next iteration
-  nextIteration();
 }
 
 void ParticleFilter::printWeights(std::string pre)
@@ -666,9 +607,6 @@ void ParticleFilter::init(const std::vector<double>& customRandInit,
   // Particle weights init with same weight (1/nParticles)
   resetWeights(1.0 / nParticles_);
 
-  // Reset PF state
-  state_.reset();
-
   // Initialize pose with initial belief
 
   ROS_WARN_COND(customPosInit.size() != (nRobots_ * 2),
@@ -691,9 +629,6 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
 {
   if (!initialized_)
     return;
-
-  // Change predicted state
-  state_.predicted[robotNumber] = true;
 
   *iteration_oss << "predict(OMNI" << robotNumber + 1 << ") -> ";
 
@@ -738,47 +673,47 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom)
         particles_[O_THETA + robot_offset][i] + deltaFinalRotEffective(seed_));
   }
 
-  // If all robots have predicted, also predict the target state
-  if (state_.allPredicted() && !state_.targetPredicted)
-    predictTarget(robotNumber);
+  // If this is the main robot, perform one PF-UCLT iteration
+  if (mainRobotID_ == robotNumber)
+  {
+// All the PF-UCLT steps
+// predictTarget() is done when the target iteration time is updated
 
-  // Start fusing if all robots have done their measurements and predictions
-  if (!state_.robotsFused && state_.allLandmarkMeasurementsDone() &&
-      state_.allPredicted())
+#ifndef DONT_FUSE_ROBOTS
     fuseRobots();
+#endif
+
+#ifndef DONT_FUSE_TARGET
+    fuseTarget();
+#endif
+
+#ifndef DONT_RESAMPLE
+    resample();
+#endif
+
+    estimate();
+
+    ROS_DEBUG("Iteration: %s", iteration_oss->str().c_str());
+    // Clear ostringstream
+    iteration_oss->str("");
+    iteration_oss->clear();
+
+    // Print state information
+    state_.print();
+
+    // Start next iteration
+    nextIteration();
+  }
 }
 
 void ParticleFilter::saveAllLandmarkMeasurementsDone(const uint robotNumber)
 {
-  if (!initialized_)
-    return;
-
   *iteration_oss << "allLandmarks(OMNI" << robotNumber + 1 << ") -> ";
-
-  // Change state
-  state_.landmarkMeasurementsDone[robotNumber] = true;
-
-  // Start fusing if all robots have done their measurements and predictions
-  if (!state_.robotsFused && state_.allLandmarkMeasurementsDone() &&
-      state_.allPredicted())
-    fuseRobots();
 }
 
 void ParticleFilter::saveAllTargetMeasurementsDone(const uint robotNumber)
 {
-  if (!initialized_)
-    return;
-
-  // Change state
-  state_.targetMeasurementsDone[robotNumber] = true;
-
   *iteration_oss << "allTargets(OMNI" << robotNumber + 1 << ") -> ";
-
-  // Start fusing if all robots have done their target measurements and the
-  // robot fusion step has been performed
-  if (!state_.targetFused && state_.robotsFused &&
-      state_.allTargetMeasurementsDone())
-    fuseTarget();
 }
 
 PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
@@ -862,7 +797,7 @@ void PFPublisher::publishParticles()
   // Also send as a series of PoseArray messages for each robot
   for (uint r = 0; r < nRobots_; ++r)
   {
-    if (false == state_.robotsUsed[r])
+    if (false == robotsUsed_[r])
       continue;
 
     uint o_robot = r * nStatesPerRobot_;
@@ -910,7 +845,7 @@ void PFPublisher::publishRobotStates()
   // This is pretty much copy and paste
   for (uint r = 0; r < nRobots_; ++r)
   {
-    if (false == state_.robotsUsed[r])
+    if (false == robotsUsed_[r])
       continue;
 
     std::ostringstream robotName;
@@ -980,25 +915,25 @@ void PFPublisher::publishGTData()
   gtPoint.header.stamp = ros::Time::now();
   gtPoint.header.frame_id = "world";
 
-  if (true == state_.robotsUsed[0])
+  if (true == robotsUsed_[0])
   {
     gtPoint.point = msg_GT_.poseOMNI1.pose.position;
     robotGTPublishers_[0].publish(gtPoint);
   }
 
-  if (true == state_.robotsUsed[2])
+  if (true == robotsUsed_[2])
   {
     gtPoint.point = msg_GT_.poseOMNI3.pose.position;
     robotGTPublishers_[2].publish(gtPoint);
   }
 
-  if (true == state_.robotsUsed[3])
+  if (true == robotsUsed_[3])
   {
     gtPoint.point = msg_GT_.poseOMNI4.pose.position;
     robotGTPublishers_[3].publish(gtPoint);
   }
 
-  if (true == state_.robotsUsed[4])
+  if (true == robotsUsed_[4])
   {
     gtPoint.point = msg_GT_.poseOMNI5.pose.position;
     robotGTPublishers_[4].publish(gtPoint);

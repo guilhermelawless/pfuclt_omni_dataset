@@ -180,9 +180,9 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   odomStruct.y = odometry->pose.pose.position.y;
   odomStruct.theta = tf2::getYaw(odometry->pose.pose.orientation);
 
-  ROS_DEBUG("OMNI%d odometry at time %d = {%f;%f;%f}", robotNumber_ + 1,
-            odometry->header.stamp.sec, odomStruct.x, odomStruct.y,
-            odomStruct.theta);
+  //  ROS_DEBUG("OMNI%d odometry at time %d = {%f;%f;%f}", robotNumber_ + 1,
+  //            odometry->header.stamp.sec, odomStruct.x, odomStruct.y,
+  //            odomStruct.theta);
 
   // Call the particle filter predict step for this robot
   pf_->predict(robotNumber_, odomStruct);
@@ -195,8 +195,8 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
 
   if (target->found)
   {
-    ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
-              target->header.stamp.sec);
+    //    ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
+    //              target->header.stamp.sec);
 
     Eigen::Vector2d targetObsVec = Eigen::Vector2d(target->x, target->y);
     pfuclt_ptcls::TargetObservation obs;
@@ -225,8 +225,8 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
   }
   else
   {
-    ROS_DEBUG("OMNI%d didn't find the ball at time %d", robotNumber_ + 1,
-              target->header.stamp.sec);
+    //    ROS_DEBUG("OMNI%d didn't find the ball at time %d", robotNumber_ + 1,
+    //              target->header.stamp.sec);
 
     pf_->saveTargetObservation(robotNumber_, false);
   }
@@ -241,8 +241,8 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
 void Robot::landmarkDataCallback(
     const read_omni_dataset::LRMLandmarksData::ConstPtr& landmarkData)
 {
-  ROS_DEBUG("OMNI%d landmark data at time %d", robotNumber_ + 1,
-            landmarkData->header.stamp.sec);
+  //  ROS_DEBUG("OMNI%d landmark data at time %d", robotNumber_ + 1,
+  //            landmarkData->header.stamp.sec);
 
   bool heuristicsFound[NUM_LANDMARKS];
   for (int i = 0; i < NUM_LANDMARKS; i++)
