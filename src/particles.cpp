@@ -14,7 +14,7 @@
 #include <sensor_msgs/PointCloud.h>
 
 //#define DONT_RESAMPLE
-#define DONT_FUSE_TARGET true
+//#define DONT_FUSE_TARGET true
 //#define ALTERNATIVE_TARGET_FUSE true
 #define BROADCAST_TF_AND_POSES true
 #define PUBLISH_PTCLS true
@@ -225,7 +225,7 @@ void ParticleFilter::fuseTarget()
   // exit if ball not seen by any robot
   if (!ballSeen)
   {
-    *iteration_oss << "Ball not seen ";
+    *iteration_oss << "Ball not seen ->";
     return;
   }
 
@@ -235,14 +235,46 @@ void ParticleFilter::fuseTarget()
   for (uint m = 0; m < nParticles_; ++m)
   {
     // Keep track of the maximum contributed weight and that particle's index
-    pdata_t maxTargetSubParticleWeight = 0.0;
-    uint mStar = 0;
+    pdata_t maxTargetSubParticleWeight = -1.0;
+    uint mStar = m;
+
+#ifndef ALTERNATIVE_FUSE_TARGET
+    // Vectors with the matrixes concerning this particle
+    std::vector<Eigen::Transform<pdata_t, 2, Eigen::Affine> > Rrobot(nRobots_);
+    std::vector<Eigen::Matrix<pdata_t, 3, 1> > Srobot(nRobots_);
+
+    for (uint r = 0; r < nRobots_; ++r)
+    {
+      if (false == robotsUsed_[r])
+        continue;
+
+      uint o_robot = r * nStatesPerRobot_;
+
+      // Robot pose <=> frame
+      // Affine creates a (Dim+1) * (Dim+1) matrix and sets
+      // last row to [0 0 ... 1]
+      Rrobot[r] = Eigen::Transform<pdata_t, 2, Eigen::Affine>(
+          Eigen::Rotation2D<pdata_t>(-particles_[o_robot + O_THETA][m]));
+
+      Srobot[r] = Eigen::Matrix<pdata_t, 3, 1>(
+          particles_[o_robot + O_X][m], particles_[o_robot + O_Y][m], 0.0);
+    }
+#endif
 
     // Find the particle m* in the set [m:M] for which the weight contribution
     // by the target subparticle to the full weight is maximum
     for (uint p = m; p < nParticles_; ++p)
     {
+      // Vector with probabilities for each robot, starting at 0.0 in case the
+      // robot hasn't seen the ball
       std::vector<pdata_t> probabilities(nRobots_, 0.0);
+
+#ifndef ALTERNATIVE_FUSE_TARGET
+      // Target in global frame
+      Eigen::Matrix<pdata_t, 3, 1> Tglobal(particles_[O_TARGET + O_TX][p],
+                                           particles_[O_TARGET + O_TY][p],
+                                           particles_[O_TARGET + O_TZ][p]);
+#endif
 
       // Observations of the target by all robots
       for (uint r = 0; r < nRobots_; ++r)
@@ -250,11 +282,12 @@ void ParticleFilter::fuseTarget()
         if (false == robotsUsed_[r] || false == bufTargetObservations_[r].found)
           continue;
 
-        uint o_robot = r * nStatesPerRobot_;
-
         TargetObservation& obs = bufTargetObservations_[r];
 
 #ifdef ALTERNATIVE_TARGET_FUSE
+
+        uint o_robot = r * nStatesPerRobot_;
+
         float Z[3], Zcap[3], Q[3][3], Q_inv[3][3], Z_Zcap[3];
         Z[0] = obs.x;
         Z[1] = obs.y;
@@ -283,21 +316,8 @@ void ParticleFilter::fuseTarget()
         // Observation in robot frame
         Eigen::Matrix<pdata_t, 3, 1> Zrobot(obs.x, obs.y, obs.z);
 
-        // Robot pose <=> frame
-        // Affine creates a (Dim+1) * (Dim+1) matrix and sets
-        // last row to [0 0 ... 1]
-        Eigen::Transform<pdata_t, 2, Eigen::Affine> Rrobot(
-            Eigen::Rotation2D<pdata_t>(-particles_[o_robot + O_THETA][m]));
-        Eigen::Matrix<pdata_t, 3, 1> Srobot(particles_[o_robot + O_X][m],
-                                            particles_[o_robot + O_Y][m], 0.0);
-
-        // Target in global frame
-        Eigen::Matrix<pdata_t, 3, 1> Tglobal(particles_[O_TARGET + O_TX][p],
-                                             particles_[O_TARGET + O_TY][p],
-                                             particles_[O_TARGET + O_TZ][p]);
-
         // Target to local frame
-        Eigen::Matrix<pdata_t, 3, 1> Trobot = Rrobot * (Tglobal - Srobot);
+        Eigen::Matrix<pdata_t, 3, 1> Trobot = Rrobot[r] * (Tglobal - Srobot[r]);
 
         // Error in observation
         Eigen::Matrix<pdata_t, 3, 1> Zerr = Trobot - Zrobot;
@@ -317,10 +337,12 @@ void ParticleFilter::fuseTarget()
         float detValue =
             1.0; // pow((2 * M_PI * obs.covXX * obs.covYY * 0.1), -0.5);
 #endif
+
+        // Probability value for this robot and this particle
         probabilities[r] = detValue * exp(expArg);
       }
 
-      // Calculate total weight contributed by this particle
+      // Total weight contributed by this particle
       pdata_t totalWeight =
           std::accumulate(probabilities.begin(), probabilities.end(), 0.0);
 
@@ -347,7 +369,7 @@ void ParticleFilter::fuseTarget()
   // The target subparticles are now reordered according to their weight
   // contribution
 
-  // printWeights("After fuseTarget()");
+  // printWeights("After fuseTarget(): ");
 }
 
 void ParticleFilter::modifiedMultinomialResampler(uint startAt)
@@ -366,10 +388,10 @@ void ParticleFilter::modifiedMultinomialResampler(uint startAt)
         cumulativeWeights[par - 1] + duplicate[O_WEIGHT][par];
   }
 
-  int halfParticles = nParticles_ * startAt;
+  int startParticle = nParticles_ * startAt;
 
-  // Resample the rest of the set
-  for (int par = halfParticles; par < nParticles_; par++)
+  // Robot particle resampling starts only at startParticle
+  for (int par = startParticle; par < nParticles_; par++)
   {
     boost::random::uniform_real_distribution<> dist(0, 1);
     float randNo = dist(seed_);
@@ -378,8 +400,23 @@ void ParticleFilter::modifiedMultinomialResampler(uint startAt)
     while (randNo > cumulativeWeights[m])
       m++;
 
-    copyParticle(particles_, duplicate, par, m);
+    copyParticle(particles_, duplicate, par, m, 0, nSubParticleSets_ - 1);
   }
+
+  /*
+  // Target resampling is done for all particles
+  for (int par = 0; par < nParticles_; par++)
+  {
+    boost::random::uniform_real_distribution<> dist(0, 1);
+    float randNo = dist(seed_);
+
+    int m = 0;
+    while (randNo > cumulativeWeights[m])
+      m++;
+
+    copyParticle(particles_, duplicate, par, m, O_TARGET, nSubParticleSets_-1);
+  }
+  */
 
   ROS_DEBUG("End of modifiedMultinomialResampler()");
 }
