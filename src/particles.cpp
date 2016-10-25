@@ -39,7 +39,7 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
       weightComponents_(data.nRobots, subparticles_t(data.nParticles, 0.0)),
       state_(data.statesPerRobot, data.nRobots),
       targetIterationTime_(), odometryTime_(), iterationTime_(),
-      mutex_()
+      mutex_(), O_TARGET(data.nRobots * data.statesPerRobot), O_WEIGHT(nSubParticleSets_-1)
 {
   ROS_INFO("Created particle filter with dimensions %d, %d",
            (int)particles_.size(), (int)particles_[0].size());
@@ -275,6 +275,13 @@ void ParticleFilter::fuseTarget()
 
         // Probability value for this robot and this particle
         probabilities[r] = detValue * exp(expArg);
+
+        // Debugging a bit
+        ROS_DEBUG_COND(!p && !m, "OMNI%d particle 0 is at {%f;%f;%f}, measured {%f;%f;%f} and the ball subparticles are {%f; %f; %f}",
+                       r+1,
+                       particles_[o_robot + O_X][0], particles_[o_robot + O_Y][0], particles_[o_robot + O_THETA][0],
+                       obs.x, obs.y, obs.z,
+                       particles_[O_TARGET+O_TX][0], particles_[O_TARGET+O_TY][0], particles_[O_TARGET+O_TZ][0]);
       }
 
       // Total weight contributed by this particle
@@ -335,10 +342,10 @@ void ParticleFilter::modifiedMultinomialResampler(uint startAt)
     while (randNo > cumulativeWeights[m])
       m++;
 
-    copyParticle(particles_, duplicate, par, m, 0, nSubParticleSets_ - 1);
+    copyParticle(particles_, duplicate, par, m, 0, O_TARGET - 1);
   }
 
-  /*
+
   // Target resampling is done for all particles
   for (int par = 0; par < nParticles_; par++)
   {
@@ -351,7 +358,7 @@ void ParticleFilter::modifiedMultinomialResampler(uint startAt)
 
     copyParticle(particles_, duplicate, par, m, O_TARGET, nSubParticleSets_-1);
   }
-  */
+
 
   ROS_DEBUG("End of modifiedMultinomialResampler()");
 }
@@ -372,7 +379,7 @@ void ParticleFilter::resample()
     pdata_t stdTheta =
         pfuclt_aux::calc_stdDev<pdata_t>(particles_[o_robot + O_THETA]);
 
-    state_.robots[r].conf = stdX + stdY + stdTheta;
+    state_.robots[r].conf = 1/(stdX + stdY + stdTheta);
 
     ROS_DEBUG("OMNI%d stdX = %f, stdY = %f, stdTheta = %f", r + 1, stdX, stdY,
               stdTheta);
@@ -494,7 +501,7 @@ void ParticleFilter::estimate()
 
   // Add to the velocity estimator
   double timeNow = ros::Time::now().toNSec() * 1e-9;
-  state_.targetVelocityEstimator.insert(timeNow, targetWeightedMeans);
+  state_.targetVelocityEstimator.insert(timeNow, bufTargetObservations_, state_.robots);
 
   // Ball velocity is estimated using linear regression
   if (state_.targetVelocityEstimator.isReadyToEstimate())

@@ -25,11 +25,11 @@
 #define O_X (0)
 #define O_Y (1)
 #define O_THETA (2)
-#define O_TARGET (nRobots_ * nStatesPerRobot_)
+//#define O_TARGET (nRobots_ * nStatesPerRobot_)
 #define O_TX (0)
 #define O_TY (1)
 #define O_TZ (2)
-#define O_WEIGHT (nSubParticleSets_ - 1)
+//#define O_WEIGHT (nSubParticleSets_ - 1)
 
 // target motion model and estimator
 #define MAX_ESTIMATOR_STACK_SIZE 15
@@ -38,10 +38,7 @@
 
 // concerning time
 #define TARGET_ITERATION_TIME_DEFAULT 0.0333
-#define ITERATION_TIME_NA (-1)
 #define TARGET_ITERATION_TIME_MAX (1)
-#define PREV 0
-#define NEW 1
 
 // others
 #define MIN_WEIGHTSUM 1e-10
@@ -109,14 +106,14 @@ protected:
      * @brief The robotState_s struct - saves information on the belief of a
      * robot's state
      */
-    struct robotState_s
+    typedef struct robotState_s
     {
       std::vector<pdata_t> pose;
       pdata_t conf;
 
       robotState_s(uint poseSize) : pose(poseSize, 0.0), conf(0.0) {}
-    };
-    std::vector<struct robotState_s> robots;
+    } RobotState;
+    std::vector<RobotState> robots;
 
     /**
      * @brief The targetState_s struct - saves information on the belief of the
@@ -149,20 +146,54 @@ protected:
 
       targetVelocityEstimator_s(const uint numberVels, const uint maxDataSize,
                                 estimatorFunc ptrFunc)
-          : numberVels(numberVels), posVec(numberVels, std::vector<double>()),
-            maxDataSize(maxDataSize)
+        : numberVels(numberVels), posVec(numberVels, std::vector<double>()),
+          maxDataSize(maxDataSize)
       {
         estimateVelocity = ptrFunc;
       }
 
-      void insert(const double timeData, const std::vector<double>& posData)
+      void insert(const double timeData, const std::vector<TargetObservation>& obsData, const std::vector<RobotState>& robotStates)
       {
+        pdata_t ballGlobal[3];
+        bool readyToInsert = false;
+        size_t size = robotStates.size();
+        uint chosenRobot = 0;
+        pdata_t maxConf = 0.0;
+
+        // Choose the robot based on having found the ball and the maximum confidence
+        for(uint r = 0; r < size; ++r)
+        {
+          if(obsData[r].found)
+          {
+            // TODO these hard coded values.. change or what?
+            if (robotStates[r].conf > maxConf && (obsData[r].x < 4.0 && obsData[r].y < 4.0) )
+            {
+              readyToInsert = true;
+              chosenRobot = r;
+              maxConf = robotStates[r].conf;
+            }
+          }
+        }
+
+        // If ball hasn't be seen, don't insert and just return
+        if(!readyToInsert)
+          return ;
+
+        // Pick the state and data from the chosen robot
+        const RobotState& rs = robotStates[chosenRobot];
+        const TargetObservation& obs = obsData[chosenRobot];
+        // Calc. coordinates in global frame based on observation data and robot state belief
+        ballGlobal[O_TX] = rs.pose[O_X] + obs.x * cos(rs.pose[O_THETA]) - obs.y * sin(rs.pose[O_THETA]);
+        ballGlobal[O_TY] = rs.pose[O_Y] + obs.x * sin(rs.pose[O_THETA]) + obs.y * cos(rs.pose[O_THETA]);
+        ballGlobal[O_TZ] = obs.z;
+
         if (timeVec.empty())
           timeInit = ros::Time::now().toNSec() * 1e-9;
 
         timeVec.push_back(timeData - timeInit);
+
         for (uint velType = 0; velType < posVec.size(); ++velType)
-          posVec[velType].push_back(posData[velType]);
+          posVec[velType].push_back(ballGlobal[velType]);
 
         if (timeVec.size() > maxDataSize)
         {
@@ -203,9 +234,9 @@ protected:
      * @brief State - constructor
      */
     State(const uint nStatesPerRobot, const uint nRobots)
-        : nStatesPerRobot(nStatesPerRobot), nRobots(nRobots),
-          targetVelocityEstimator(STATES_PER_TARGET, MAX_ESTIMATOR_STACK_SIZE,
-                                  pfuclt_aux::linearRegressionSlope)
+      : nStatesPerRobot(nStatesPerRobot), nRobots(nRobots),
+        targetVelocityEstimator(STATES_PER_TARGET, MAX_ESTIMATOR_STACK_SIZE,
+                                pfuclt_aux::linearRegressionSlope)
     {
       // Create and initialize the robots vector
       for (uint r = 0; r < nRobots; ++r)
@@ -254,7 +285,7 @@ public:
   struct PFinitData
   {
     const uint mainRobotID, nParticles, nTargets, statesPerRobot, nRobots,
-        nLandmarks;
+    nLandmarks;
     const std::vector<bool>& robotsUsed;
     const std::vector<Landmark>& landmarksMap;
     std::vector<float> alpha;
@@ -281,10 +312,10 @@ public:
                const std::vector<bool>& robotsUsed,
                const std::vector<Landmark>& landmarksMap,
                const std::vector<float>& alpha = std::vector<float>())
-        : mainRobotID(mainRobotID), nParticles(nParticles), nTargets(nTargets),
-          statesPerRobot(statesPerRobot), nRobots(nRobots),
-          nLandmarks(nLandmarks), alpha(alpha), robotsUsed(robotsUsed),
-          landmarksMap(landmarksMap)
+      : mainRobotID(mainRobotID), nParticles(nParticles), nTargets(nTargets),
+        statesPerRobot(statesPerRobot), nRobots(nRobots),
+        nLandmarks(nLandmarks), alpha(alpha), robotsUsed(robotsUsed),
+        landmarksMap(landmarksMap)
     {
       // If vector alpha is not provided, use a default one
       if (this->alpha.empty())
@@ -302,9 +333,9 @@ public:
       if (this->alpha.size() != 4 * nRobots)
       {
         ROS_ERROR(
-            "The provided vector alpha is not of the correct size. Returning "
-            "without particle filter! (should have %d=nRobots*4 elements)",
-            nRobots * 4);
+              "The provided vector alpha is not of the correct size. Returning "
+              "without particle filter! (should have %d=nRobots*4 elements)",
+              nRobots * 4);
         return;
       }
     }
@@ -411,6 +442,7 @@ protected:
 
 public:
   boost::shared_ptr<std::ostringstream> iteration_oss;
+  uint O_TARGET, O_WEIGHT;
 
   /**
    * @brief ParticleFilter - constructor
@@ -600,7 +632,7 @@ public:
      * @param robotHeight - the fixed robot height
      */
     PublishData(ros::NodeHandle& nh, float robotHeight)
-        : nh(nh), robotHeight(robotHeight)
+      : nh(nh), robotHeight(robotHeight)
     {
     }
   };
@@ -608,8 +640,8 @@ public:
 private:
   ros::Subscriber GT_sub_;
   ros::Publisher robotStatePublisher_, targetStatePublisher_,
-      particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_,
-      targetGTPublisher_, targetParticlePublisher_;
+  particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_,
+  targetGTPublisher_, targetParticlePublisher_;
   std::vector<ros::Publisher> particleStdPublishers_;
   std::vector<ros::Publisher> robotGTPublishers_;
   std::vector<ros::Publisher> robotEstimatePublishers_;
