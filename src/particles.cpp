@@ -611,6 +611,15 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom, const 
 
   *iteration_oss << "predict(OMNI" << robotNumber + 1 << ") -> ";
 
+#ifdef EVALUATE_TIME_PERFORMANCE
+  // If this is the main robot, mark this time as the iteration init and update the odometry time
+  if(mainRobotID_ == robotNumber)
+  {
+    iterationTime_.updateTime(ros::Time::now());
+    odometryTime_.updateTime(stamp);
+  }
+#endif
+
   using namespace boost::random;
 
   // Variables concerning this robot specifically
@@ -655,20 +664,11 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom, const 
   // If this is the main robot, perform one PF-UCLT iteration
   if (mainRobotID_ == robotNumber)
   {
-#ifdef EVALUATE_TIME_PERFORMANCE
-    odometryTime_.updateTime(stamp);
-    ROS_INFO("Odometry IF NOT slowed down deltaT = %fs :::::::::: %fHz", odometryTime_.diff, 1.0/odometryTime_.diff);
-#endif
-
     // Lock mutex
     boost::mutex::scoped_lock(mutex_);
 
-#ifdef EVALUATE_TIME_PERFORMANCE
-    iterationTime_.updateTime(ros::Time::now());
-#endif
-
     // All the PF-UCLT steps
-    // predictTarget() is done when the target iteration time is updated
+    predictTarget();
 
 #ifndef DONT_FUSE_ROBOTS
     fuseRobots();
@@ -686,7 +686,8 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom, const 
 
 #ifdef EVALUATE_TIME_PERFORMANCE
     iterationTime_.updateTime(ros::Time::now());
-    ROS_INFO("Iteration deltaT = %fs :::::::::: %fHz", iterationTime_.diff, 1.0/iterationTime_.diff);
+    ROS_INFO("Odometry IF NOT slowed down deltaT = %fms :::::::::: %fHz", 1e3*odometryTime_.diff, 1.0/odometryTime_.diff);
+    ROS_INFO("Iteration deltaT = %fms :::::::::: %fHz", 1e3*iterationTime_.diff, 1.0/iterationTime_.diff);
 #endif
 
     ROS_DEBUG("Iteration: %s", iteration_oss->str().c_str());

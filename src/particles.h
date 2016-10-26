@@ -461,9 +461,6 @@ public:
       targetIterationTime_.diff = TARGET_ITERATION_TIME_DEFAULT;
     }
     ROS_DEBUG("Target tracking iteration time: %f", targetIterationTime_.diff);
-
-    // After this the target state is predicted
-    predictTarget();
   }
 
   ParticleFilter* getPFReference() { return this; }
