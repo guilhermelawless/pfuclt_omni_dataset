@@ -350,6 +350,8 @@ protected:
    */
   virtual void nextIteration() {}
 
+  virtual void resize_particles(uint n) {}
+
 public:
   boost::shared_ptr<std::ostringstream> iteration_oss;
   uint O_TARGET, O_WEIGHT;
@@ -557,6 +559,16 @@ public:
      */
     PublishData(float robotHeight) : robotHeight(robotHeight) {}
   };
+
+  void resize_particles(uint n)
+  {
+    // Prepare particle message
+    msg_particles_.particles.resize(n);
+    for (uint p = 0; p < n; ++p)
+    {
+      msg_particles_.particles[p].particle.resize(nSubParticleSets_);
+    }
+  }
 
 private:
   ros::Subscriber GT_sub_;

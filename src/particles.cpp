@@ -98,6 +98,8 @@ void ParticleFilter::dynamicReconfigureCallback(
         particles_t(nSubParticleSets_, subparticles_t(config.particles, 0.0));
     weightComponents_ =
         particles_t(nRobots_, subparticles_t(config.particles, 0.0));
+
+    resize_particles(config.particles);
     init();
   }
 
@@ -798,11 +800,7 @@ PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
       robotGTPublishers_(data.nRobots), robotEstimatePublishers_(data.nRobots)
 {
   // Prepare particle message
-  msg_particles_.particles.resize(nParticles_);
-  for (uint p = 0; p < nParticles_; ++p)
-  {
-    msg_particles_.particles[p].particle.resize(nSubParticleSets_);
-  }
+  resize_particles(nParticles_);
 
   // Subscribe and advertise the republishing of GT data, time synced with the
   // state publisher
