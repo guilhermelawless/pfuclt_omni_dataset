@@ -40,17 +40,12 @@ float ROB_HT; // Fixed height of the robots above ground in meters
 // initialized as 0,0 because the robot is absent from the dataset.
 std::vector<double> POS_INIT;
 
-int N_PARTICLES;
 int N_DIMENSIONS;
 
 bool USE_CUSTOM_VALUES = false; // If set to true via the parameter server, the
 // custom values will be used
 std::vector<double> CUSTOM_PARTICLE_INIT; // Used to set custom values when
 // initiating the particle filter set (will still be a uniform distribution)
-
-std::vector<float> CUSTOM_RANDOM_ALPHA; // Used to set custom values for the
-// sampling models in the particle
-// filter
 
 bool DEBUG;
 bool PUBLISH;
@@ -63,10 +58,9 @@ ros::Time timeInit;
 
 RobotFactory::RobotFactory(ros::NodeHandle& nh) : nh_(nh)
 {
-  ParticleFilter::PFinitData initData(
-      nh,
-      MY_ID, N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS,
-      NUM_LANDMARKS, PLAYING_ROBOTS, landmarks, CUSTOM_RANDOM_ALPHA);
+  ParticleFilter::PFinitData initData(nh, MY_ID, NUM_TARGETS, STATES_PER_ROBOT,
+                                      MAX_ROBOTS, NUM_LANDMARKS, PLAYING_ROBOTS,
+                                      landmarks);
 
   if (PUBLISH)
     pf = boost::shared_ptr<PFPublisher>(
@@ -408,7 +402,6 @@ int main(int argc, char* argv[])
 
   readParam<int>(nh, "/MAX_ROBOTS", MAX_ROBOTS);
   readParam<float>(nh, "/ROB_HT", ROB_HT);
-  readParam<int>(nh, "/N_PARTICLES", N_PARTICLES);
   readParam<int>(nh, "/NUM_TARGETS", NUM_TARGETS);
   readParam<int>(nh, "/NUM_LANDMARKS", NUM_LANDMARKS);
   readParam<float>(nh, "/LANDMARK_COV/K1", K1);
@@ -433,21 +426,6 @@ int main(int argc, char* argv[])
                 "have %d numbers and has %d",
                 total_size * 2, (int)CUSTOM_PARTICLE_INIT.size());
     }
-
-    readParam<float>(nh, "/CUSTOM_RANDOM_ALPHA", CUSTOM_RANDOM_ALPHA);
-    if (CUSTOM_RANDOM_ALPHA.size() != (MAX_ROBOTS * 4))
-    {
-      ROS_ERROR("/CUSTOM_RANDOM_ALPHA given but not of correct size - should "
-                "have %d numbers and has %d",
-                MAX_ROBOTS * 4, (int)CUSTOM_RANDOM_ALPHA.size());
-    }
-  }
-
-  if (N_PARTICLES < 0 || total_size < 0)
-  {
-    ROS_ERROR("Unacceptable configuration for ParticleFilter class");
-    nh.shutdown();
-    return 0;
   }
 
   pfuclt::RobotFactory Factory(nh);

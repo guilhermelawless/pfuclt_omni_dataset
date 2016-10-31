@@ -18,26 +18,28 @@
 #define BROADCAST_TF_AND_POSES true
 #define PUBLISH_PTCLS true
 //#define EVALUATE_TIME_PERFORMANCE true
+#define RECONFIGURE_ALPHAS true
 
 namespace pfuclt_ptcls
 {
 
 ParticleFilter::ParticleFilter(struct PFinitData& data)
     : nh_(data.nh), mainRobotID_(data.mainRobotID - 1),
-      nParticles_(data.nParticles), nTargets_(data.nTargets),
-      nStatesPerRobot_(data.statesPerRobot), nRobots_(data.nRobots),
+      nTargets_(data.nTargets), nStatesPerRobot_(data.statesPerRobot),
+      nRobots_(data.nRobots),
       nSubParticleSets_(data.nTargets * STATES_PER_TARGET +
                         data.nRobots * data.statesPerRobot + 1),
-      nLandmarks_(data.nLandmarks), alpha_(data.alpha),
-      robotsUsed_(data.robotsUsed), landmarksMap_(data.landmarksMap),
+      nLandmarks_(data.nLandmarks), robotsUsed_(data.robotsUsed),
+      landmarksMap_(data.landmarksMap),
+      dynamicVariables_(data.nh, data.nRobots),
       iteration_oss(new std::ostringstream("")),
-      particles_(nSubParticleSets_, subparticles_t(data.nParticles)),
+      nParticles_(dynamicVariables_.nParticles),
+      particles_(nSubParticleSets_, subparticles_t(nParticles_)),
       seed_(time(0)), initialized_(false),
       bufLandmarkObservations_(
           data.nRobots, std::vector<LandmarkObservation>(data.nLandmarks)),
       bufTargetObservations_(data.nRobots),
-      weightComponents_(data.nRobots, subparticles_t(data.nParticles, 0.0)),
-      dynamicVariables_(data.nh),
+      weightComponents_(data.nRobots, subparticles_t(nParticles_, 0.0)),
       state_(data.statesPerRobot, data.nRobots,
              dynamicVariables_.velocityEstimatorStackSize),
       targetIterationTime_(), odometryTime_(), iterationTime_(), mutex_(),
@@ -57,25 +59,65 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
 void ParticleFilter::dynamicReconfigureCallback(
     pfuclt_omni_dataset::DynamicConfig& config)
 {
-  ROS_INFO("Reconfigure request: \n\t\tVelocityEstimatorStackSize = "
-           "%d\n\t\tPercentageParticlesToKeepWhileResampling = %.1f",
-           config.VelocityEstimatorStackSize,
-           config.PercentageParticlesToKeepWhileResampling);
+  // Skip first callback which is done automatically for some reason
+  if (dynamicVariables_.firstCallback)
+  {
+    dynamicVariables_.firstCallback = false;
+    return;
+  }
+
+  ROS_INFO("Dynamic Reconfigure Callback:\n\tvelocity_estimator_stack_size = "
+           "%d\n\tresampling_percentage_to_keep = "
+           "%f\n\tpredict_model_stddev = "
+           "%f\n\tOMNI1_alpha=%s\n\tOMNI3_alpha=%s\n\tOMNI4_alpha=%s\n\tOMNI5_"
+           "alpha=%s",
+           config.groups.target.velocity_estimator_stack_size,
+           config.groups.resampling.percentage_to_keep,
+           config.groups.target.predict_model_stddev,
+           config.groups.alphas.OMNI1_alpha.c_str(),
+           config.groups.alphas.OMNI3_alpha.c_str(),
+           config.groups.alphas.OMNI4_alpha.c_str(),
+           config.groups.alphas.OMNI5_alpha.c_str());
 
   // Resize velocity estimator if value changed
   if (dynamicVariables_.velocityEstimatorStackSize !=
-      config.VelocityEstimatorStackSize)
+      config.groups.target.velocity_estimator_stack_size)
   {
     ROS_INFO("Resizing target velocity estimator to %d",
-             config.VelocityEstimatorStackSize);
-    state_.targetVelocityEstimator.resize(config.VelocityEstimatorStackSize);
+             config.groups.target.velocity_estimator_stack_size);
+    state_.targetVelocityEstimator.resize(
+        config.groups.target.velocity_estimator_stack_size);
+  }
+
+  // Resize particles and re-initialize the pf if value changed
+  if (dynamicVariables_.nParticles != config.particles)
+  {
+    ROS_INFO("Resizing particles to %d and re-initializing the pf",
+             config.particles);
+    particles_ =
+        particles_t(nSubParticleSets_, subparticles_t(config.particles, 0.0));
+    weightComponents_ =
+        particles_t(nRobots_, subparticles_t(config.particles, 0.0));
+    init();
   }
 
   // Update with desired values
   dynamicVariables_.velocityEstimatorStackSize =
-      config.VelocityEstimatorStackSize;
+      config.groups.target.velocity_estimator_stack_size;
+  dynamicVariables_.nParticles = nParticles_ = config.particles;
   dynamicVariables_.resamplingPercentageToKeep =
-      config.PercentageParticlesToKeepWhileResampling;
+      config.groups.resampling.percentage_to_keep;
+  dynamicVariables_.targetRandStddev =
+      config.groups.target.predict_model_stddev;
+
+  // Alpha values updated only if using the original dataset
+  if (RECONFIGURE_ALPHAS)
+  {
+    dynamicVariables_.fill_alpha(0, config.groups.alphas.OMNI1_alpha);
+    dynamicVariables_.fill_alpha(2, config.groups.alphas.OMNI3_alpha);
+    dynamicVariables_.fill_alpha(3, config.groups.alphas.OMNI4_alpha);
+    dynamicVariables_.fill_alpha(4, config.groups.alphas.OMNI5_alpha);
+  }
 }
 
 void ParticleFilter::predictTarget()
@@ -86,7 +128,7 @@ void ParticleFilter::predictTarget()
 
   // Random acceleration model
   normal_distribution<> targetAcceleration(TARGET_RAND_MEAN,
-                                           TARGET_RAND_STDDEV);
+                                           dynamicVariables_.targetRandStddev);
 
   for (int p = 0; p < nParticles_; p++)
   {
@@ -662,8 +704,7 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
 
   // Variables concerning this robot specifically
   int robot_offset = robotNumber * nStatesPerRobot_;
-  float alpha[4] = { alpha_[robotNumber * 4 + 0], alpha_[robotNumber * 4 + 1],
-                     alpha_[robotNumber * 4 + 2], alpha_[robotNumber * 4 + 3] };
+  std::vector<float>& alpha = dynamicVariables_.alpha[robotNumber];
 
   // Determining the propagation of the robot state through odometry
   pdata_t deltaRot = atan2(odom.y, odom.x);
@@ -766,7 +807,7 @@ PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
   // Subscribe and advertise the republishing of GT data, time synced with the
   // state publisher
   GT_sub_ = nh_.subscribe<read_omni_dataset::LRMGTData>(
-      "gtData_4robotExp", 10,
+      "/gtData_4robotExp", 10,
       boost::bind(&PFPublisher::gtDataCallback, this, _1));
 
   syncedGTPublisher_ = nh_.advertise<read_omni_dataset::LRMGTData>(
@@ -797,15 +838,15 @@ PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
 
     // particle publisher
     particleStdPublishers_[r] = nh_.advertise<geometry_msgs::PoseArray>(
-        robotName.str() + "/particles", 1000);
+        "/" + robotName.str() + "/particles", 1000);
 
     // estimated state
     robotEstimatePublishers_[r] = nh_.advertise<geometry_msgs::PoseStamped>(
-        robotName.str() + "/estimatedPose", 1000);
+        "/" + robotName.str() + "/estimatedPose", 1000);
 
     // ground truth publisher
     robotGTPublishers_[r] = nh_.advertise<geometry_msgs::PointStamped>(
-        robotName.str() + "/gtPose", 1000);
+        "/" + robotName.str() + "/gtPose", 1000);
   }
 
   ROS_INFO("It's a publishing particle filter!");
@@ -1096,24 +1137,62 @@ void ParticleFilter::State::targetVelocityEstimator_s::resize(
   posVec.reserve(maxDataSize);
 }
 
-ParticleFilter::dynamicVariables_s::dynamicVariables_s(ros::NodeHandle& nh)
+ParticleFilter::dynamicVariables_s::dynamicVariables_s(ros::NodeHandle& nh,
+                                                       const uint nRobots)
+    : alpha(nRobots, std::vector<float>(NUM_ALPHAS)), firstCallback(true)
 {
-  // Get node parameters if they exist
-  if (!readParam<int>(nh, "VelocityEstimatorStackSize",
-                      velocityEstimatorStackSize))
+  // Get node parameters, assume they exist
+  readParam<int>(nh, "velocity_estimator_stack_size",
+                 velocityEstimatorStackSize);
+  readParam<double>(nh, "percentage_to_keep", resamplingPercentageToKeep);
+
+  readParam<int>(nh, "particles", nParticles);
+
+  readParam<double>(nh, "predict_model_stddev", targetRandStddev);
+
+  // Get alpha values for some robots (hard-coded for our 4 robots..)
+  for (uint r = 0; r < nRobots; ++r)
   {
-    // Set a default value
-    nh.setParam("VelocityEstimatorStackSize", 10);
-    velocityEstimatorStackSize = 10;
+    std::string paramName =
+        "OMNI" + boost::lexical_cast<std::string>(r + 1) + "_alpha";
+
+    std::string str;
+    if (readParam<std::string>(nh, paramName, str))
+      fill_alpha(r, str); // value was provided
+    else
+      fill_alpha(r, "0.015,0.1,0.5,0.001"); // default
+  }
+}
+
+void ParticleFilter::dynamicVariables_s::fill_alpha(const uint robot,
+                                                    const std::string& str)
+{
+  // Tokenize the string of comma-separated values
+  std::istringstream iss(str);
+  std::string token;
+  uint tokenCount = 0;
+  while (std::getline(iss, token, ','))
+  {
+    if (tokenCount >= NUM_ALPHAS)
+      break;
+
+    std::istringstream tokss(token);
+    float val;
+    tokss >> val;
+
+    if (val < 0)
+    {
+      ROS_WARN("Invalid alpha value %f", val);
+      continue;
+    }
+
+    alpha[robot][tokenCount] = val;
+    ++tokenCount;
   }
 
-  if (!readParam<double>(nh, "PercentageParticlesToKeepWhileResampling",
-                         resamplingPercentageToKeep))
-  {
-    // Set a default value
-    nh.setParam("PercentageParticlesToKeepWhileResampling", 50);
-    resamplingPercentageToKeep = 50;
-  }
+  ROS_WARN_COND(tokenCount != NUM_ALPHAS,
+                "Number of alpha values provided is not the required number %d",
+                NUM_ALPHAS);
 }
 
 // end of namespace pfuclt_ptcls

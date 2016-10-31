@@ -21,6 +21,8 @@
 #include <dynamic_reconfigure/server.h>
 #include <pfuclt_omni_dataset/DynamicConfig.h>
 
+#define NUM_ALPHAS 4
+
 // ideally later this will be a parameter, when it makes sense to
 #define STATES_PER_TARGET 3
 
@@ -36,7 +38,6 @@
 
 // target motion model and estimator
 #define TARGET_RAND_MEAN 0
-#define TARGET_RAND_STDDEV 20.0
 
 // concerning time
 #define TARGET_ITERATION_TIME_DEFAULT 0.0333
@@ -98,10 +99,16 @@ private:
 protected:
   struct dynamicVariables_s
   {
+    bool firstCallback;
+    int nParticles;
     int velocityEstimatorStackSize;
     double resamplingPercentageToKeep;
+    double targetRandStddev;
+    std::vector<std::vector<float> > alpha;
 
-    dynamicVariables_s(ros::NodeHandle&);
+    dynamicVariables_s(ros::NodeHandle& nh, const uint nRobots);
+
+    void fill_alpha(const uint robot, const std::string& str);
 
   } dynamicVariables_;
 
@@ -211,11 +218,9 @@ public:
    */
   struct PFinitData
   {
-    const uint mainRobotID, nParticles, nTargets, statesPerRobot, nRobots,
-        nLandmarks;
+    const uint mainRobotID, nTargets, statesPerRobot, nRobots, nLandmarks;
     const std::vector<bool>& robotsUsed;
     const std::vector<Landmark>& landmarksMap;
-    std::vector<float> alpha;
     ros::NodeHandle& nh;
 
     /**
@@ -224,7 +229,6 @@ public:
      * @param mainRobotID - the robot number where this algorithm will run on -
      * affects the timings of iteration and estimation updates - consider that
      * OMNI1 is ID1
-     * @param nParticles - the number of particles to be in the particle filter
      * @param nTargets - the number of targets to consider
      * @param statesPerRobot - the state space dimension for each robot
      * @param nRobots - number of robots
@@ -235,47 +239,24 @@ public:
      * on the landmark locations
      * @param vector with values to be used in the RNG for the model sampling
      */
-    PFinitData(ros::NodeHandle& nh, const uint mainRobotID,
-               const uint nParticles, const uint nTargets,
+    PFinitData(ros::NodeHandle& nh, const uint mainRobotID, const uint nTargets,
                const uint statesPerRobot, const uint nRobots,
                const uint nLandmarks, const std::vector<bool>& robotsUsed,
-               const std::vector<Landmark>& landmarksMap,
-               const std::vector<float>& alpha = std::vector<float>())
-        : nh(nh), mainRobotID(mainRobotID), nParticles(nParticles),
-          nTargets(nTargets), statesPerRobot(statesPerRobot), nRobots(nRobots),
-          nLandmarks(nLandmarks), alpha(alpha), robotsUsed(robotsUsed),
+               const std::vector<Landmark>& landmarksMap)
+        : nh(nh), mainRobotID(mainRobotID), nTargets(nTargets),
+          statesPerRobot(statesPerRobot), nRobots(nRobots),
+          nLandmarks(nLandmarks), robotsUsed(robotsUsed),
           landmarksMap(landmarksMap)
     {
-      // If vector alpha is not provided, use a default one
-      if (this->alpha.empty())
-      {
-        for (int r = 0; r < nRobots; ++r)
-        {
-          this->alpha.push_back(0.015);
-          this->alpha.push_back(0.1);
-          this->alpha.push_back(0.5);
-          this->alpha.push_back(0.001);
-        }
-      }
-
-      // Check size of vector alpha
-      if (this->alpha.size() != 4 * nRobots)
-      {
-        ROS_ERROR(
-            "The provided vector alpha is not of the correct size. Returning "
-            "without particle filter! (should have %d=nRobots*4 elements)",
-            nRobots * 4);
-        return;
-      }
     }
   };
 
 protected:
   ros::NodeHandle& nh_;
+  uint nParticles_;
   const uint mainRobotID_;
   const std::vector<Landmark>& landmarksMap_;
   const std::vector<bool>& robotsUsed_;
-  const uint nParticles_;
   const uint nTargets_;
   const uint nRobots_;
   const uint nStatesPerRobot_;
@@ -284,7 +265,6 @@ protected:
   particles_t particles_;
   particles_t weightComponents_;
   RNGType seed_;
-  std::vector<float> alpha_;
   bool initialized_;
   std::vector<std::vector<LandmarkObservation> > bufLandmarkObservations_;
   std::vector<TargetObservation> bufTargetObservations_;

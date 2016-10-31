@@ -10,7 +10,6 @@
     <rosparam param="PLAYING_ROBOTS"> [1, 0, 1, 1, 1] </rosparam>
     <param name="NUM_TARGETS" value="1"/>
     <param name="NUM_LANDMARKS" value="10"/>
-    <param name="N_PARTICLES" value="200"/>
     <param name="LANDMARK_COV/K1" type="double" value="2.0"/>
     <param name="LANDMARK_COV/K2" type="double" value="0.5"/>
     <param name="LANDMARK_COV/K3" type="double" value="0.2"/>
@@ -44,15 +43,7 @@
          -4.5,4.5,
          -3.14159,3.14159]
     </rosparam>
-
-    <rosparam param="CUSTOM_RANDOM_ALPHA">
-        [0.015, 0.1, 0.5, 0.001,
-         0.015, 0.1, 0.5, 0.001,
-         0.015, 0.1, 0.5, 0.001,
-         0.025, 0.4, 0.9, 0.003,
-         0.015, 0.4, 0.4, 0.001]
-    </rosparam>
-
+    
     <node name="performer" pkg="pfuclt_omni_dataset" type="pfuclt_omni_dataset" output="screen" args="--debug $(arg debug) --publish $(arg publish)">
     	<remap from="/pfuclt_orangeBallState" to="/estimatedOrangeBallState"/>
 		<remap from="/pfuclt_omni_poses" to="/estimated_omni_poses"/>
@@ -64,7 +55,14 @@
         name="player"
         output="screen"
         args="--quiet --rate=$(arg rate) $(arg path)/OMNI1_odomballLandmarks.bag $(arg path)/OMNI3_odomballLandmarks.bag $(arg path)/OMNI4_odomballLandmarks.bag $(arg path)/OMNI5_odomballLandmarks.bag $(arg path)/four_robot_experiment_GT.bag" >
-        <param name="PercentageParticlesToKeepWhileResampling" value="50"/>
-        <param name="VelocityEstimatorStackSize" value="15"/>
+        <param name="percentage_to_keep" value="50"/>
+        <param name="velocity_estimator_stack_size" value="15"/>
+        <param name="predict_model_stddev" value="15.0"/>
+        <param name="particles" value="200"/>
+        <param name="OMNI1_alpha" value="0.015, 0.1, 0.5, 0.001"/>
+        <param name="OMNI2_alpha" value="0.015, 0.1, 0.5, 0.001"/>
+        <param name="OMNI3_alpha" value="0.015, 0.1, 0.5, 0.001"/>
+        <param name="OMNI4_alpha" value="0.025, 0.4, 0.9, 0.003"/>
+        <param name="OMNI5_alpha" value="0.015, 0.1, 0.5, 0.001"/>
     </node>
 </launch>
