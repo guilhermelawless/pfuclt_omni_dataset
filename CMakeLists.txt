@@ -24,7 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 generate_dynamic_reconfigure_options(
-  config/pfuclt_dynamic.cfg
+  config/Dynamic.cfg
 )
 
 INCLUDE_DIRECTORIES(${catkin_INCLUDE_DIRS})
