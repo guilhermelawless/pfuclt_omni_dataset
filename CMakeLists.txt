@@ -2,11 +2,13 @@ cmake_minimum_required(VERSION 2.8.3)
 project(pfuclt_omni_dataset)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
-find_package(cmake_modules REQUIRED)
+find_package(
+  cmake_modules REQUIRED
+  catkin REQUIRED dynamic_reconfigure
+)
 
 #external includes
 INCLUDE_DIRECTORIES(include/)
-
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -18,6 +20,11 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   tf2
   tf2_ros
+  dynamic_reconfigure
+)
+
+generate_dynamic_reconfigure_options(
+  config/pfuclt_dynamic.cfg
 )
 
 INCLUDE_DIRECTORIES(${catkin_INCLUDE_DIRS})
