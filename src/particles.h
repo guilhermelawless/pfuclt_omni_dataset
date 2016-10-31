@@ -35,7 +35,6 @@
 //#define O_WEIGHT (nSubParticleSets_ - 1)
 
 // target motion model and estimator
-#define MAX_ESTIMATOR_STACK_SIZE 15
 #define TARGET_RAND_MEAN 0
 #define TARGET_RAND_STDDEV 20.0
 
@@ -45,7 +44,6 @@
 
 // others
 #define MIN_WEIGHTSUM 1e-10
-#define RESAMPLE_START_AT 0.5
 
 //#define MORE_DEBUG true
 
@@ -98,16 +96,14 @@ private:
       dynamicServer_;
 
 protected:
-  /**
-   * @brief dynamicReconfigureCallback - Dynamic reconfigure callback for
-   * dynamically setting variables during runtime
-   * @remark class members as classbacks must be defined as static so they don't
-   * have access to the "this" keyword, they must be member-free methods. Thus,
-   * the callback is called with a pointer to a ParticleFilter object (this),
-   * and has private access since it is a method of the same class
-   */
-  static void dynamicReconfigureCallback(pfuclt_omni_dataset::DynamicConfig&,
-                                         ParticleFilter*);
+  struct dynamicVariables_s
+  {
+    int velocityEstimatorStackSize;
+    double resamplingPercentageToKeep;
+
+    dynamicVariables_s(ros::NodeHandle&);
+
+  } dynamicVariables_;
 
   /**
    * @brief The state_s struct - defines a structure to hold state information
@@ -160,143 +156,51 @@ protected:
       uint timeInit;
       uint numberVels;
 
-      targetVelocityEstimator_s(const uint numberVels, const uint maxDataSize,
+      targetVelocityEstimator_s(const uint numberVels, const int maxDataSize,
                                 estimatorFunc ptrFunc)
           : numberVels(numberVels), posVec(numberVels, std::vector<double>()),
             maxDataSize(maxDataSize)
       {
+        // Pointer to the estimator function
         estimateVelocity = ptrFunc;
+
+        // Reserve the data size
+        timeVec.reserve(maxDataSize);
+        posVec.reserve(maxDataSize);
       }
 
       void insert(const double timeData,
                   const std::vector<TargetObservation>& obsData,
-                  const std::vector<RobotState>& robotStates)
-      {
-        pdata_t ballGlobal[3];
-        bool readyToInsert = false;
-        size_t size = robotStates.size();
-        uint chosenRobot = 0;
-        pdata_t maxConf = 0.0;
-
-        // Choose the robot based on having found the ball and the maximum
-        // confidence
-        for (uint r = 0; r < size; ++r)
-        {
-          if (obsData[r].found)
-          {
-            // TODO these hard coded values.. change or what?
-            if (robotStates[r].conf > maxConf &&
-                (obsData[r].x < 4.0 && obsData[r].y < 4.0))
-            {
-              readyToInsert = true;
-              chosenRobot = r;
-              maxConf = robotStates[r].conf;
-            }
-          }
-        }
-
-        // If ball hasn't be seen, don't insert and just return
-        if (!readyToInsert)
-          return;
-
-        // Pick the state and data from the chosen robot
-        const RobotState& rs = robotStates[chosenRobot];
-        const TargetObservation& obs = obsData[chosenRobot];
-        // Calc. coordinates in global frame based on observation data and robot
-        // state belief
-        ballGlobal[O_TX] = rs.pose[O_X] + obs.x * cos(rs.pose[O_THETA]) -
-                           obs.y * sin(rs.pose[O_THETA]);
-        ballGlobal[O_TY] = rs.pose[O_Y] + obs.x * sin(rs.pose[O_THETA]) +
-                           obs.y * cos(rs.pose[O_THETA]);
-        ballGlobal[O_TZ] = obs.z;
-
-        if (timeVec.empty())
-          timeInit = ros::Time::now().toNSec() * 1e-9;
-
-        timeVec.push_back(timeData - timeInit);
-
-        for (uint velType = 0; velType < posVec.size(); ++velType)
-          posVec[velType].push_back(ballGlobal[velType]);
-
-        if (timeVec.size() > maxDataSize)
-        {
-          timeVec.erase(timeVec.begin());
-          for (uint velType = 0; velType < posVec.size(); ++velType)
-            posVec[velType].erase(posVec[velType].begin());
-        }
-      }
+                  const std::vector<RobotState>& robotStates);
 
       bool isReadyToEstimate() { return (timeVec.size() == maxDataSize); }
 
-      double estimate(uint velType)
+      double estimate(const uint velType)
       {
         double velEst = estimateVelocity(timeVec, posVec[velType]);
         ROS_DEBUG("Estimated velocity type %d = %f", velType, velEst);
-
-#ifdef MORE_DEBUG
-        std::ostringstream oss_time;
-        oss_time << "timeVec = [ ";
-        for (uint i = 0; i < timeVec.size(); ++i)
-          oss_time << timeVec[i] << " ";
-        oss_time << "]";
-
-        std::ostringstream oss_pos;
-        oss_pos << "posVec[" << velType << "] = [ ";
-        for (uint i = 0; i < posVec[velType].size(); ++i)
-          oss_pos << posVec[velType][i] << " ";
-        oss_pos << "]";
-
-        ROS_DEBUG("%s", oss_time.str().c_str());
-        ROS_DEBUG("%s", oss_pos.str().c_str());
-#endif
         return velEst;
       }
+
+      void resize(const uint newStackSize);
+
     } targetVelocityEstimator;
 
     /**
      * @brief State - constructor
      */
-    State(const uint nStatesPerRobot, const uint nRobots)
+    State(const uint nStatesPerRobot, const uint nRobots,
+          const uint velocityEstimatorStackSize)
         : nStatesPerRobot(nStatesPerRobot), nRobots(nRobots),
-          targetVelocityEstimator(STATES_PER_TARGET, MAX_ESTIMATOR_STACK_SIZE,
+          targetVelocityEstimator(STATES_PER_TARGET, velocityEstimatorStackSize,
                                   pfuclt_aux::linearRegressionSlope)
     {
+      ROS_INFO("Target Velocity Estimator initialiazed with a stack size of %d",
+               velocityEstimatorStackSize);
+
       // Create and initialize the robots vector
       for (uint r = 0; r < nRobots; ++r)
         robots.push_back(robotState_s(nStatesPerRobot));
-    }
-
-  private:
-    void print(std::ostringstream& oss, std::vector<bool>& vec)
-    {
-      oss << "[";
-
-      for (std::vector<bool>::iterator it = vec.begin(); it != vec.end(); ++it)
-        oss << *it;
-
-      oss << "]";
-      return;
-    }
-
-  public:
-    void print()
-    {
-      std::ostringstream oss;
-      oss << "PF State:" << std::endl;
-      for (uint r = 0; r < nRobots; ++r)
-      {
-        oss << "OMNI " << r + 1 << "[ ";
-        for (uint k = 0; k < nStatesPerRobot; ++k)
-          oss << robots[r].pose[k] << " ";
-        oss << "]" << std::endl;
-      }
-
-      oss << "Target [ ";
-      for (uint k = 0; k < STATES_PER_TARGET; ++k)
-        oss << target.pos[k] << " ";
-      oss << "]" << std::endl;
-
-      ROS_DEBUG("%s", oss.str().c_str());
     }
   };
 
@@ -312,9 +216,11 @@ public:
     const std::vector<bool>& robotsUsed;
     const std::vector<Landmark>& landmarksMap;
     std::vector<float> alpha;
+    ros::NodeHandle& nh;
 
     /**
      * @brief PFinitData
+     * @param nh - the node handle
      * @param mainRobotID - the robot number where this algorithm will run on -
      * affects the timings of iteration and estimation updates - consider that
      * OMNI1 is ID1
@@ -329,14 +235,14 @@ public:
      * on the landmark locations
      * @param vector with values to be used in the RNG for the model sampling
      */
-    PFinitData(const uint mainRobotID, const uint nParticles,
-               const uint nTargets, const uint statesPerRobot,
-               const uint nRobots, const uint nLandmarks,
-               const std::vector<bool>& robotsUsed,
+    PFinitData(ros::NodeHandle& nh, const uint mainRobotID,
+               const uint nParticles, const uint nTargets,
+               const uint statesPerRobot, const uint nRobots,
+               const uint nLandmarks, const std::vector<bool>& robotsUsed,
                const std::vector<Landmark>& landmarksMap,
                const std::vector<float>& alpha = std::vector<float>())
-        : mainRobotID(mainRobotID), nParticles(nParticles), nTargets(nTargets),
-          statesPerRobot(statesPerRobot), nRobots(nRobots),
+        : nh(nh), mainRobotID(mainRobotID), nParticles(nParticles),
+          nTargets(nTargets), statesPerRobot(statesPerRobot), nRobots(nRobots),
           nLandmarks(nLandmarks), alpha(alpha), robotsUsed(robotsUsed),
           landmarksMap(landmarksMap)
     {
@@ -365,6 +271,7 @@ public:
   };
 
 protected:
+  ros::NodeHandle& nh_;
   const uint mainRobotID_;
   const std::vector<Landmark>& landmarksMap_;
   const std::vector<bool>& robotsUsed_;
@@ -466,6 +373,12 @@ protected:
 public:
   boost::shared_ptr<std::ostringstream> iteration_oss;
   uint O_TARGET, O_WEIGHT;
+
+  /**
+   * @brief dynamicReconfigureCallback - Dynamic reconfigure callback for
+   * dynamically setting variables during runtime
+   */
+  void dynamicReconfigureCallback(pfuclt_omni_dataset::DynamicConfig&);
 
   /**
    * @brief ParticleFilter - constructor
@@ -654,7 +567,6 @@ class PFPublisher : public ParticleFilter
 public:
   struct PublishData
   {
-    ros::NodeHandle& nh;
     float robotHeight;
 
     /**
@@ -663,10 +575,7 @@ public:
      * @param nh - the node handle object
      * @param robotHeight - the fixed robot height
      */
-    PublishData(ros::NodeHandle& nh, float robotHeight)
-        : nh(nh), robotHeight(robotHeight)
-    {
-    }
+    PublishData(float robotHeight) : robotHeight(robotHeight) {}
   };
 
 private:

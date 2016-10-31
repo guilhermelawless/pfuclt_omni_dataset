@@ -23,9 +23,9 @@ namespace pfuclt_ptcls
 {
 
 ParticleFilter::ParticleFilter(struct PFinitData& data)
-    : mainRobotID_(data.mainRobotID - 1), nParticles_(data.nParticles),
-      nTargets_(data.nTargets), nStatesPerRobot_(data.statesPerRobot),
-      nRobots_(data.nRobots),
+    : nh_(data.nh), mainRobotID_(data.mainRobotID - 1),
+      nParticles_(data.nParticles), nTargets_(data.nTargets),
+      nStatesPerRobot_(data.statesPerRobot), nRobots_(data.nRobots),
       nSubParticleSets_(data.nTargets * STATES_PER_TARGET +
                         data.nRobots * data.statesPerRobot + 1),
       nLandmarks_(data.nLandmarks), alpha_(data.alpha),
@@ -37,9 +37,11 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
           data.nRobots, std::vector<LandmarkObservation>(data.nLandmarks)),
       bufTargetObservations_(data.nRobots),
       weightComponents_(data.nRobots, subparticles_t(data.nParticles, 0.0)),
-      state_(data.statesPerRobot, data.nRobots), targetIterationTime_(),
-      odometryTime_(), iterationTime_(), mutex_(), dynamicServer_(),
-      O_TARGET(data.nRobots * data.statesPerRobot),
+      dynamicVariables_(data.nh),
+      state_(data.statesPerRobot, data.nRobots,
+             dynamicVariables_.velocityEstimatorStackSize),
+      targetIterationTime_(), odometryTime_(), iterationTime_(), mutex_(),
+      dynamicServer_(), O_TARGET(data.nRobots * data.statesPerRobot),
       O_WEIGHT(nSubParticleSets_ - 1)
 {
   ROS_INFO("Created particle filter with dimensions %d, %d",
@@ -48,15 +50,32 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
   // Bind dynamic reconfigure callback
   dynamic_reconfigure::Server<pfuclt_omni_dataset::DynamicConfig>::CallbackType
       callback;
-  callback = boost::bind(&dynamicReconfigureCallback, _1, this);
+  callback = boost::bind(&ParticleFilter::dynamicReconfigureCallback, this, _1);
   dynamicServer_.setCallback(callback);
 }
 
 void ParticleFilter::dynamicReconfigureCallback(
-    pfuclt_omni_dataset::DynamicConfig& config, ParticleFilter* pf)
+    pfuclt_omni_dataset::DynamicConfig& config)
 {
-  ROS_INFO("Reconfigure request: %d", config.VelocityEstimatorStackSize);
-  pf->state_.nRobots;
+  ROS_INFO("Reconfigure request: \n\t\tVelocityEstimatorStackSize = "
+           "%d\n\t\tPercentageParticlesToKeepWhileResampling = %.1f",
+           config.VelocityEstimatorStackSize,
+           config.PercentageParticlesToKeepWhileResampling);
+
+  // Resize velocity estimator if value changed
+  if (dynamicVariables_.velocityEstimatorStackSize !=
+      config.VelocityEstimatorStackSize)
+  {
+    ROS_INFO("Resizing target velocity estimator to %d",
+             config.VelocityEstimatorStackSize);
+    state_.targetVelocityEstimator.resize(config.VelocityEstimatorStackSize);
+  }
+
+  // Update with desired values
+  dynamicVariables_.velocityEstimatorStackSize =
+      config.VelocityEstimatorStackSize;
+  dynamicVariables_.resamplingPercentageToKeep =
+      config.PercentageParticlesToKeepWhileResampling;
 }
 
 void ParticleFilter::predictTarget()
@@ -422,7 +441,8 @@ void ParticleFilter::resample()
   for (uint p = 0; p < nParticles_; ++p)
     particles_[O_WEIGHT][p] = particles_[O_WEIGHT][p] / weightSum;
 
-  modifiedMultinomialResampler(RESAMPLE_START_AT);
+  modifiedMultinomialResampler(dynamicVariables_.resamplingPercentageToKeep /
+                               100.0);
 
   // printWeights("after resampling: ");
 }
@@ -715,9 +735,6 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
     iteration_oss->str("");
     iteration_oss->clear();
 
-    // Print state information
-    state_.print();
-
     // Start next iteration
     nextIteration();
   }
@@ -748,29 +765,29 @@ PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
 
   // Subscribe and advertise the republishing of GT data, time synced with the
   // state publisher
-  GT_sub_ = pubData.nh.subscribe<read_omni_dataset::LRMGTData>(
+  GT_sub_ = nh_.subscribe<read_omni_dataset::LRMGTData>(
       "gtData_4robotExp", 10,
       boost::bind(&PFPublisher::gtDataCallback, this, _1));
 
-  syncedGTPublisher_ = pubData.nh.advertise<read_omni_dataset::LRMGTData>(
+  syncedGTPublisher_ = nh_.advertise<read_omni_dataset::LRMGTData>(
       "/gtData_synced_pfuclt_estimate", 1000);
 
   // Other publishers
-  robotStatePublisher_ = pubData.nh.advertise<read_omni_dataset::RobotState>(
-      "/pfuclt_omni_poses", 1000);
-  targetStatePublisher_ = pubData.nh.advertise<read_omni_dataset::BallData>(
+  robotStatePublisher_ =
+      nh_.advertise<read_omni_dataset::RobotState>("/pfuclt_omni_poses", 1000);
+  targetStatePublisher_ = nh_.advertise<read_omni_dataset::BallData>(
       "/pfuclt_orangeBallState", 1000);
-  particlePublisher_ = pubData.nh.advertise<pfuclt_omni_dataset::particles>(
-      "/pfuclt_particles", 10);
+  particlePublisher_ =
+      nh_.advertise<pfuclt_omni_dataset::particles>("/pfuclt_particles", 10);
 
   // Rviz visualization publishers
   // Target
-  targetEstimatePublisher_ = pubData.nh.advertise<geometry_msgs::PointStamped>(
-      "/target/estimatedPose", 1000);
+  targetEstimatePublisher_ =
+      nh_.advertise<geometry_msgs::PointStamped>("/target/estimatedPose", 1000);
   targetGTPublisher_ =
-      pubData.nh.advertise<geometry_msgs::PointStamped>("/target/gtPose", 1000);
+      nh_.advertise<geometry_msgs::PointStamped>("/target/gtPose", 1000);
   targetParticlePublisher_ =
-      pubData.nh.advertise<sensor_msgs::PointCloud>("/target/particles", 10);
+      nh_.advertise<sensor_msgs::PointCloud>("/target/particles", 10);
 
   // Robots
   for (uint r = 0; r < nRobots_; ++r)
@@ -779,16 +796,15 @@ PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
     robotName << "omni" << r + 1;
 
     // particle publisher
-    particleStdPublishers_[r] = pubData.nh.advertise<geometry_msgs::PoseArray>(
+    particleStdPublishers_[r] = nh_.advertise<geometry_msgs::PoseArray>(
         robotName.str() + "/particles", 1000);
 
     // estimated state
-    robotEstimatePublishers_[r] =
-        pubData.nh.advertise<geometry_msgs::PoseStamped>(
-            robotName.str() + "/estimatedPose", 1000);
+    robotEstimatePublishers_[r] = nh_.advertise<geometry_msgs::PoseStamped>(
+        robotName.str() + "/estimatedPose", 1000);
 
     // ground truth publisher
-    robotGTPublishers_[r] = pubData.nh.advertise<geometry_msgs::PointStamped>(
+    robotGTPublishers_[r] = nh_.advertise<geometry_msgs::PointStamped>(
         robotName.str() + "/gtPose", 1000);
   }
 
@@ -992,6 +1008,112 @@ void PFPublisher::nextIteration()
 
   // Call the base class method
   ParticleFilter::nextIteration();
+}
+
+void ParticleFilter::State::targetVelocityEstimator_s::insert(
+    const double timeData, const std::vector<TargetObservation>& obsData,
+    const std::vector<ParticleFilter::State::RobotState>& robotStates)
+{
+  pdata_t ballGlobal[3];
+  bool readyToInsert = false;
+  size_t size = robotStates.size();
+  uint chosenRobot = 0;
+  pdata_t maxConf = 0.0;
+
+  // Check if the vector is full
+  if (timeVec.capacity() == timeVec.size())
+  {
+    // Erase first element of both vectors
+    timeVec.erase(timeVec.begin());
+    for (uint velType = 0; velType < posVec.size(); ++velType)
+      posVec[velType].erase(posVec[velType].begin());
+  }
+
+  // Choose the robot based on having found the ball and the maximum
+  // confidence
+  for (uint r = 0; r < size; ++r)
+  {
+    if (obsData[r].found)
+    {
+      // TODO these hard coded values.. change or what?
+      if (robotStates[r].conf > maxConf &&
+          (obsData[r].x < 4.0 && obsData[r].y < 4.0))
+      {
+        readyToInsert = true;
+        chosenRobot = r;
+        maxConf = robotStates[r].conf;
+      }
+    }
+  }
+
+  // If ball hasn't be seen, don't insert and just return
+  if (!readyToInsert)
+    return;
+
+  // Pick the state and data from the chosen robot
+  const RobotState& rs = robotStates[chosenRobot];
+  const TargetObservation& obs = obsData[chosenRobot];
+  // Calc. coordinates in global frame based on observation data and robot
+  // state belief
+  ballGlobal[O_TX] = rs.pose[O_X] + obs.x * cos(rs.pose[O_THETA]) -
+                     obs.y * sin(rs.pose[O_THETA]);
+  ballGlobal[O_TY] = rs.pose[O_Y] + obs.x * sin(rs.pose[O_THETA]) +
+                     obs.y * cos(rs.pose[O_THETA]);
+  ballGlobal[O_TZ] = obs.z;
+
+  if (timeVec.empty())
+    timeInit = ros::Time::now().toNSec() * 1e-9;
+
+  timeVec.push_back(timeData - timeInit);
+
+  for (uint velType = 0; velType < posVec.size(); ++velType)
+    posVec[velType].push_back(ballGlobal[velType]);
+}
+
+void ParticleFilter::State::targetVelocityEstimator_s::resize(
+    const uint newStackSize)
+{
+  // Update to new stack size
+  maxDataSize = newStackSize;
+
+  // When using std::vector::resize, the last elements will be removed if the
+  // new stack size is lower. Since we want to remove the first, we'll have to
+  // do that manually
+  if (newStackSize < timeVec.size())
+  {
+    uint sizeIter = newStackSize;
+    uint currSize = timeVec.size();
+    while (sizeIter > currSize)
+    {
+      timeVec.erase(timeVec.begin());
+      posVec.erase(posVec.begin());
+      sizeIter--;
+    }
+  }
+
+  // Reserve the new size
+  timeVec.reserve(maxDataSize);
+  posVec.reserve(maxDataSize);
+}
+
+ParticleFilter::dynamicVariables_s::dynamicVariables_s(ros::NodeHandle& nh)
+{
+  // Get node parameters if they exist
+  if (!readParam<int>(nh, "VelocityEstimatorStackSize",
+                      velocityEstimatorStackSize))
+  {
+    // Set a default value
+    nh.setParam("VelocityEstimatorStackSize", 10);
+    velocityEstimatorStackSize = 10;
+  }
+
+  if (!readParam<double>(nh, "PercentageParticlesToKeepWhileResampling",
+                         resamplingPercentageToKeep))
+  {
+    // Set a default value
+    nh.setParam("PercentageParticlesToKeepWhileResampling", 50);
+    resamplingPercentageToKeep = 50;
+  }
 }
 
 // end of namespace pfuclt_ptcls

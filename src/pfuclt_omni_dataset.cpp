@@ -64,12 +64,13 @@ ros::Time timeInit;
 RobotFactory::RobotFactory(ros::NodeHandle& nh) : nh_(nh)
 {
   ParticleFilter::PFinitData initData(
+      nh,
       MY_ID, N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS,
       NUM_LANDMARKS, PLAYING_ROBOTS, landmarks, CUSTOM_RANDOM_ALPHA);
 
   if (PUBLISH)
     pf = boost::shared_ptr<PFPublisher>(
-        new PFPublisher(initData, PFPublisher::PublishData(nh, ROB_HT)));
+        new PFPublisher(initData, PFPublisher::PublishData(ROB_HT)));
   else
     pf = boost::shared_ptr<ParticleFilter>(new ParticleFilter(initData));
 
@@ -364,7 +365,7 @@ int main(int argc, char* argv[])
 {
 
   ros::init(argc, argv, "pfuclt_omni_dataset");
-  ros::NodeHandle nh;
+  ros::NodeHandle nh("~");
 
   using namespace pfuclt;
 

@@ -63,6 +63,8 @@
         type="play"
         name="player"
         output="screen"
-        args="--quiet --rate=$(arg rate) $(arg path)/OMNI1_odomballLandmarks.bag $(arg path)/OMNI3_odomballLandmarks.bag $(arg path)/OMNI4_odomballLandmarks.bag $(arg path)/OMNI5_odomballLandmarks.bag $(arg path)/four_robot_experiment_GT.bag"
-    />
+        args="--quiet --rate=$(arg rate) $(arg path)/OMNI1_odomballLandmarks.bag $(arg path)/OMNI3_odomballLandmarks.bag $(arg path)/OMNI4_odomballLandmarks.bag $(arg path)/OMNI5_odomballLandmarks.bag $(arg path)/four_robot_experiment_GT.bag" >
+        <param name="PercentageParticlesToKeepWhileResampling" value="50"/>
+        <param name="VelocityEstimatorStackSize" value="15"/>
+    </node>
 </launch>
