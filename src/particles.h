@@ -350,7 +350,28 @@ protected:
    */
   virtual void nextIteration() {}
 
-  virtual void resize_particles(uint n) {}
+  /**
+   * @brief resize_particles - change to a different number of particles
+   * @param n - the desired number of particles
+   */
+  virtual void resize_particles(const uint n)
+  {
+    size_t old_size = particles_[0].size();
+
+    // Resize weightComponents
+    for (uint r = 0; r < weightComponents_.size(); ++r)
+      weightComponents_[r].resize(n);
+
+    // Resize particles
+    for (uint s = 0; s < particles_.size(); ++s)
+      particles_[s].resize(n);
+
+    // If n is lower than old_size, the last particles are removed - the ones
+    // with the most weight are kept
+    // But if n is higher, it's better to resample
+    if (n > old_size)
+      resample();
+  }
 
 public:
   boost::shared_ptr<std::ostringstream> iteration_oss;
@@ -560,9 +581,19 @@ public:
     PublishData(float robotHeight) : robotHeight(robotHeight) {}
   };
 
-  void resize_particles(uint n)
+  /**
+   * @brief resize_particles - change to a different number of particles and
+   * resize the publishing message
+   * @param n - the desired number of particles
+   */
+  void resize_particles(const uint n)
   {
-    // Prepare particle message
+    // Call base class method
+    ParticleFilter::resize_particles(n);
+
+    ROS_INFO("Resizing particle message");
+
+    // Resize particle message
     msg_particles_.particles.resize(n);
     for (uint p = 0; p < n; ++p)
     {

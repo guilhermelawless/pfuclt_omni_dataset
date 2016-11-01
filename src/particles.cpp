@@ -66,12 +66,16 @@ void ParticleFilter::dynamicReconfigureCallback(
     return;
   }
 
-  ROS_INFO("Dynamic Reconfigure Callback:\n\tvelocity_estimator_stack_size = "
+  if (!initialized_)
+    return;
+
+  ROS_INFO("Dynamic Reconfigure Callback:\n\tparticles = "
+           "%d\n\tvelocity_estimator_stack_size = "
            "%d\n\tresampling_percentage_to_keep = "
            "%f\n\tpredict_model_stddev = "
            "%f\n\tOMNI1_alpha=%s\n\tOMNI3_alpha=%s\n\tOMNI4_alpha=%s\n\tOMNI5_"
            "alpha=%s",
-           config.groups.target.velocity_estimator_stack_size,
+           config.particles, config.groups.target.velocity_estimator_stack_size,
            config.groups.resampling.percentage_to_keep,
            config.groups.target.predict_model_stddev,
            config.groups.alphas.OMNI1_alpha.c_str(),
@@ -94,19 +98,15 @@ void ParticleFilter::dynamicReconfigureCallback(
   {
     ROS_INFO("Resizing particles to %d and re-initializing the pf",
              config.particles);
-    particles_ =
-        particles_t(nSubParticleSets_, subparticles_t(config.particles, 0.0));
-    weightComponents_ =
-        particles_t(nRobots_, subparticles_t(config.particles, 0.0));
 
     resize_particles(config.particles);
-    init();
+    nParticles_ = config.particles;
   }
 
   // Update with desired values
   dynamicVariables_.velocityEstimatorStackSize =
       config.groups.target.velocity_estimator_stack_size;
-  dynamicVariables_.nParticles = nParticles_ = config.particles;
+  dynamicVariables_.nParticles = config.particles;
   dynamicVariables_.resamplingPercentageToKeep =
       config.groups.resampling.percentage_to_keep;
   dynamicVariables_.targetRandStddev =
@@ -1029,6 +1029,9 @@ void PFPublisher::gtDataCallback(
 
 void PFPublisher::nextIteration()
 {
+  // Call the base class method
+  ParticleFilter::nextIteration();
+
   // Time stamps using ros time
   msg_state_.header.stamp = msg_GT_.header.stamp = msg_target_.header.stamp =
       ros::Time::now();
@@ -1044,9 +1047,6 @@ void PFPublisher::nextIteration()
 
   // Publish GT data
   publishGTData();
-
-  // Call the base class method
-  ParticleFilter::nextIteration();
 }
 
 void ParticleFilter::State::targetVelocityEstimator_s::insert(
