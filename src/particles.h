@@ -609,6 +609,7 @@ private:
   std::vector<ros::Publisher> particleStdPublishers_;
   std::vector<ros::Publisher> robotGTPublishers_;
   std::vector<ros::Publisher> robotEstimatePublishers_;
+  ros::Publisher targetObservationsPublisher_;
 
   read_omni_dataset::LRMGTData msg_GT_;
   pfuclt_omni_dataset::particles msg_particles_;
@@ -623,6 +624,7 @@ private:
   void publishRobotStates();
   void publishTargetState();
   void publishGTData();
+  void publishTargetObservations();
 
 public:
   /**
