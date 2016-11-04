@@ -20,6 +20,7 @@
 #define PUBLISH_PTCLS true
 //#define EVALUATE_TIME_PERFORMANCE true
 #define RECONFIGURE_ALPHAS true
+//#define USE_NEWER_READ_OMNI_PACKAGE true
 
 namespace pfuclt_ptcls
 {
@@ -1067,6 +1068,14 @@ void PFPublisher::publishGTData()
   gtPoint.header.stamp = ros::Time::now();
   gtPoint.header.frame_id = "world";
 
+#ifdef USE_NEWER_READ_OMNI_PACKAGE
+  for(uint r=0; r < nRobots_; ++r)
+  {
+    gtPoint.point = msg_GT_.poseOMNI[r].pose.position;
+    robotGTPublishers_[0].publish(gtPoint);
+  }
+
+#else
   if (true == robotsUsed_[0])
   {
     gtPoint.point = msg_GT_.poseOMNI1.pose.position;
@@ -1090,6 +1099,7 @@ void PFPublisher::publishGTData()
     gtPoint.point = msg_GT_.poseOMNI5.pose.position;
     robotGTPublishers_[4].publish(gtPoint);
   }
+#endif
 
   // Publish for the target as well
   if (msg_GT_.orangeBall3DGTposition.found)
