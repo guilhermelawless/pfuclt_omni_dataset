@@ -8,6 +8,7 @@ Panels:
         - /Status1
         - /OMNI41/Estimate1
         - /OMNI51/Estimate1/Status1
+        - /Target1
       Splitter Ratio: 0.5
     Tree Height: 438
   - Class: rviz/Selection
@@ -282,6 +283,17 @@ Visualization Manager:
           Topic: /target/gtPose
           Unreliable: false
           Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /targetObservations
+          Name: Observations
+          Namespaces:
+            OMNI1_target_observations: true
+            OMNI3_target_observations: true
+            OMNI4_target_observations: true
+            OMNI5_target_observations: true
+          Queue Size: 100
+          Value: true
       Enabled: true
       Name: Target
   Enabled: true
@@ -308,16 +320,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 13
+      Distance: 12.8911
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 2.80409
-        Y: -1.36183
-        Z: 0.434927
+        X: 1.89857
+        Y: -0.137419
+        Z: 0.43615
       Name: Current View
       Near Clip Distance: 0.01
       Pitch: 1.5698
@@ -341,5 +353,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1215
-  X: 1985
-  Y: 24
+  X: 1974
+  Y: -14
