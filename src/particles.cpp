@@ -512,8 +512,14 @@ void ParticleFilter::estimate()
 
   if (weightSum < MIN_WEIGHTSUM)
   {
+    ROS_WARN(
+        "Didn't estimate, performed reset in velocity estimator to be safe");
+
     // Print iteration and state information
     *iteration_oss << "DONE without estimating!";
+
+    // Reset velocity estimator
+    state_.targetVelocityEstimator.reset();
 
     // Don't estimate
     return;
@@ -1069,7 +1075,7 @@ void PFPublisher::publishGTData()
   gtPoint.header.frame_id = "world";
 
 #ifdef USE_NEWER_READ_OMNI_PACKAGE
-  for(uint r=0; r < nRobots_; ++r)
+  for (uint r = 0; r < nRobots_; ++r)
   {
     gtPoint.point = msg_GT_.poseOMNI[r].pose.position;
     robotGTPublishers_[0].publish(gtPoint);
@@ -1152,13 +1158,17 @@ void ParticleFilter::State::targetVelocityEstimator_s::insert(
   uint chosenRobot = 0;
   pdata_t maxConf = 0.0;
 
-  // Check if the vector is full
-  if (timeVec.capacity() == timeVec.size())
+  ROS_DEBUG("Inserting new data in velocity estimator");
+
+  // Check if the vectors are full
+  for (uint v = 0; v < numberVels; ++v)
   {
-    // Erase first element of both vectors
-    timeVec.erase(timeVec.begin());
-    for (uint velType = 0; velType < posVec.size(); ++velType)
-      posVec[velType].erase(posVec[velType].begin());
+    if (timeVecs[v].capacity() == timeVecs[v].size())
+    {
+      // Erase first element of both vectors
+      timeVecs[v].erase(timeVecs[v].begin());
+      posVecs[v].erase(posVecs[v].begin());
+    }
   }
 
   // Choose the robot based on having found the ball and the maximum
@@ -1193,39 +1203,46 @@ void ParticleFilter::State::targetVelocityEstimator_s::insert(
                      obs.y * cos(rs.pose[O_THETA]);
   ballGlobal[O_TZ] = obs.z;
 
-  if (timeVec.empty())
-    timeInit = ros::Time::now().toNSec() * 1e-9;
+  // Insert data in the vectors, with special attention if the timeVec is empty
+  for (uint velType = 0; velType < numberVels; ++velType)
+  {
+    if (timeVecs[velType].empty())
+      timeInit = ros::Time::now().toNSec() * 1e-9;
 
-  timeVec.push_back(timeData - timeInit);
-
-  for (uint velType = 0; velType < posVec.size(); ++velType)
-    posVec[velType].push_back(ballGlobal[velType]);
+    timeVecs[velType].push_back(timeData - timeInit);
+    posVecs[velType].push_back(ballGlobal[velType]);
+  }
 }
 
 void ParticleFilter::State::targetVelocityEstimator_s::resize(
     const uint newStackSize)
 {
+  ROS_DEBUG("Resizing target velocity estimator");
+
   // Update to new stack size
   maxDataSize = newStackSize;
 
   // When using std::vector::resize, the last elements will be removed if the
   // new stack size is lower. Since we want to remove the first, we'll have to
   // do that manually
-  if (newStackSize < timeVec.size())
+  for (uint velType = 0; velType < numberVels; ++velType)
   {
-    uint sizeIter = newStackSize;
-    uint currSize = timeVec.size();
-    while (sizeIter > currSize)
+    if (newStackSize < timeVecs[velType].size())
     {
-      timeVec.erase(timeVec.begin());
-      posVec.erase(posVec.begin());
-      sizeIter--;
+      uint sizeIter = newStackSize;
+      uint currSize = timeVecs[velType].size();
+      while (sizeIter > currSize)
+      {
+        timeVecs[velType].erase(timeVecs[velType].begin());
+        posVecs[velType].erase(posVecs[velType].begin());
+        sizeIter--;
+      }
     }
-  }
 
-  // Reserve the new size
-  timeVec.reserve(maxDataSize);
-  posVec.reserve(maxDataSize);
+    // Reserve the new size
+    timeVecs[velType].reserve(maxDataSize);
+    posVecs[velType].reserve(maxDataSize);
+  }
 }
 
 ParticleFilter::dynamicVariables_s::dynamicVariables_s(ros::NodeHandle& nh,

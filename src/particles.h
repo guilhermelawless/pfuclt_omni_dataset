@@ -155,8 +155,9 @@ protected:
      */
     struct targetVelocityEstimator_s
     {
-      std::vector<double> timeVec;
-      std::vector<std::vector<double> > posVec;
+      std::vector<std::vector<double> > timeVecs;
+      std::vector<std::vector<double> > posVecs;
+      std::vector<double> lastEstimates;
       estimatorFunc estimateVelocity;
 
       uint maxDataSize;
@@ -165,31 +166,55 @@ protected:
 
       targetVelocityEstimator_s(const uint numberVels, const int maxDataSize,
                                 estimatorFunc ptrFunc)
-          : numberVels(numberVels), posVec(numberVels, std::vector<double>()),
-            maxDataSize(maxDataSize)
+          : numberVels(numberVels), posVecs(numberVels, std::vector<double>()),
+            timeVecs(numberVels, std::vector<double>()),
+            maxDataSize(maxDataSize), lastEstimates(numberVels)
       {
         // Pointer to the estimator function
         estimateVelocity = ptrFunc;
 
         // Reserve the data size
-        timeVec.reserve(maxDataSize);
-        posVec.reserve(maxDataSize);
+        for (uint velType = 0; velType < numberVels; ++velType)
+        {
+          timeVecs[velType].reserve(maxDataSize);
+          posVecs[velType].reserve(maxDataSize);
+        }
+
+        ROS_INFO("Created a target velocity estimator");
       }
 
       void insert(const double timeData,
                   const std::vector<TargetObservation>& obsData,
                   const std::vector<RobotState>& robotStates);
 
-      bool isReadyToEstimate() { return (timeVec.size() == maxDataSize); }
+      bool isReadyToEstimate()
+      {
+        for (uint velType = 0; velType < numberVels; ++velType)
+        {
+          if (timeVecs[velType].size() != timeVecs[velType].capacity())
+            return false;
+        }
+
+        return true;
+      }
 
       double estimate(const uint velType)
       {
-        double velEst = estimateVelocity(timeVec, posVec[velType]);
-        ROS_DEBUG("Estimated velocity type %d = %f", velType, velEst);
-        return velEst;
+        lastEstimates[velType] =
+            estimateVelocity(timeVecs[velType], posVecs[velType]);
+        return lastEstimates[velType];
       }
 
       void resize(const uint newStackSize);
+
+      void reset()
+      {
+        for (uint velType = 0; velType < numberVels; ++velType)
+        {
+          timeVecs[velType].clear();
+          posVecs[velType].clear();
+        }
+      }
 
     } targetVelocityEstimator;
 

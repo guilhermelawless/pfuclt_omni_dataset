@@ -57,7 +57,7 @@
         args="--quiet --rate=$(arg rate) $(arg path)/OMNI1_odomballLandmarks.bag $(arg path)/OMNI3_odomballLandmarks.bag $(arg path)/OMNI4_odomballLandmarks.bag $(arg path)/OMNI5_odomballLandmarks.bag $(arg path)/four_robot_experiment_GT.bag" >
         <param name="percentage_to_keep" value="50"/>
         <param name="velocity_estimator_stack_size" value="15"/>
-        <param name="predict_model_stddev" value="15.0"/>
+        <param name="predict_model_stddev" value="25.0"/>
         <param name="particles" value="200"/>
         <param name="OMNI1_alpha" value="0.015, 0.1, 0.5, 0.001"/>
         <param name="OMNI2_alpha" value="0.015, 0.1, 0.5, 0.001"/>
