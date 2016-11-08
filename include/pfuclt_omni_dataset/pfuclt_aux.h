@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 #include <vector>
 #include <fstream>
-#include "pfuclt_aux.h"
+#include <pfuclt_omni_dataset/pfuclt_aux.h>
 #include <boost/ref.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>

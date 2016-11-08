@@ -1,7 +1,7 @@
 #ifndef PARTICLES_H
 #define PARTICLES_H
 
-#include "pfuclt_aux.h"
+#include <pfuclt_omni_dataset/pfuclt_aux.h>
 
 #include <vector>
 #include <algorithm>

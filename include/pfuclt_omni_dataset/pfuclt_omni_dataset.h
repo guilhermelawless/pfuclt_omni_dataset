@@ -21,8 +21,8 @@
 #include <boost/shared_ptr.hpp>
 
 // Auxiliary libraries
-#include "pfuclt_aux.h"
-#include "particles.h"
+#include <pfuclt_omni_dataset/pfuclt_aux.h>
+#include <pfuclt_omni_dataset/pfuclt_particles.h>
 
 namespace pfuclt
 {

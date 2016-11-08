@@ -1,5 +1,5 @@
-#include "particles.h"
-#include "ros/ros.h"
+#include <pfuclt_omni_dataset/pfuclt_particles.h>
+#include <ros/ros.h>
 #include <stdlib.h>
 #include <boost/random.hpp>
 #include <boost/foreach.hpp>
@@ -13,6 +13,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/PointCloud.h>
 #include <visualization_msgs/Marker.h>
+#include <read_omni_dataset/read_omni_dataset.h>  // defines version of messages
 
 //#define DONT_RESAMPLE
 //#define DONT_FUSE_TARGET true
@@ -20,7 +21,6 @@
 #define PUBLISH_PTCLS true
 //#define EVALUATE_TIME_PERFORMANCE true
 #define RECONFIGURE_ALPHAS true
-//#define USE_NEWER_READ_OMNI_PACKAGE true
 
 namespace pfuclt_ptcls
 {

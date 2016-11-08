@@ -1,6 +1,6 @@
-#include "pfuclt_aux.h"
-#include "particles.h"
-#include "pfuclt_omni_dataset.h"
+#include <pfuclt_omni_dataset/pfuclt_aux.h>
+#include <pfuclt_omni_dataset/pfuclt_particles.h>
+#include <pfuclt_omni_dataset/pfuclt_omni_dataset.h>
 #include <tf2/utils.h>
 
 #define ROS_TDIFF(t) (t.toSec() - timeInit.toSec())

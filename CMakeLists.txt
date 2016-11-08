@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
+
 project(pfuclt_omni_dataset)
 
 #set(CMAKE_BUILD_TYPE Debug)
@@ -10,7 +11,10 @@ find_package(
 )
 
 #external includes
-INCLUDE_DIRECTORIES(include/)
+INCLUDE_DIRECTORIES(include)
+
+#build library for minicsv
+add_library(minicsv src/minicsv.cpp)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -24,6 +28,9 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   dynamic_reconfigure
 )
+
+FIND_PACKAGE(read_omni_dataset REQUIRED)
+INCLUDE_DIRECTORIES(${read_omni_dataset_INCLUDE_DIRS})
 
 generate_dynamic_reconfigure_options(
   config/Dynamic.cfg
@@ -44,9 +51,9 @@ generate_messages(
 )
 
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  CATKIN_DEPENDS roscpp rospy
-CATKIN_DEPENDS roscpp rospy message_runtime
+#CATKIN_DEPENDS roscpp rospy message_runtime read_omni_dataset
 #  DEPENDS system_lib
 )
 
@@ -56,10 +63,9 @@ INCLUDE_DIRECTORIES(${Eigen_INCLUDE_DIRS})
 find_package(Boost COMPONENTS filesystem REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-set(SOURCE_FILES src/pfuclt_omni_dataset.cpp src/pfuclt_aux.cpp src/particles.cpp)
-set(HEADER_FILES src/pfuclt_omni_dataset.h src/pfuclt_aux.h src/particles.h)
+set(SOURCE_FILES src/pfuclt_omni_dataset.cpp src/pfuclt_aux.cpp src/pfuclt_particles.cpp)
 
-add_executable(pfuclt_omni_dataset ${SOURCE_FILES} ${HEADER_FILES})
+add_executable(pfuclt_omni_dataset ${SOURCE_FILES})
 add_dependencies(pfuclt_omni_dataset pfuclt_omni_dataset_generate_messages_cpp)
-target_link_libraries(pfuclt_omni_dataset ${catkin_LIBRARIES} ${rosbag_LIBRARIES})
+target_link_libraries(pfuclt_omni_dataset ${catkin_LIBRARIES} ${rosbag_LIBRARIES} ${read_omni_dataset_LIBRARIES} minicsv)
 
