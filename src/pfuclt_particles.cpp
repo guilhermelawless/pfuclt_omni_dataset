@@ -13,7 +13,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/PointCloud.h>
 #include <visualization_msgs/Marker.h>
-#include <read_omni_dataset/read_omni_dataset.h>  // defines version of messages
+#include <read_omni_dataset/read_omni_dataset.h> // defines version of messages
 
 //#define DONT_RESAMPLE
 //#define DONT_FUSE_TARGET true
@@ -297,6 +297,9 @@ void ParticleFilter::fuseTarget()
       break;
     }
   }
+
+  // Update ball state
+  state_.target.seen = ballSeen;
 
   // exit if ball not seen by any robot
   if (!ballSeen)
@@ -976,6 +979,8 @@ void PFPublisher::publishTargetState()
   msg_target_.x = state_.target.pos[O_TX];
   msg_target_.y = state_.target.pos[O_TY];
   msg_target_.z = state_.target.pos[O_TZ];
+  msg_target_.found = state_.target.seen;
+
   targetStatePublisher_.publish(msg_target_);
 
 #ifdef BROADCAST_TF_AND_POSES

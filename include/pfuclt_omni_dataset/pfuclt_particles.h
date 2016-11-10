@@ -142,8 +142,11 @@ protected:
     {
       std::vector<pdata_t> pos;
       std::vector<pdata_t> vel;
+      bool seen;
 
-      targetState_s() : pos(STATES_PER_TARGET, 0.0), vel(STATES_PER_TARGET, 0.0)
+      targetState_s()
+          : pos(STATES_PER_TARGET, 0.0), vel(STATES_PER_TARGET, 0.0),
+            seen(false)
       {
       }
     } target;
