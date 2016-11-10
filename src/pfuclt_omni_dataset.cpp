@@ -428,6 +428,11 @@ int main(int argc, char* argv[])
     }
   }
 
+  ROS_INFO("Waiting for /clock");
+  while(ros::Time::now().toSec() == 0)
+    ;
+  ROS_INFO("/clock message received");
+
   pfuclt::RobotFactory Factory(nh);
 
   if (USE_CUSTOM_VALUES && PLAYING_ROBOTS[1])
