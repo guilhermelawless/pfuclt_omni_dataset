@@ -193,27 +193,40 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
     //    ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
     //              target->header.stamp.sec);
 
-    Eigen::Vector2d targetObsVec = Eigen::Vector2d(target->x, target->y);
     pfuclt_ptcls::TargetObservation obs;
 
     obs.found = true;
     obs.x = target->x;
     obs.y = target->y;
     obs.z = target->z;
-    obs.d = targetObsVec.norm();
+    obs.d = Eigen::Vector2d(obs.x, obs.y).norm();
+    obs.r = Eigen::Vector3d(obs.x, obs.y, obs.z).norm();
     obs.phi = atan2(target->y, target->x);
 
-    obs.covDD = (double)(1 / target->mismatchFactor) *
-                (K3 * obs.d + K4 * (obs.d * obs.d));
+    // Auxiliary
+    const double cos2p = pow(cos(obs.phi), 2);
+    const double sin2p = pow(sin(obs.phi), 2);
+    const double d2 = pow(obs.d, 2);
+    const double r2 = pow(obs.r, 2);
 
-    obs.covPP = K5 * (1 / (obs.d + 1));
+    // 3D Model
+    static const float ballRadius = 0.1;
+    static const float ballr2 = pow(ballRadius, 2);
+    obs.covDD = K3 * (r2 * sin2p / (2 * ballr2)) +
+                K4 * (r2 * sin2p / (2 * (r2 - ballr2))) +
+                K3 * K4 * (r2 * cos2p / (4 * ballr2 * (r2 - ballr2)));
+    obs.covPP = K5 / (r2 - ballr2 * sin2p);
 
-    obs.covXX = pow(cos(obs.phi), 2) * obs.covDD +
-                pow(sin(obs.phi), 2) *
-                    (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
-    obs.covYY = pow(sin(obs.phi), 2) * obs.covDD +
-                pow(cos(obs.phi), 2) *
-                    (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
+    // 2D Model
+    //    obs.covDD = (double)(1 / target->mismatchFactor) *
+    //                (K3 * obs.d + K4 * (obs.d * obs.d));
+
+    //    obs.covPP = K5 * (1 / (obs.d + 1));
+
+    obs.covXX =
+        cos2p * obs.covDD + sin2p * (d2 * obs.covPP + obs.covDD * obs.covPP);
+    obs.covYY =
+        sin2p * obs.covDD + cos2p * (d2 * obs.covPP + obs.covDD * obs.covPP);
 
     // Save this observation
     pf_->saveTargetObservation(robotNumber_, obs);
@@ -429,7 +442,7 @@ int main(int argc, char* argv[])
   }
 
   ROS_INFO("Waiting for /clock");
-  while(ros::Time::now().toSec() == 0)
+  while (ros::Time::now().toSec() == 0)
     ;
   ROS_INFO("/clock message received");
 

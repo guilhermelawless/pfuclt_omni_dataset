@@ -76,7 +76,7 @@ typedef struct targetObs_s
 {
   bool found;
   double x, y, z;
-  double d, phi;
+  double d, phi, r;
   double covDD, covPP, covXX, covYY;
 
   targetObs_s() { found = false; }
