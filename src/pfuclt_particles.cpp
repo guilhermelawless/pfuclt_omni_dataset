@@ -1183,8 +1183,7 @@ void ParticleFilter::State::targetVelocityEstimator_s::insert(
     if (obsData[r].found)
     {
       // TODO these hard coded values.. change or what?
-      if (robotStates[r].conf > maxConf &&
-          (obsData[r].x < 4.0 && obsData[r].y < 4.0))
+      if (robotStates[r].conf > maxConf && sqrt(pow(obsData[r].x, 2) + pow(obsData[r].y, 2)) < 4.0)
       {
         readyToInsert = true;
         chosenRobot = r;
