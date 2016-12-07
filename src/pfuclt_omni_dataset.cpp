@@ -430,15 +430,12 @@ int main(int argc, char* argv[])
   uint total_size =
       MAX_ROBOTS * STATES_PER_ROBOT + NUM_TARGETS * STATES_PER_TARGET;
 
-  if (USE_CUSTOM_VALUES)
+  readParam<double>(nh, "/CUSTOM_PARTICLE_INIT", CUSTOM_PARTICLE_INIT);
+  if (CUSTOM_PARTICLE_INIT.size() != (total_size * 2))
   {
-    readParam<double>(nh, "/CUSTOM_PARTICLE_INIT", CUSTOM_PARTICLE_INIT);
-    if (CUSTOM_PARTICLE_INIT.size() != (total_size * 2))
-    {
-      ROS_ERROR("/CUSTOM_PARTICLE_INIT given but not of correct size - should "
-                "have %d numbers and has %d",
-                total_size * 2, (int)CUSTOM_PARTICLE_INIT.size());
-    }
+    ROS_ERROR("/CUSTOM_PARTICLE_INIT given but not of correct size - should "
+              "have %d numbers and has %d",
+              total_size * 2, (int)CUSTOM_PARTICLE_INIT.size());
   }
 
   ROS_INFO("Waiting for /clock");
