@@ -15,12 +15,13 @@
 #include <visualization_msgs/Marker.h>
 #include <read_omni_dataset/read_omni_dataset.h> // defines version of messages
 
-//#define DONT_RESAMPLE
+//#define DONT_RESAMPLE true
 //#define DONT_FUSE_TARGET true
+//#define DONT_FUSE_ROBOTS true
 #define BROADCAST_TF_AND_POSES true
 #define PUBLISH_PTCLS true
 //#define EVALUATE_TIME_PERFORMANCE true
-#define RECONFIGURE_ALPHAS true
+//#define RECONFIGURE_ALPHAS true
 
 namespace pfuclt_ptcls
 {
@@ -114,14 +115,13 @@ void ParticleFilter::dynamicReconfigureCallback(
   dynamicVariables_.targetRandStddev =
       config.groups.target.predict_model_stddev;
 
-  // Alpha values updated only if using the original dataset
-  if (RECONFIGURE_ALPHAS)
-  {
-    dynamicVariables_.fill_alpha(0, config.groups.alphas.OMNI1_alpha);
-    dynamicVariables_.fill_alpha(2, config.groups.alphas.OMNI3_alpha);
-    dynamicVariables_.fill_alpha(3, config.groups.alphas.OMNI4_alpha);
-    dynamicVariables_.fill_alpha(4, config.groups.alphas.OMNI5_alpha);
-  }
+// Alpha values updated only if using the original dataset
+#ifdef RECONFIGURE_ALPHAS
+  dynamicVariables_.fill_alpha(0, config.groups.alphas.OMNI1_alpha);
+  dynamicVariables_.fill_alpha(2, config.groups.alphas.OMNI3_alpha);
+  dynamicVariables_.fill_alpha(3, config.groups.alphas.OMNI4_alpha);
+  dynamicVariables_.fill_alpha(4, config.groups.alphas.OMNI5_alpha);
+#endif
 }
 
 void ParticleFilter::predictTarget()
@@ -219,6 +219,7 @@ void ParticleFilter::fuseRobots()
                                Zerr(O_Y) * Zerr(O_Y) / m.covYY);
         float detValue = 1.0; // pow((2 * M_PI * m.covXX * m.covYY), -0.5);
 
+        /*
         ROS_DEBUG_COND(
             p == 0,
             "OMNI%d's particle 0 is at {%f;%f;%f}, sees landmark %d with "
@@ -226,6 +227,7 @@ void ParticleFilter::fuseRobots()
             r + 1, particles_[o_robot + O_X][p], particles_[o_robot + O_Y][p],
             particles_[o_robot + O_THETA][p], l, 100 * (detValue * exp(expArg)),
             Zerr(0), Zerr(1));
+        */
 
         // Update weight component for this robot and particular particle
         probabilities[r][p] *= detValue * exp(expArg);
@@ -397,7 +399,7 @@ void ParticleFilter::fuseTarget()
   // The target subparticles are now reordered according to their weight
   // contribution
 
-  // printWeights("After fuseTarget(): ");
+  printWeights("After fuseTarget(): ");
 }
 
 void ParticleFilter::modifiedMultinomialResampler(uint startAt)
@@ -654,16 +656,15 @@ void ParticleFilter::init(const std::vector<double>& customRandInit,
   // Set flag
   initialized_ = true;
 
+  bool flag_theta_given = (customPosInit.size() == nRobots_ * 3 &&
+                           customRandInit.size() == nSubParticleSets_ * 3);
+  size_t numVars =
+      flag_theta_given ? customRandInit.size() / 3 : customRandInit.size() / 2;
+
   ROS_INFO("Initializing particle filter");
 
-  ROS_WARN_COND(
-      customRandInit.size() != ((nSubParticleSets_ - 1) * 2),
-      "The provided vector for particle initilization does not have the "
-      "correct size (should have %d elements",
-      (nSubParticleSets_ - 1) * 2);
-
   // For all subparticle sets except the particle weights
-  for (int i = 0; i < customRandInit.size() / 2; ++i)
+  for (int i = 0; i < numVars; ++i)
   {
     ROS_DEBUG("Values for distribution: %.4f %.4f", customRandInit[2 * i],
               customRandInit[2 * i + 1]);
@@ -680,16 +681,13 @@ void ParticleFilter::init(const std::vector<double>& customRandInit,
   resetWeights(1.0 / nParticles_);
 
   // Initialize pose with initial belief
-
-  ROS_WARN_COND(customPosInit.size() != (nRobots_ * 2),
-                "The provided vector for initial state belief does not have "
-                "the correct size");
-
   for (uint r = 0; r < nRobots_; ++r)
   {
     pdata_t tmp[] = { customPosInit[2 * r + O_X], customPosInit[2 * r + O_Y],
                       -M_PI };
     state_.robots[r].pose = std::vector<pdata_t>(tmp, tmp + nStatesPerRobot_);
+    if (flag_theta_given)
+      state_.robots[r].pose.push_back(customPosInit[2 * r + O_THETA]);
   }
 
   // State should have the initial belief
@@ -859,9 +857,19 @@ PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
     robotEstimatePublishers_[r] = nh_.advertise<geometry_msgs::PoseStamped>(
         "/" + robotName.str() + "/estimatedPose", 1000);
 
-    // ground truth publisher
+// ground truth publisher, in the simulation package we have PoseStamped
+#ifndef USE_NEWER_READ_OMNI_PACKAGE
     robotGTPublishers_[r] = nh_.advertise<geometry_msgs::PointStamped>(
         "/" + robotName.str() + "/gtPose", 1000);
+#else
+    robotGTPublishers_[r] = nh_.advertise<geometry_msgs::PoseStamped>(
+        "/" + robotName.str() + "/gtPose", 1000);
+
+    // add a new pose to the pose message for each robot, with its frame
+    geometry_msgs::PoseStamped ps;
+    ps.header.frame_id = robotName.str();
+    msg_state_.robotPose.push_back(ps);
+#endif
   }
 
   ROS_INFO("It's a publishing particle filter!");
@@ -938,11 +946,16 @@ void PFPublisher::publishRobotStates()
       continue;
 
     std::ostringstream robotName;
-    robotName << "OMNI" << r + 1;
+    robotName << "omni" << r + 1;
+
+    msg_state_.header.stamp = ros::Time::now();
 
     ParticleFilter::State::robotState_s& pfState = state_.robots[r];
+#ifdef USE_NEWER_READ_OMNI_PACKAGE
+    geometry_msgs::Pose& rosState = msg_state_.robotPose[r].pose;
+#else
     geometry_msgs::Pose& rosState = msg_state_.robotPose[r].pose.pose;
-
+#endif
     // Create from Euler angles
     tf2::Quaternion tf2q(tf2::Vector3(0, 0, 1), pfState.pose[O_THETA]);
     tf2::Transform tf2t(tf2q, tf2::Vector3(pfState.pose[O_X], pfState.pose[O_Y],
@@ -956,7 +969,7 @@ void PFPublisher::publishRobotStates()
     geometry_msgs::TransformStamped estTransf;
     estTransf.header.stamp = ros::Time::now();
     estTransf.header.frame_id = "world";
-    estTransf.child_frame_id = robotName.str();
+    estTransf.child_frame_id = robotName.str() + "est";
     estTransf.transform = tf2::toMsg(tf2t);
     robotBroadcasters[r].sendTransform(estTransf);
 
@@ -975,6 +988,9 @@ void PFPublisher::publishRobotStates()
 
 void PFPublisher::publishTargetState()
 {
+  msg_target_.header.stamp = ros::Time::now();
+  msg_target_.header.frame_id = "world";
+
   // Our custom message type
   msg_target_.x = state_.target.pos[O_TX];
   msg_target_.y = state_.target.pos[O_TY];
@@ -1010,7 +1026,7 @@ void PFPublisher::publishTargetObservations()
 
     // Robot and observation
     std::ostringstream robotName;
-    robotName << "OMNI" << r + 1;
+    robotName << "omni" << r + 1;
 
     TargetObservation& obs = bufTargetObservations_[r];
 
@@ -1025,7 +1041,7 @@ void PFPublisher::publishTargetObservations()
     else
       previouslyPublished[r] = false;
 
-    marker.header.frame_id = robotName.str();
+    marker.header.frame_id = robotName.str() + "est";
     marker.header.stamp = ros::Time();
 
     // Setting the same namespace and id will overwrite the previous marker
@@ -1074,16 +1090,19 @@ void PFPublisher::publishGTData()
   // Publish custom format
   syncedGTPublisher_.publish(msg_GT_);
 
-  // Publish poses for every robot
   geometry_msgs::PointStamped gtPoint;
   gtPoint.header.stamp = ros::Time::now();
   gtPoint.header.frame_id = "world";
 
 #ifdef USE_NEWER_READ_OMNI_PACKAGE
+  geometry_msgs::PoseStamped gtPose;
+  gtPose.header.stamp = ros::Time::now();
+  gtPose.header.frame_id = "world";
+
   for (uint r = 0; r < nRobots_; ++r)
   {
-    gtPoint.point = msg_GT_.poseOMNI[r].pose.position;
-    robotGTPublishers_[0].publish(gtPoint);
+    gtPose.pose = msg_GT_.poseOMNI[r].pose;
+    robotGTPublishers_[r].publish(gtPose);
   }
 
 #else
@@ -1149,8 +1168,13 @@ void PFPublisher::nextIteration()
   // Publish robot-to-target lines
   publishTargetObservations();
 
-  // Publish GT data
+  // Publish GT data if we have received any callback
+#ifdef USE_NEWER_READ_OMNI_PACKAGE
+  if (!msg_GT_.poseOMNI.empty())
+    publishGTData();
+#else
   publishGTData();
+#endif
 }
 
 void ParticleFilter::State::targetVelocityEstimator_s::insert(
@@ -1183,7 +1207,8 @@ void ParticleFilter::State::targetVelocityEstimator_s::insert(
     if (obsData[r].found)
     {
       // TODO these hard coded values.. change or what?
-      if (robotStates[r].conf > maxConf && sqrt(pow(obsData[r].x, 2) + pow(obsData[r].y, 2)) < 4.0)
+      if (robotStates[r].conf > maxConf &&
+          sqrt(pow(obsData[r].x, 2) + pow(obsData[r].y, 2)) < 4.0)
       {
         readyToInsert = true;
         chosenRobot = r;
@@ -1207,7 +1232,8 @@ void ParticleFilter::State::targetVelocityEstimator_s::insert(
                      obs.y * cos(rs.pose[O_THETA]);
   ballGlobal[O_TZ] = obs.z;
 
-  // Insert data in the vectors, with special attention if the timeVec is empty
+  // Insert data in the vectors, with special attention if the timeVec is
+  // empty
   for (uint velType = 0; velType < numberVels; ++velType)
   {
     if (timeVecs[velType].empty())

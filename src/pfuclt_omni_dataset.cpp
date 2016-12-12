@@ -86,10 +86,7 @@ void RobotFactory::tryInitializeParticles()
   if (!areAllRobotsActive())
     return;
 
-  if (USE_CUSTOM_VALUES)
-    pf->init(CUSTOM_PARTICLE_INIT, POS_INIT);
-  else
-    pf->init();
+  pf->init(CUSTOM_PARTICLE_INIT, POS_INIT);
 }
 
 void RobotFactory::initializeFixedLandmarks()
@@ -190,8 +187,8 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
 
   if (target->found)
   {
-    //    ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
-    //              target->header.stamp.sec);
+        ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
+                  target->header.stamp.sec);
 
     pfuclt_ptcls::TargetObservation obs;
 
