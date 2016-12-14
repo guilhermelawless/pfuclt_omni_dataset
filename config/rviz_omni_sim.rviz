@@ -8,7 +8,6 @@ Panels:
         - /Status1
         - /Target1/Estimated1/Status1
         - /Target1/targetObervations1/Namespaces1
-        - /OMNI11/Estimated1
         - /OMNI21/Estimated1
         - /OMNI91/Estimated1
       Splitter Ratio: 0.505556
@@ -65,8 +64,6 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        OMNI1est:
-          Value: true
         omni1:
           Value: true
         omni1est:
@@ -75,17 +72,27 @@ Visualization Manager:
           Value: true
         omni2est:
           Value: true
+        omni3:
+          Value: true
+        omni3est:
+          Value: true
+        omni4:
+          Value: true
+        omni4est:
+          Value: true
+        omni5:
+          Value: true
+        omni5est:
+          Value: true
         world:
           Value: true
       Marker Scale: 1
       Name: TF
-      Show Arrows: true
+      Show Arrows: false
       Show Axes: true
       Show Names: true
       Tree:
         world:
-          OMNI1est:
-            {}
           omni1:
             {}
           omni1est:
@@ -93,6 +100,18 @@ Visualization Manager:
           omni2:
             {}
           omni2est:
+            {}
+          omni3:
+            {}
+          omni3est:
+            {}
+          omni4:
+            {}
+          omni4est:
+            {}
+          omni5:
+            {}
+          omni5est:
             {}
       Update Interval: 0
       Value: true
@@ -124,7 +143,7 @@ Visualization Manager:
           Enabled: true
           History Length: 1
           Name: GTPose
-          Radius: 0.1
+          Radius: 0.3
           Topic: /target/gtPose
           Unreliable: false
           Value: true
@@ -164,19 +183,18 @@ Visualization Manager:
           Enabled: true
           History Length: 1
           Name: Estimated
-          Radius: 0.2
+          Radius: 0.3
           Topic: /target/estimatedPose
           Unreliable: false
           Value: true
         - Class: rviz/Marker
-          Enabled: true
+          Enabled: false
           Marker Topic: /targetObservations
           Name: targetObervations
           Namespaces:
-            omni1_target_observations: true
-            omni2_target_observations: true
+            {}
           Queue Size: 100
-          Value: true
+          Value: false
       Enabled: true
       Name: Target
     - Class: rviz/Group
@@ -226,6 +244,22 @@ Visualization Manager:
           Shape: Arrow
           Topic: /omni1/estimatedPose
           Unreliable: false
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni1/poseMarker
+          Name: Cylinder
+          Namespaces:
+            omni1: true
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni1/targetObs
+          Name: GTTargetObs
+          Namespaces:
+            /omni1/targetObs: true
+          Queue Size: 100
           Value: true
       Enabled: true
       Name: OMNI1
@@ -277,6 +311,22 @@ Visualization Manager:
           Topic: /omni2/particles
           Unreliable: false
           Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni2/poseMarker
+          Name: Cylinder
+          Namespaces:
+            omni2: true
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni2/targetObs
+          Name: GTTargetObs
+          Namespaces:
+            /omni2/targetObs: true
+          Queue Size: 100
+          Value: true
       Enabled: true
       Name: OMNI2
     - Class: rviz/Group
@@ -326,6 +376,22 @@ Visualization Manager:
           Name: Particles
           Topic: /omni3/particles
           Unreliable: false
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni3/poseMarker
+          Name: Cylinder
+          Namespaces:
+            omni3: true
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni3/targetObs
+          Name: GTTargetObs
+          Namespaces:
+            /omni3/targetObs: true
+          Queue Size: 100
           Value: true
       Enabled: true
       Name: OMNI3
@@ -377,6 +443,22 @@ Visualization Manager:
           Topic: /omni4/particles
           Unreliable: false
           Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni4/poseMarker
+          Name: Cylinder
+          Namespaces:
+            omni4: true
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni4/targetObs
+          Name: GTTargetObs
+          Namespaces:
+            /omni4/targetObs: true
+          Queue Size: 100
+          Value: true
       Enabled: true
       Name: OMNI4
     - Class: rviz/Group
@@ -426,6 +508,22 @@ Visualization Manager:
           Name: Particles
           Topic: /omni5/particles
           Unreliable: false
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni5/poseMarker
+          Name: Cylinder
+          Namespaces:
+            omni5: true
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni5/targetObs
+          Name: GTTargetObs
+          Namespaces:
+            /omni5/targetObs: true
+          Queue Size: 100
           Value: true
       Enabled: true
       Name: OMNI5
@@ -477,6 +575,22 @@ Visualization Manager:
           Topic: /omni6/particles
           Unreliable: false
           Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni6/poseMarker
+          Name: Cylinder
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni6/targetObs
+          Name: GTTargetObs
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
       Enabled: true
       Name: OMNI6
     - Class: rviz/Group
@@ -526,6 +640,22 @@ Visualization Manager:
           Name: Particles
           Topic: /omni7/particles
           Unreliable: false
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni7/poseMarker
+          Name: Cylinder
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni7/targetObs
+          Name: GTTargetObs
+          Namespaces:
+            {}
+          Queue Size: 100
           Value: true
       Enabled: true
       Name: OMNI7
@@ -577,6 +707,22 @@ Visualization Manager:
           Topic: /omni8/particles
           Unreliable: false
           Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni8/poseMarker
+          Name: Cylinder
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni8/targetObs
+          Name: GTTargetObs
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
       Enabled: true
       Name: OMNI8
     - Class: rviz/Group
@@ -626,6 +772,22 @@ Visualization Manager:
           Name: Particles
           Topic: /omni9/particles
           Unreliable: false
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni9/poseMarker
+          Name: Cylinder
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni9/targetObs
+          Name: GTTargetObs
+          Namespaces:
+            {}
+          Queue Size: 100
           Value: true
       Enabled: true
       Name: OMNI9
@@ -677,13 +839,29 @@ Visualization Manager:
           Topic: /omni10/particles
           Unreliable: false
           Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni10/poseMarker
+          Name: Cylinder
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /omni10/targetObs
+          Name: GTTargetObs
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
       Enabled: true
       Name: OMNI10
   Enabled: true
   Global Options:
     Background Color: 0; 0; 0
     Fixed Frame: world
-    Frame Rate: 60
+    Frame Rate: 30
   Name: root
   Tools:
     - Class: rviz/Interact
@@ -703,22 +881,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 23.1839
+      Distance: 14.6365
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 2.04069
-        Y: 3.57422
-        Z: -0.196912
+        X: 4.77654
+        Y: 0.104955
+        Z: -0.720372
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 1.5648
+      Pitch: 1.5698
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.72856
+      Yaw: 4.72859
     Saved: ~
 Window Geometry:
   Displays:

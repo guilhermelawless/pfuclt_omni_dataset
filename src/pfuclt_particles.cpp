@@ -1055,7 +1055,7 @@ void PFPublisher::publishTargetObservations()
     geometry_msgs::Point head;
     head.x = obs.x;
     head.y = obs.y;
-    head.z = obs.z;
+    head.z = obs.z - pubData.robotHeight;
     marker.points.push_back(head);
 
     marker.scale.x = 0.01;
