@@ -20,7 +20,7 @@
 //#define DONT_FUSE_ROBOTS true
 #define BROADCAST_TF_AND_POSES true
 #define PUBLISH_PTCLS true
-//#define EVALUATE_TIME_PERFORMANCE true
+#define EVALUATE_TIME_PERFORMANCE true
 //#define RECONFIGURE_ALPHAS true
 
 namespace pfuclt_ptcls
@@ -708,8 +708,8 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
   // the odometry time
   if (mainRobotID_ == robotNumber)
   {
-    iterationTime_.updateTime(ros::Time::now());
-    odometryTime_.updateTime(stamp);
+    iterationTime_.updateTime(ros::WallTime::now());
+    odometryTime_.updateTime(ros::Time::now());
   }
 #endif
 
@@ -777,10 +777,10 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
     estimate();
 
 #ifdef EVALUATE_TIME_PERFORMANCE
-    iterationTime_.updateTime(ros::Time::now());
-    ROS_INFO("Odometry IF NOT slowed down deltaT = %fms :::::::::: %fHz",
+    iterationTime_.updateTime(ros::WallTime::now());
+    ROS_INFO("(SIM TIME) Odometry analyzed with = %fms :::::::::: %fHz",
              1e3 * odometryTime_.diff, 1.0 / odometryTime_.diff);
-    ROS_INFO("Iteration deltaT = %fms :::::::::: %fHz",
+    ROS_INFO("(REAL TIME) Iteration took %fms :::::::::: %fHz",
              1e3 * iterationTime_.diff, 1.0 / iterationTime_.diff);
 #endif
 
@@ -1042,7 +1042,7 @@ void PFPublisher::publishTargetObservations()
       previouslyPublished[r] = false;
 
     marker.header.frame_id = robotName.str() + "est";
-    marker.header.stamp = ros::Time();
+    marker.header.stamp = ros::Time::now();
 
     // Setting the same namespace and id will overwrite the previous marker
     marker.ns = robotName.str() + "_target_observations";

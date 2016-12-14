@@ -167,6 +167,7 @@ double linearRegressionSlope(const std::vector<double>& x, const std::vector<dou
 typedef struct timeEval_s
 {
   ros::Time rosPrev, rosNew;
+  ros::WallTime wallPrev, wallNew;
   double diff;
 
   timeEval_s()
@@ -186,6 +187,16 @@ typedef struct timeEval_s
     rosNew = t;
 
     diff = (rosNew-rosPrev).toNSec() * 1e-9;
+
+    return diff;
+  }
+
+  double updateTime(ros::WallTime t)
+  {
+    wallPrev = wallNew;
+    wallNew = t;
+
+    diff = (wallNew-wallPrev).toNSec() * 1e-9;
 
     return diff;
   }
