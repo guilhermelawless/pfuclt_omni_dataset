@@ -296,7 +296,7 @@ protected:
   bool initialized_;
   std::vector<std::vector<LandmarkObservation> > bufLandmarkObservations_;
   std::vector<TargetObservation> bufTargetObservations_;
-  TimeEval targetIterationTime_, odometryTime_, iterationTime_;
+  TimeEval targetIterationTime_, odometryTime_;
   struct State state_;
 
   /**

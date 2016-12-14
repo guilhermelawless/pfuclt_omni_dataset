@@ -45,7 +45,7 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
       weightComponents_(data.nRobots, subparticles_t(nParticles_, 0.0)),
       state_(data.statesPerRobot, data.nRobots,
              dynamicVariables_.velocityEstimatorStackSize),
-      targetIterationTime_(), odometryTime_(), iterationTime_(), mutex_(),
+      targetIterationTime_(), odometryTime_(), mutex_(),
       dynamicServer_(), O_TARGET(data.nRobots * data.statesPerRobot),
       O_WEIGHT(nSubParticleSets_ - 1)
 {
@@ -704,11 +704,9 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
   *iteration_oss << "predict(OMNI" << robotNumber + 1 << ") -> ";
 
 #ifdef EVALUATE_TIME_PERFORMANCE
-  // If this is the main robot, mark this time as the iteration init and update
-  // the odometry time
+  // If this is the main robot, update the odometry time
   if (mainRobotID_ == robotNumber)
   {
-    iterationTime_.updateTime(ros::WallTime::now());
     odometryTime_.updateTime(ros::Time::now());
   }
 #endif
@@ -777,11 +775,8 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
     estimate();
 
 #ifdef EVALUATE_TIME_PERFORMANCE
-    iterationTime_.updateTime(ros::WallTime::now());
     ROS_INFO("(SIM TIME) Odometry analyzed with = %fms :::::::::: %fHz",
              1e3 * odometryTime_.diff, 1.0 / odometryTime_.diff);
-    ROS_INFO("(REAL TIME) Iteration took %fms :::::::::: %fHz",
-             1e3 * iterationTime_.diff, 1.0 / iterationTime_.diff);
 #endif
 
     ROS_DEBUG("Iteration: %s", iteration_oss->str().c_str());

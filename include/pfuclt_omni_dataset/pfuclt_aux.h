@@ -173,6 +173,7 @@ typedef struct timeEval_s
   timeEval_s()
   {
     rosPrev = rosNew = ros::Time::now();
+    wallPrev = wallNew = ros::WallTime::now();
     diff = 0.0;
   }
 
