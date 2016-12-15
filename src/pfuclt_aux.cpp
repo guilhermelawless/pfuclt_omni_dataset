@@ -1,5 +1,5 @@
-#include "pfuclt_aux.h"
-#include "minicsv.h"
+#include <pfuclt_omni_dataset/pfuclt_aux.h>
+#include <minicsv/minicsv.h>
 #include <iostream>
 
 namespace pfuclt_aux

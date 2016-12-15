@@ -9,7 +9,6 @@
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="namespaces.html"><span>Namespaces</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
     </ul>
   </div>
@@ -29,24 +28,24 @@
 <div class="title">pfuclt_aux.cpp</div>  </div>
 </div><!--header-->
 <div class="contents">
-<a href="pfuclt__aux_8cpp.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="pfuclt__aux_8h.html">pfuclt_aux.h</a>&quot;</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &quot;minicsv.h&quot;</span></div>
+<a href="pfuclt__aux_8cpp.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#include &lt;pfuclt_omni_dataset/pfuclt_aux.h&gt;</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &lt;minicsv/minicsv.h&gt;</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;</div>
 <div class="line"><a name="l00005"></a><span class="lineno"><a class="line" href="namespacepfuclt__aux.html">    5</a></span>&#160;<span class="keyword">namespace </span>pfuclt_aux</div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;{</div>
-<div class="line"><a name="l00007"></a><span class="lineno"><a class="line" href="namespacepfuclt__aux.html#a4611b0d375e3e97111f5038a68a45e25">    7</a></span>&#160;std::vector&lt;Landmark&gt; <a class="code" href="namespacepfuclt__aux.html#a4611b0d375e3e97111f5038a68a45e25">getLandmarks</a>(<span class="keyword">const</span> <span class="keywordtype">char</span>* filename)</div>
+<div class="line"><a name="l00007"></a><span class="lineno"><a class="line" href="namespacepfuclt__aux.html#a6a517c560d06c1e5f9d7330f138b8d58">    7</a></span>&#160;std::vector&lt;Landmark&gt; <a class="code" href="namespacepfuclt__aux.html#a6a517c560d06c1e5f9d7330f138b8d58">getLandmarks</a>(<span class="keyword">const</span> <span class="keywordtype">char</span>* filename)</div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;{</div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  std::vector&lt;Landmark&gt; lm_vec;</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  mini::csv::ifstream is(filename);</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  <span class="keywordflow">if</span> (is.is_open())</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  {</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    <a class="code" href="structpfuclt__aux_1_1landmark__s.html">Landmark</a> lm;</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    Landmark lm;</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    <span class="keywordflow">while</span> (is.read_line())</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    {</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;      <span class="comment">// order is serial,x,y\n</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;      is &gt;&gt; lm.<a class="code" href="structpfuclt__aux_1_1landmark__s.html#ae09536ced3b00d374d8b971e8b9281f4">serial</a> &gt;&gt; lm.<a class="code" href="structpfuclt__aux_1_1landmark__s.html#a3445742ec85600bce4a0155607b89af7">x</a> &gt;&gt; lm.<a class="code" href="structpfuclt__aux_1_1landmark__s.html#a7b81810a3fc99c463cdcce59d33682c2">y</a>;</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;      is &gt;&gt; lm.serial &gt;&gt; lm.x &gt;&gt; lm.y;</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;      lm_vec.push_back(lm);</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    }</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  }</div>
@@ -69,20 +68,15 @@
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">// end of namespace</span></div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;}</div>
-<div class="ttc" id="structpfuclt__aux_1_1landmark__s_html_a7b81810a3fc99c463cdcce59d33682c2"><div class="ttname"><a href="structpfuclt__aux_1_1landmark__s.html#a7b81810a3fc99c463cdcce59d33682c2">pfuclt_aux::landmark_s::y</a></div><div class="ttdeci">float y</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__aux_8h_source.html#l00033">pfuclt_aux.h:33</a></div></div>
-<div class="ttc" id="structpfuclt__aux_1_1landmark__s_html_ae09536ced3b00d374d8b971e8b9281f4"><div class="ttname"><a href="structpfuclt__aux_1_1landmark__s.html#ae09536ced3b00d374d8b971e8b9281f4">pfuclt_aux::landmark_s::serial</a></div><div class="ttdeci">int serial</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__aux_8h_source.html#l00032">pfuclt_aux.h:32</a></div></div>
-<div class="ttc" id="structpfuclt__aux_1_1landmark__s_html"><div class="ttname"><a href="structpfuclt__aux_1_1landmark__s.html">pfuclt_aux::landmark_s</a></div><div class="ttdoc">The Landmark struct - used to store a landmark, defined by its serial number, and its position {x...</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__aux_8h_source.html#l00030">pfuclt_aux.h:30</a></div></div>
-<div class="ttc" id="namespacepfuclt__aux_html_a4611b0d375e3e97111f5038a68a45e25"><div class="ttname"><a href="namespacepfuclt__aux.html#a4611b0d375e3e97111f5038a68a45e25">pfuclt_aux::getLandmarks</a></div><div class="ttdeci">std::vector&lt; Landmark &gt; getLandmarks(const char *filename)</div><div class="ttdoc">getLandmarks - read landmark configuration from CSV file </div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__aux_8cpp_source.html#l00007">pfuclt_aux.cpp:7</a></div></div>
-<div class="ttc" id="structpfuclt__aux_1_1landmark__s_html_a3445742ec85600bce4a0155607b89af7"><div class="ttname"><a href="structpfuclt__aux_1_1landmark__s.html#a3445742ec85600bce4a0155607b89af7">pfuclt_aux::landmark_s::x</a></div><div class="ttdeci">float x</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__aux_8h_source.html#l00033">pfuclt_aux.h:33</a></div></div>
+<div class="ttc" id="namespacepfuclt__aux_html_a6a517c560d06c1e5f9d7330f138b8d58"><div class="ttname"><a href="namespacepfuclt__aux.html#a6a517c560d06c1e5f9d7330f138b8d58">pfuclt_aux::getLandmarks</a></div><div class="ttdeci">std::vector&lt; Landmark &gt; getLandmarks(const char *filename)</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__aux_8cpp_source.html#l00007">pfuclt_aux.cpp:7</a></div></div>
 <div class="ttc" id="namespacepfuclt__aux_html_a2ac2e95ac2cd55a6d4e57f4c6de43b27"><div class="ttname"><a href="namespacepfuclt__aux.html#a2ac2e95ac2cd55a6d4e57f4c6de43b27">pfuclt_aux::linearRegressionSlope</a></div><div class="ttdeci">double linearRegressionSlope(const std::vector&lt; double &gt; &amp;x, const std::vector&lt; double &gt; &amp;y)</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__aux_8cpp_source.html#l00027">pfuclt_aux.cpp:27</a></div></div>
-<div class="ttc" id="pfuclt__aux_8h_html"><div class="ttname"><a href="pfuclt__aux_8h.html">pfuclt_aux.h</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 
 <br clear="all" />
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Wed Oct 19 2016 11:19:56</small>
+<small>autogenerated on Thu Dec 15 2016 16:54:00</small>
 </div>
 </body>
 </html>

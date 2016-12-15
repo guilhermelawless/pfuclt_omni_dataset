@@ -1,6 +1,6 @@
-#include "pfuclt_aux.h"
-#include "particles.h"
-#include "pfuclt_omni_dataset.h"
+#include <pfuclt_omni_dataset/pfuclt_aux.h>
+#include <pfuclt_omni_dataset/pfuclt_particles.h>
+#include <pfuclt_omni_dataset/pfuclt_omni_dataset.h>
 #include <tf2/utils.h>
 
 #define ROS_TDIFF(t) (t.toSec() - timeInit.toSec())
@@ -40,17 +40,12 @@ float ROB_HT; // Fixed height of the robots above ground in meters
 // initialized as 0,0 because the robot is absent from the dataset.
 std::vector<double> POS_INIT;
 
-int N_PARTICLES;
 int N_DIMENSIONS;
 
 bool USE_CUSTOM_VALUES = false; // If set to true via the parameter server, the
 // custom values will be used
 std::vector<double> CUSTOM_PARTICLE_INIT; // Used to set custom values when
 // initiating the particle filter set (will still be a uniform distribution)
-
-std::vector<float> CUSTOM_RANDOM_ALPHA; // Used to set custom values for the
-// sampling models in the particle
-// filter
 
 bool DEBUG;
 bool PUBLISH;
@@ -63,13 +58,13 @@ ros::Time timeInit;
 
 RobotFactory::RobotFactory(ros::NodeHandle& nh) : nh_(nh)
 {
-  ParticleFilter::PFinitData initData(
-      N_PARTICLES, NUM_TARGETS, STATES_PER_ROBOT, MAX_ROBOTS, NUM_LANDMARKS,
-      PLAYING_ROBOTS, landmarks, CUSTOM_RANDOM_ALPHA);
+  ParticleFilter::PFinitData initData(nh, MY_ID, NUM_TARGETS, STATES_PER_ROBOT,
+                                      MAX_ROBOTS, NUM_LANDMARKS, PLAYING_ROBOTS,
+                                      landmarks);
 
   if (PUBLISH)
     pf = boost::shared_ptr<PFPublisher>(
-        new PFPublisher(initData, PFPublisher::PublishData(nh, ROB_HT)));
+        new PFPublisher(initData, PFPublisher::PublishData(ROB_HT)));
   else
     pf = boost::shared_ptr<ParticleFilter>(new ParticleFilter(initData));
 
@@ -91,10 +86,7 @@ void RobotFactory::tryInitializeParticles()
   if (!areAllRobotsActive())
     return;
 
-  if (USE_CUSTOM_VALUES)
-    pf->init(CUSTOM_PARTICLE_INIT, POS_INIT);
-  else
-    pf->init();
+  pf->init(CUSTOM_PARTICLE_INIT, POS_INIT);
 }
 
 void RobotFactory::initializeFixedLandmarks()
@@ -180,12 +172,12 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   odomStruct.y = odometry->pose.pose.position.y;
   odomStruct.theta = tf2::getYaw(odometry->pose.pose.orientation);
 
-  ROS_DEBUG("OMNI%d odometry at time %d = {%f;%f;%f}", robotNumber_ + 1,
-            odometry->header.stamp.sec, odomStruct.x, odomStruct.y,
-            odomStruct.theta);
+  //  ROS_DEBUG("OMNI%d odometry at time %d = {%f;%f;%f}", robotNumber_ + 1,
+  //            odometry->header.stamp.sec, odomStruct.x, odomStruct.y,
+  //            odomStruct.theta);
 
   // Call the particle filter predict step for this robot
-  pf_->predict(robotNumber_, odomStruct);
+  pf_->predict(robotNumber_, odomStruct, odometry->header.stamp);
 }
 
 void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
@@ -195,38 +187,51 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
 
   if (target->found)
   {
-    ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
-              target->header.stamp.sec);
+    // ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
+    //          target->header.stamp.sec);
 
-    Eigen::Vector2d targetObsVec = Eigen::Vector2d(target->x, target->y);
     pfuclt_ptcls::TargetObservation obs;
 
     obs.found = true;
     obs.x = target->x;
     obs.y = target->y;
     obs.z = target->z;
-    obs.d = targetObsVec.norm();
+    obs.d = Eigen::Vector2d(obs.x, obs.y).norm();
+    obs.r = Eigen::Vector3d(obs.x, obs.y, obs.z).norm();
     obs.phi = atan2(target->y, target->x);
 
-    obs.covDD = (double)(1 / target->mismatchFactor) *
-                (K3 * obs.d + K4 * (obs.d * obs.d));
+    // Auxiliary
+    const double cos2p = pow(cos(obs.phi), 2);
+    const double sin2p = pow(sin(obs.phi), 2);
+    const double d2 = pow(obs.d, 2);
+    const double r2 = pow(obs.r, 2);
 
-    obs.covPP = K5 * (1 / (obs.d + 1));
+    // 3D Model
+    static const float ballRadius = 0.1;
+    static const float ballr2 = pow(ballRadius, 2);
+    obs.covDD = K3 * (r2 * sin2p / (2 * ballr2)) +
+                K4 * (r2 * sin2p / (2 * (r2 - ballr2))) +
+                K3 * K4 * (r2 * cos2p / (4 * ballr2 * (r2 - ballr2)));
+    obs.covPP = K5 / (r2 - ballr2 * sin2p);
 
-    obs.covXX = pow(cos(obs.phi), 2) * obs.covDD +
-                pow(sin(obs.phi), 2) *
-                    (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
-    obs.covYY = pow(sin(obs.phi), 2) * obs.covDD +
-                pow(cos(obs.phi), 2) *
-                    (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
+    // 2D Model
+    //    obs.covDD = (double)(1 / target->mismatchFactor) *
+    //                (K3 * obs.d + K4 * (obs.d * obs.d));
+
+    //    obs.covPP = K5 * (1 / (obs.d + 1));
+
+    obs.covXX =
+        cos2p * obs.covDD + sin2p * (d2 * obs.covPP + obs.covDD * obs.covPP);
+    obs.covYY =
+        sin2p * obs.covDD + cos2p * (d2 * obs.covPP + obs.covDD * obs.covPP);
 
     // Save this observation
     pf_->saveTargetObservation(robotNumber_, obs);
   }
   else
   {
-    ROS_DEBUG("OMNI%d didn't find the ball at time %d", robotNumber_ + 1,
-              target->header.stamp.sec);
+    //    ROS_DEBUG("OMNI%d didn't find the ball at time %d", robotNumber_ + 1,
+    //              target->header.stamp.sec);
 
     pf_->saveTargetObservation(robotNumber_, false);
   }
@@ -235,14 +240,14 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
 
   // If this is the "self robot", update the iteration time
   if (MY_ID == robotNumber_ + 1)
-    pf_->updateIterationTime(target->header.stamp);
+    pf_->updateTargetIterationTime(target->header.stamp);
 }
 
 void Robot::landmarkDataCallback(
     const read_omni_dataset::LRMLandmarksData::ConstPtr& landmarkData)
 {
-  ROS_DEBUG("OMNI%d landmark data at time %d", robotNumber_ + 1,
-            landmarkData->header.stamp.sec);
+  //  ROS_DEBUG("OMNI%d landmark data at time %d", robotNumber_ + 1,
+  //            landmarkData->header.stamp.sec);
 
   bool heuristicsFound[NUM_LANDMARKS];
   for (int i = 0; i < NUM_LANDMARKS; i++)
@@ -364,7 +369,7 @@ int main(int argc, char* argv[])
 {
 
   ros::init(argc, argv, "pfuclt_omni_dataset");
-  ros::NodeHandle nh;
+  ros::NodeHandle nh("~");
 
   using namespace pfuclt;
 
@@ -407,7 +412,6 @@ int main(int argc, char* argv[])
 
   readParam<int>(nh, "/MAX_ROBOTS", MAX_ROBOTS);
   readParam<float>(nh, "/ROB_HT", ROB_HT);
-  readParam<int>(nh, "/N_PARTICLES", N_PARTICLES);
   readParam<int>(nh, "/NUM_TARGETS", NUM_TARGETS);
   readParam<int>(nh, "/NUM_LANDMARKS", NUM_LANDMARKS);
   readParam<float>(nh, "/LANDMARK_COV/K1", K1);
@@ -423,31 +427,18 @@ int main(int argc, char* argv[])
   uint total_size =
       MAX_ROBOTS * STATES_PER_ROBOT + NUM_TARGETS * STATES_PER_TARGET;
 
-  if (USE_CUSTOM_VALUES)
+  readParam<double>(nh, "/CUSTOM_PARTICLE_INIT", CUSTOM_PARTICLE_INIT);
+  if (CUSTOM_PARTICLE_INIT.size() != (total_size * 2))
   {
-    readParam<double>(nh, "/CUSTOM_PARTICLE_INIT", CUSTOM_PARTICLE_INIT);
-    if (CUSTOM_PARTICLE_INIT.size() != (total_size * 2))
-    {
-      ROS_ERROR("/CUSTOM_PARTICLE_INIT given but not of correct size - should "
-                "have %d numbers and has %d",
-                total_size * 2, (int)CUSTOM_PARTICLE_INIT.size());
-    }
-
-    readParam<float>(nh, "/CUSTOM_RANDOM_ALPHA", CUSTOM_RANDOM_ALPHA);
-    if (CUSTOM_RANDOM_ALPHA.size() != (MAX_ROBOTS * 4))
-    {
-      ROS_ERROR("/CUSTOM_RANDOM_ALPHA given but not of correct size - should "
-                "have %d numbers and has %d",
-                MAX_ROBOTS * 4, (int)CUSTOM_RANDOM_ALPHA.size());
-    }
+    ROS_ERROR("/CUSTOM_PARTICLE_INIT given but not of correct size - should "
+              "have %d numbers and has %d",
+              total_size * 2, (int)CUSTOM_PARTICLE_INIT.size());
   }
 
-  if (N_PARTICLES < 0 || total_size < 0)
-  {
-    ROS_ERROR("Unacceptable configuration for ParticleFilter class");
-    nh.shutdown();
-    return 0;
-  }
+  ROS_INFO("Waiting for /clock");
+  while (ros::Time::now().toSec() == 0)
+    ;
+  ROS_INFO("/clock message received");
 
   pfuclt::RobotFactory Factory(nh);
 
