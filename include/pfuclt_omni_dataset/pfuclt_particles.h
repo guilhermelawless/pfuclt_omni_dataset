@@ -21,6 +21,8 @@
 #include <dynamic_reconfigure/server.h>
 #include <pfuclt_omni_dataset/DynamicConfig.h>
 
+#include <geometry_msgs/Vector3.h>
+
 #define NUM_ALPHAS 4
 
 // ideally later this will be a parameter, when it makes sense to
@@ -162,6 +164,7 @@ protected:
       std::vector<std::vector<double> > posVecs;
       std::vector<double> lastEstimates;
       estimatorFunc estimateVelocity;
+      geometry_msgs::Vector3 velMsg;
 
       uint maxDataSize;
       uint timeInit;
@@ -205,6 +208,7 @@ protected:
       {
         lastEstimates[velType] =
             estimateVelocity(timeVecs[velType], posVecs[velType]);
+
         return lastEstimates[velType];
       }
 
@@ -298,6 +302,7 @@ protected:
   std::vector<TargetObservation> bufTargetObservations_;
   TimeEval targetIterationTime_, odometryTime_;
   struct State state_;
+  ros::Publisher velPublisher_;
 
   /**
    * @brief copyParticle - copies a whole particle from one particle set to

@@ -187,8 +187,8 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
 
   if (target->found)
   {
-        ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
-                  target->header.stamp.sec);
+    // ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
+    //          target->header.stamp.sec);
 
     pfuclt_ptcls::TargetObservation obs;
 
