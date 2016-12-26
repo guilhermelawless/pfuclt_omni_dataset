@@ -313,10 +313,8 @@ void ParticleFilter::fuseTarget()
   {
     *iteration_oss << "Ball not seen ->";
 
-    // Clear the velocity estimator
-    state_.targetVelocityEstimator.reset();
-    state_.target.vel[O_TX] = state_.target.vel[O_TY] =
-        state_.target.vel[O_TZ] = 0.0;
+    // Insert zeros in the velocity estimator
+    state_.targetVelocityEstimator.insertZeros();
 
     return;
   }
@@ -1203,6 +1201,23 @@ void PFPublisher::nextIteration()
 #else
   publishGTData();
 #endif
+}
+
+void ParticleFilter::State::targetVelocityEstimator_s::insertZeros()
+{
+  for (uint velType = 0; velType < numberVels; ++velType)
+  {
+    // If empty, no need to insert zeros
+    if (timeVecs[velType].empty())
+      return;
+
+    // Figure out last known position
+    const double lastPos = posVecs[velType].back();
+
+    // Insert the same position at a new time
+    timeVecs[velType].push_back(ros::Time::now().toNSec()*1e9 - timeInit);
+    posVecs[velType].push_back(lastPos);
+  }
 }
 
 void ParticleFilter::State::targetVelocityEstimator_s::insert(

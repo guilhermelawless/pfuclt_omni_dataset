@@ -189,6 +189,8 @@ protected:
         ROS_INFO("Created a target velocity estimator");
       }
 
+      void insertZeros();
+
       void insert(const double timeData,
                   const std::vector<TargetObservation>& obsData,
                   const std::vector<RobotState>& robotStates);
