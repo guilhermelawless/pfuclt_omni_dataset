@@ -320,36 +320,44 @@ void ParticleFilter::fuseTarget()
 
     return;
   }
-
   // If program is here, at least one robot saw the ball
 
+  // Instance variables to be worked in the loops
+  pdata_t maxTargetSubParticleWeight, totalWeight;
+  uint m, p, mStar, r, o_robot;
+  std::vector<pdata_t> probabilities(nRobots_);
+  float expArg, detValue, Z[3], Zcap[3], Z_Zcap[3];
+  TargetObservation* obs;
+
   // For every particle m in the particle set [1:M]
-  for (uint m = 0; m < nParticles_; ++m)
+  for (m = 0; m < nParticles_; ++m)
   {
     // Keep track of the maximum contributed weight and that particle's index
-    pdata_t maxTargetSubParticleWeight = -1.0;
-    uint mStar = m;
+    maxTargetSubParticleWeight = -1.0;
+    mStar = m;
 
     // Find the particle m* in the set [m:M] for which the weight contribution
     // by the target subparticle to the full weight is maximum
-    for (uint p = m; p < nParticles_; ++p)
+    for (p = m; p < nParticles_; ++p)
     {
       // Vector with probabilities for each robot, starting at 0.0 in case the
       // robot hasn't seen the ball
-      std::vector<pdata_t> probabilities(nRobots_, 0.0);
+      probabilities.assign(nRobots_, 0.0);
 
       // Observations of the target by all robots
-      for (uint r = 0; r < nRobots_; ++r)
+      for (r = 0; r < nRobots_; ++r)
       {
         if (false == robotsUsed_[r] || false == bufTargetObservations_[r].found)
           continue;
 
-        TargetObservation& obs = bufTargetObservations_[r];
+        // Usefull variables
+        obs = &bufTargetObservations_[r];
+        o_robot = r * nStatesPerRobot_;
 
-        uint o_robot = r * nStatesPerRobot_;
-
-        float Z[3] = { obs.x, obs.y, obs.z }, Zcap[3], Z_Zcap[3];
-
+        // Observation model
+        Z[0] = obs->x;
+        Z[1] = obs->y;
+        Z[2] = obs->z;
         Zcap[0] =
             (particles_[O_TARGET + O_TX][p] - particles_[o_robot + O_X][m]) *
                 (cos(particles_[o_robot + O_THETA][m])) +
@@ -365,10 +373,10 @@ void ParticleFilter::fuseTarget()
         Z_Zcap[1] = Z[1] - Zcap[1];
         Z_Zcap[2] = Z[2] - Zcap[2];
 
-        float expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / obs.covXX +
-                               Z_Zcap[1] * Z_Zcap[1] / obs.covYY +
-                               Z_Zcap[2] * Z_Zcap[2] * 10.0);
-        float detValue = 1.0; // powf( (2*PI*Q[0][0]*Q[1][1]*Q[2][2]),-0.5);
+        expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / .3 * obs->covXX +
+                         Z_Zcap[1] * Z_Zcap[1] / .3 * obs->covYY +
+                         Z_Zcap[2] * Z_Zcap[2] * 10.0);
+        detValue = 1.0; // powf( (2*PI*Q[0][0]*Q[1][1]*Q[2][2]),-0.5);
 
         // Probability value for this robot and this particle
         probabilities[r] = detValue * exp(expArg);
@@ -389,7 +397,7 @@ void ParticleFilter::fuseTarget()
       }
 
       // Total weight contributed by this particle
-      pdata_t totalWeight =
+      totalWeight =
           std::accumulate(probabilities.begin(), probabilities.end(), 0.0);
 
       // If the weight is the maximum as of now, update the maximum and set
