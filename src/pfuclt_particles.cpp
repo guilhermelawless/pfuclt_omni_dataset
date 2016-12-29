@@ -220,8 +220,8 @@ void ParticleFilter::fuseRobots()
         // The values of interest to the particle weights
         // Note: using Eigen wasn't of particular interest here since it does
         // not allow for transposing a non-dynamic matrix
-        float expArg = -0.5 * (Zerr(O_X) * Zerr(O_X) / m.covXX +
-                               Zerr(O_Y) * Zerr(O_Y) / m.covYY);
+        float expArg = -0.5 * (Zerr(O_X) * Zerr(O_X) / .3 * m.covXX +
+                               Zerr(O_Y) * Zerr(O_Y) / .3 * m.covYY);
         float detValue = 1.0; // pow((2 * M_PI * m.covXX * m.covYY), -0.5);
 
         /*
@@ -374,7 +374,7 @@ void ParticleFilter::fuseTarget()
         expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / .3 * obs->covXX +
                          Z_Zcap[1] * Z_Zcap[1] / .3 * obs->covYY +
                          Z_Zcap[2] * Z_Zcap[2] * 10.0);
-        detValue = 1.0; // powf( (2*PI*Q[0][0]*Q[1][1]*Q[2][2]),-0.5);
+        detValue = pow((2 * M_PI * obs->covXX * obs->covYY * 10.0), -0.5);
 
         // Probability value for this robot and this particle
         probabilities[r] = detValue * exp(expArg);
@@ -551,9 +551,20 @@ void ParticleFilter::estimate()
     // state_.target.vel[O_TX] = state_.target.vel[O_TY] =
     //    state_.target.vel[O_TZ] = 0.0;
 
+    // Increase standard deviation for target prediction
+    if (dynamicVariables_.targetRandStddev != TARGET_RAND_STDDEV_LOST)
+    {
+      dynamicVariables_.oldTargetRandSTddev =
+          dynamicVariables_.targetRandStddev;
+      dynamicVariables_.targetRandStddev = TARGET_RAND_STDDEV_LOST;
+    }
+
     // Don't estimate
     return;
   }
+
+  // Return (if necessary) to old target prediction model stddev
+  dynamicVariables_.targetRandStddev = dynamicVariables_.oldTargetRandSTddev;
 
   // For each robot
   for (uint r = 0; r < nRobots_; ++r)
@@ -1215,7 +1226,7 @@ void ParticleFilter::State::targetVelocityEstimator_s::insertZeros()
     const double lastPos = posVecs[velType].back();
 
     // Insert the same position at a new time
-    timeVecs[velType].push_back(ros::Time::now().toNSec()*1e9 - timeInit);
+    timeVecs[velType].push_back(ros::Time::now().toNSec() * 1e9 - timeInit);
     posVecs[velType].push_back(lastPos);
   }
 }
@@ -1330,6 +1341,7 @@ ParticleFilter::dynamicVariables_s::dynamicVariables_s(ros::NodeHandle& nh,
   readParam<int>(nh, "particles", nParticles);
 
   readParam<double>(nh, "predict_model_stddev", targetRandStddev);
+  oldTargetRandSTddev = targetRandStddev;
 
   // Get alpha values for some robots (hard-coded for our 4 robots..)
   for (uint r = 0; r < nRobots; ++r)

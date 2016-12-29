@@ -40,6 +40,7 @@
 
 // target motion model and estimator
 #define TARGET_RAND_MEAN 0
+#define TARGET_RAND_STDDEV_LOST 500.0
 
 // concerning time
 #define TARGET_ITERATION_TIME_DEFAULT 0.0333
@@ -106,6 +107,7 @@ protected:
     int velocityEstimatorStackSize;
     double resamplingPercentageToKeep;
     double targetRandStddev;
+    double oldTargetRandSTddev;
     std::vector<std::vector<float> > alpha;
 
     dynamicVariables_s(ros::NodeHandle& nh, const uint nRobots);
