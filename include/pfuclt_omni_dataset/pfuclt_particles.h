@@ -311,6 +311,7 @@ protected:
   uint16_t numberIterations;
   struct State state_;
   ros::Publisher velPublisher_;
+  ros::Time latestObservationTime_;
 
   /**
    * @brief copyParticle - copies a whole particle from one particle set to
@@ -578,9 +579,11 @@ public:
    * @param obs - the observation data as a structure defined in this file
    */
   inline void saveTargetObservation(const uint robotNumber,
-                                    const TargetObservation obs)
+                                    const TargetObservation obs,
+                                    ros::Time stamp)
   {
     bufTargetObservations_[robotNumber] = obs;
+    latestObservationTime_ = stamp;
   }
 
   /**

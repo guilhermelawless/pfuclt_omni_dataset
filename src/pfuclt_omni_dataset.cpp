@@ -226,7 +226,7 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
         sin2p * obs.covDD + cos2p * (d2 * obs.covPP + obs.covDD * obs.covPP);
 
     // Save this observation
-    pf_->saveTargetObservation(robotNumber_, obs);
+    pf_->saveTargetObservation(robotNumber_, obs, target->header.stamp);
   }
   else
   {
