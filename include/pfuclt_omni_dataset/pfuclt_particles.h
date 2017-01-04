@@ -305,6 +305,8 @@ protected:
   std::vector<std::vector<LandmarkObservation> > bufLandmarkObservations_;
   std::vector<TargetObservation> bufTargetObservations_;
   TimeEval targetIterationTime_, odometryTime_;
+  ros::WallTime iterationEvalTime_;
+  ros::WallDuration maxDeltaIteration_;
   struct State state_;
   ros::Publisher velPublisher_;
 
