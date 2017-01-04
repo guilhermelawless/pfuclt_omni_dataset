@@ -311,7 +311,7 @@ protected:
   uint16_t numberIterations;
   struct State state_;
   ros::Publisher velPublisher_;
-  ros::Time latestObservationTime_;
+  ros::Time latestObservationTime_, savedLatestObservationTime_;
 
   /**
    * @brief copyParticle - copies a whole particle from one particle set to

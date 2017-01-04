@@ -320,6 +320,8 @@ void ParticleFilter::fuseTarget()
     return;
   }
   // If program is here, at least one robot saw the ball
+  // Save the latest observation time to be used when publishing
+  savedLatestObservationTime_ = latestObservationTime_;
 
   // Instance variables to be worked in the loops
   pdata_t maxTargetSubParticleWeight, totalWeight;
@@ -951,7 +953,7 @@ void PFPublisher::publishParticles()
 
     uint o_robot = r * nStatesPerRobot_;
     geometry_msgs::PoseArray msgStd_particles;
-    msgStd_particles.header.stamp = latestObservationTime_;
+    msgStd_particles.header.stamp = savedLatestObservationTime_;
     msgStd_particles.header.frame_id = "world";
 
     for (uint p = 0; p < nParticles_; ++p)
@@ -1000,7 +1002,7 @@ void PFPublisher::publishRobotStates()
     std::ostringstream robotName;
     robotName << "omni" << r + 1;
 
-    msg_state_.header.stamp = latestObservationTime_;
+    msg_state_.header.stamp = savedLatestObservationTime_;
 
     ParticleFilter::State::robotState_s& pfState = state_.robots[r];
 #ifdef USE_NEWER_READ_OMNI_PACKAGE
@@ -1019,7 +1021,7 @@ void PFPublisher::publishRobotStates()
 #ifdef BROADCAST_TF_AND_POSES
     // TF2 broadcast
     geometry_msgs::TransformStamped estTransf;
-    estTransf.header.stamp = latestObservationTime_;
+    estTransf.header.stamp = savedLatestObservationTime_;
     estTransf.header.frame_id = "world";
     estTransf.child_frame_id = robotName.str() + "est";
     estTransf.transform = tf2::toMsg(tf2t);
@@ -1040,7 +1042,7 @@ void PFPublisher::publishRobotStates()
 
 void PFPublisher::publishTargetState()
 {
-  msg_target_.header.stamp = latestObservationTime_;
+  msg_target_.header.stamp = savedLatestObservationTime_;
   msg_target_.header.frame_id = "world";
 
   // Our custom message type
@@ -1094,7 +1096,7 @@ void PFPublisher::publishTargetObservations()
       previouslyPublished[r] = false;
 
     marker.header.frame_id = robotName.str() + "est";
-    marker.header.stamp = latestObservationTime_;
+    marker.header.stamp = savedLatestObservationTime_;
 
     // Setting the same namespace and id will overwrite the previous marker
     marker.ns = robotName.str() + "_target_observations";
@@ -1143,12 +1145,12 @@ void PFPublisher::publishGTData()
   syncedGTPublisher_.publish(msg_GT_);
 
   geometry_msgs::PointStamped gtPoint;
-  gtPoint.header.stamp = latestObservationTime_;
+  gtPoint.header.stamp = savedLatestObservationTime_;
   gtPoint.header.frame_id = "world";
 
 #ifdef USE_NEWER_READ_OMNI_PACKAGE
   geometry_msgs::PoseStamped gtPose;
-  gtPose.header.stamp = latestObservationTime_;
+  gtPose.header.stamp = savedLatestObservationTime_;
   gtPose.header.frame_id = "world";
 
   for (uint r = 0; r < nRobots_; ++r)
