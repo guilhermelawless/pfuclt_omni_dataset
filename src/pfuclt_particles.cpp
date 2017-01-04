@@ -47,7 +47,8 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
              dynamicVariables_.velocityEstimatorStackSize),
       targetIterationTime_(), odometryTime_(), iterationEvalTime_(), mutex_(),
       dynamicServer_(), O_TARGET(data.nRobots * data.statesPerRobot),
-      O_WEIGHT(nSubParticleSets_ - 1)
+      O_WEIGHT(nSubParticleSets_ - 1), numberIterations(0),
+      durationSum(ros::WallDuration(0))
 {
   ROS_INFO("Created particle filter with dimensions %d, %d",
            (int)particles_.size(), (int)particles_[0].size());
@@ -826,9 +827,13 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
     if (deltaIteration > maxDeltaIteration_)
       maxDeltaIteration_ = deltaIteration;
 
+    durationSum += deltaIteration;
+    numberIterations++;
+
     ROS_INFO_STREAM("(WALL TIME) Iteration time: "
                     << 1e-6 * deltaIteration.toNSec() << "ms ::: Worst case: "
-                    << 1e-6 * maxDeltaIteration_.toNSec() << "ms");
+                    << 1e-6 * maxDeltaIteration_.toNSec() << "ms ::: Average: "
+                    << 1e-6 * (durationSum.toNSec() / numberIterations) << "s");
 #endif
 
     // ROS_DEBUG("Iteration: %s", iteration_oss->str().c_str());

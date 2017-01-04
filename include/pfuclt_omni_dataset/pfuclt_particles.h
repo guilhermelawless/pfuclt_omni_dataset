@@ -307,6 +307,8 @@ protected:
   TimeEval targetIterationTime_, odometryTime_;
   ros::WallTime iterationEvalTime_;
   ros::WallDuration maxDeltaIteration_;
+  ros::WallDuration durationSum;
+  uint16_t numberIterations;
   struct State state_;
   ros::Publisher velPublisher_;
 
