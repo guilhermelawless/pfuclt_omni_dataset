@@ -145,7 +145,8 @@ void ParticleFilter::predictTarget()
                                          targetAcceleration(seed_),
                                          targetAcceleration(seed_) };
 
-    for (uint s = 0; s < STATES_PER_TARGET; ++s)
+    // Use X and Y velocity estimates
+    for (uint s = 0; s < STATES_PER_TARGET - 1; ++s)
     {
       pdata_t diff = state_.target.vel[s] * targetIterationTime_.diff +
                      0.5 * accel[s] * pow(targetIterationTime_.diff, 2);
@@ -160,6 +161,10 @@ void ParticleFilter::predictTarget()
           s, diff, targetIterationTime_.diff, state_.target.vel[s]);
       */
     }
+
+    // but for Z only the random acceleration model
+    particles_[O_TARGET + O_TZ][p] +=
+        0.5 * accel[O_TZ] * pow(targetIterationTime_.diff, 2);
   }
 }
 
