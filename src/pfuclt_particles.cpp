@@ -229,8 +229,8 @@ void ParticleFilter::fuseRobots()
         // The values of interest to the particle weights
         // Note: using Eigen wasn't of particular interest here since it does
         // not allow for transposing a non-dynamic matrix
-        float expArg = -0.5 * (Zerr(O_X) * Zerr(O_X) / .3 * m.covXX +
-                               Zerr(O_Y) * Zerr(O_Y) / .3 * m.covYY);
+        float expArg = -0.5 * (Zerr(O_X) * Zerr(O_X) / m.covXX +
+                               Zerr(O_Y) * Zerr(O_Y) / m.covYY);
         float detValue = 1.0; // pow((2 * M_PI * m.covXX * m.covYY), -0.5);
 
         /*
@@ -383,7 +383,8 @@ void ParticleFilter::fuseTarget()
         expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / .3 * obs->covXX +
                          Z_Zcap[1] * Z_Zcap[1] / .3 * obs->covYY +
                          Z_Zcap[2] * Z_Zcap[2] * 10.0);
-        detValue = pow((2 * M_PI * obs->covXX * obs->covYY * 10.0), -0.5);
+        detValue =
+            1.0; // pow((2 * M_PI * obs->covXX * obs->covYY * 10.0), -0.5);
 
         // Probability value for this robot and this particle
         probabilities[r] = detValue * exp(expArg);
@@ -520,6 +521,7 @@ void ParticleFilter::resample()
     *iteration_oss << "FAIL! -> ";
 
     converged_ = false;
+    resetWeights(1.0 / nParticles_);
     return;
   }
 
