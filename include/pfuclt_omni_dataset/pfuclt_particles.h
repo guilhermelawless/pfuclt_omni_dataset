@@ -15,6 +15,7 @@
 
 #include <read_omni_dataset/RobotState.h>
 #include <read_omni_dataset/LRMGTData.h>
+#include <read_omni_dataset/Estimate.h>
 #include <pfuclt_omni_dataset/particle.h>
 #include <pfuclt_omni_dataset/particles.h>
 
@@ -306,12 +307,13 @@ protected:
   std::vector<TargetObservation> bufTargetObservations_;
   TimeEval targetIterationTime_, odometryTime_;
   ros::WallTime iterationEvalTime_;
-  ros::WallDuration maxDeltaIteration_;
+  ros::WallDuration deltaIteration_, maxDeltaIteration_;
   ros::WallDuration durationSum;
   uint16_t numberIterations;
   struct State state_;
   ros::Publisher velPublisher_;
   ros::Time latestObservationTime_, savedLatestObservationTime_;
+  bool converged_;
 
   /**
    * @brief copyParticle - copies a whole particle from one particle set to
@@ -647,7 +649,7 @@ public:
 
 private:
   ros::Subscriber GT_sub_;
-  ros::Publisher robotStatePublisher_, targetStatePublisher_,
+  ros::Publisher estimatePublisher_,
       particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_,
       targetGTPublisher_, targetParticlePublisher_;
   std::vector<ros::Publisher> particleStdPublishers_;
@@ -657,8 +659,7 @@ private:
 
   read_omni_dataset::LRMGTData msg_GT_;
   pfuclt_omni_dataset::particles msg_particles_;
-  read_omni_dataset::RobotState msg_state_;
-  read_omni_dataset::BallData msg_target_;
+  read_omni_dataset::Estimate msg_estimate_;
 
   std::vector<tf2_ros::TransformBroadcaster> robotBroadcasters;
 
@@ -667,6 +668,7 @@ private:
   void publishParticles();
   void publishRobotStates();
   void publishTargetState();
+  void publishEstimate();
   void publishGTData();
   void publishTargetObservations();
 

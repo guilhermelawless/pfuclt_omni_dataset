@@ -518,8 +518,11 @@ void ParticleFilter::resample()
     // Print iteration and state information
     *iteration_oss << "FAIL! -> ";
 
+    converged_ = false;
     return;
   }
+
+  converged_ = true;
 
   // All resamplers use normalized weights
   for (uint p = 0; p < nParticles_; ++p)
@@ -829,16 +832,15 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
     ROS_INFO("(WALL TIME) Odometry analyzed with = %fms",
              1e3 * odometryTime_.diff);
 
-    ros::WallDuration deltaIteration =
-        ros::WallTime::now() - iterationEvalTime_;
-    if (deltaIteration > maxDeltaIteration_)
-      maxDeltaIteration_ = deltaIteration;
+    deltaIteration_ = ros::WallTime::now() - iterationEvalTime_;
+    if (deltaIteration_ > maxDeltaIteration_)
+      maxDeltaIteration_ = deltaIteration_;
 
-    durationSum += deltaIteration;
+    durationSum += deltaIteration_;
     numberIterations++;
 
     ROS_INFO_STREAM("(WALL TIME) Iteration time: "
-                    << 1e-6 * deltaIteration.toNSec() << "ms ::: Worst case: "
+                    << 1e-6 * deltaIteration_.toNSec() << "ms ::: Worst case: "
                     << 1e-6 * maxDeltaIteration_.toNSec() << "ms ::: Average: "
                     << 1e-6 * (durationSum.toNSec() / numberIterations) << "s");
 #endif
@@ -882,10 +884,8 @@ PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
       "/gtData_synced_pfuclt_estimate", 1000);
 
   // Other publishers
-  robotStatePublisher_ =
-      nh_.advertise<read_omni_dataset::RobotState>("/pfuclt_omni_poses", 1000);
-  targetStatePublisher_ = nh_.advertise<read_omni_dataset::BallData>(
-      "/pfuclt_orangeBallState", 1000);
+  estimatePublisher_ =
+      nh_.advertise<read_omni_dataset::Estimate>("/pfuclt_estimate", 100);
   particlePublisher_ =
       nh_.advertise<pfuclt_omni_dataset::particles>("/pfuclt_particles", 10);
 
@@ -916,6 +916,10 @@ PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
     robotEstimatePublishers_[r] = nh_.advertise<geometry_msgs::PoseStamped>(
         "/" + robotName.str() + "/estimatedPose", 1000);
 
+    // build estimate msg
+    msg_estimate_.robotEstimates.push_back(geometry_msgs::Pose());
+    msg_estimate_.targetVisibility.push_back(false);
+
 // ground truth publisher, in the simulation package we have PoseStamped
 #ifndef USE_NEWER_READ_OMNI_PACKAGE
     robotGTPublishers_[r] = nh_.advertise<geometry_msgs::PointStamped>(
@@ -923,11 +927,6 @@ PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
 #else
     robotGTPublishers_[r] = nh_.advertise<geometry_msgs::PoseStamped>(
         "/" + robotName.str() + "/gtPose", 1000);
-
-    // add a new pose to the pose message for each robot, with base frame
-    geometry_msgs::PoseStamped ps;
-    ps.header.frame_id = "world";
-    msg_state_.robotPose.push_back(ps);
 #endif
   }
 
@@ -1007,14 +1006,11 @@ void PFPublisher::publishRobotStates()
     std::ostringstream robotName;
     robotName << "omni" << r + 1;
 
-    msg_state_.header.stamp = savedLatestObservationTime_;
+    msg_estimate_.header.stamp = savedLatestObservationTime_;
 
     ParticleFilter::State::robotState_s& pfState = state_.robots[r];
-#ifdef USE_NEWER_READ_OMNI_PACKAGE
-    geometry_msgs::Pose& rosState = msg_state_.robotPose[r].pose;
-#else
-    geometry_msgs::Pose& rosState = msg_state_.robotPose[r].pose.pose;
-#endif
+    geometry_msgs::Pose& rosState = msg_estimate_.robotEstimates[r];
+
     // Create from Euler angles
     tf2::Quaternion tf2q(tf2::Vector3(0, 0, 1), pfState.pose[O_THETA]);
     tf2::Transform tf2t(tf2q, tf2::Vector3(pfState.pose[O_X], pfState.pose[O_Y],
@@ -1041,22 +1037,22 @@ void PFPublisher::publishRobotStates()
     robotEstimatePublishers_[r].publish(estPose);
 #endif
   }
-
-  robotStatePublisher_.publish(msg_state_);
 }
 
 void PFPublisher::publishTargetState()
 {
-  msg_target_.header.stamp = savedLatestObservationTime_;
-  msg_target_.header.frame_id = "world";
+  msg_estimate_.targetEstimate.header.frame_id = "world";
 
   // Our custom message type
-  msg_target_.x = state_.target.pos[O_TX];
-  msg_target_.y = state_.target.pos[O_TY];
-  msg_target_.z = state_.target.pos[O_TZ];
-  msg_target_.found = state_.target.seen;
+  msg_estimate_.targetEstimate.x = state_.target.pos[O_TX];
+  msg_estimate_.targetEstimate.y = state_.target.pos[O_TY];
+  msg_estimate_.targetEstimate.z = state_.target.pos[O_TZ];
+  msg_estimate_.targetEstimate.found = state_.target.seen;
 
-  targetStatePublisher_.publish(msg_target_);
+  for (uint r = 0; r < nRobots_; ++r)
+  {
+    msg_estimate_.targetVisibility[r] = bufTargetObservations_[r].found;
+  }
 
 #ifdef BROADCAST_TF_AND_POSES
   // Publish as a standard pose msg using the previous TF
@@ -1069,6 +1065,16 @@ void PFPublisher::publishTargetState()
 
   targetEstimatePublisher_.publish(estPoint);
 #endif
+}
+
+void PFPublisher::publishEstimate()
+{
+  // msg_estimate_ has been built in other methods (publishRobotStates and
+  // publishTargetState)
+  msg_estimate_.computationTime = deltaIteration_.toNSec() * 1e-9;
+  msg_estimate_.converged = converged_;
+
+  estimatePublisher_.publish(msg_estimate_);
 }
 
 void PFPublisher::publishTargetObservations()
@@ -1211,10 +1217,6 @@ void PFPublisher::nextIteration()
   // Call the base class method
   ParticleFilter::nextIteration();
 
-  // Time stamps using ros time
-  msg_state_.header.stamp = msg_GT_.header.stamp = msg_target_.header.stamp =
-      ros::Time::now();
-
   // Publish the particles first
   publishParticles();
 
@@ -1223,6 +1225,9 @@ void PFPublisher::nextIteration()
 
   // Publish target state
   publishTargetState();
+
+  // Publish estimate
+  publishEstimate();
 
   // Publish robot-to-target lines
   publishTargetObservations();
