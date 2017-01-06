@@ -355,7 +355,8 @@ void Robot::landmarkDataCallback(
                   pow(cos(obs.phi), 2) *
                       (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);
 
-      pf_->saveLandmarkObservation(robotNumber_, i, obs);
+      pf_->saveLandmarkObservation(robotNumber_, i, obs,
+                                   landmarkData->header.stamp);
     }
   }
 

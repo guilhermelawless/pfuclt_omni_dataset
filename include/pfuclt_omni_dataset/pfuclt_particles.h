@@ -549,9 +549,11 @@ public:
    */
   inline void saveLandmarkObservation(const uint robotNumber,
                                       const uint landmarkNumber,
-                                      const LandmarkObservation obs)
+                                      const LandmarkObservation obs,
+                                      ros::Time stamp)
   {
     bufLandmarkObservations_[robotNumber][landmarkNumber] = obs;
+    latestObservationTime_ = stamp;
   }
 
   /**
@@ -585,7 +587,6 @@ public:
                                     ros::Time stamp)
   {
     bufTargetObservations_[robotNumber] = obs;
-    latestObservationTime_ = stamp;
   }
 
   /**
@@ -649,9 +650,8 @@ public:
 
 private:
   ros::Subscriber GT_sub_;
-  ros::Publisher estimatePublisher_,
-      particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_,
-      targetGTPublisher_, targetParticlePublisher_;
+  ros::Publisher estimatePublisher_, particlePublisher_,
+      targetEstimatePublisher_, targetGTPublisher_, targetParticlePublisher_;
   std::vector<ros::Publisher> particleStdPublishers_;
   std::vector<ros::Publisher> robotGTPublishers_;
   std::vector<ros::Publisher> robotEstimatePublishers_;

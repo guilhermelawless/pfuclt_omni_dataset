@@ -172,6 +172,9 @@ void ParticleFilter::fuseRobots()
 {
   *iteration_oss << "fuseRobots() -> ";
 
+  // Save the latest observation time to be used when publishing
+  savedLatestObservationTime_ = latestObservationTime_;
+
   // Keeps track of number of landmarks seen for each robot
   std::vector<uint> landmarksSeen(nRobots_, 0);
 
@@ -325,8 +328,6 @@ void ParticleFilter::fuseTarget()
     return;
   }
   // If program is here, at least one robot saw the ball
-  // Save the latest observation time to be used when publishing
-  savedLatestObservationTime_ = latestObservationTime_;
 
   // Instance variables to be worked in the loops
   pdata_t maxTargetSubParticleWeight, totalWeight;
@@ -874,14 +875,10 @@ PFPublisher::PFPublisher(struct ParticleFilter::PFinitData& data,
   // Prepare particle message
   resize_particles(nParticles_);
 
-  // Subscribe and advertise the republishing of GT data, time synced with the
-  // state publisher
+  // Subscribe to GT data
   GT_sub_ = nh_.subscribe<read_omni_dataset::LRMGTData>(
       "/gtData_4robotExp", 10,
       boost::bind(&PFPublisher::gtDataCallback, this, _1));
-
-  syncedGTPublisher_ = nh_.advertise<read_omni_dataset::LRMGTData>(
-      "/gtData_synced_pfuclt_estimate", 1000);
 
   // Other publishers
   estimatePublisher_ =
@@ -1152,9 +1149,6 @@ void PFPublisher::publishTargetObservations()
 
 void PFPublisher::publishGTData()
 {
-  // Publish custom format
-  syncedGTPublisher_.publish(msg_GT_);
-
   geometry_msgs::PointStamped gtPoint;
   gtPoint.header.stamp = savedLatestObservationTime_;
   gtPoint.header.frame_id = "world";
@@ -1253,7 +1247,7 @@ void ParticleFilter::State::targetVelocityEstimator_s::insertZeros()
     const double lastPos = posVecs[velType].back();
 
     // Insert the same position at a new time
-    timeVecs[velType].push_back(ros::Time::now().toNSec() * 1e9 - timeInit);
+    timeVecs[velType].push_back(ros::Time::now().toNSec() * 1e-9 - timeInit);
     posVecs[velType].push_back(lastPos);
   }
 }
