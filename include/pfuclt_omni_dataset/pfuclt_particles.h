@@ -357,6 +357,17 @@ protected:
   }
 
   /**
+   * @brief spreadTargetParticlesSphere - spread a percentage of the target
+   * particle in a sphere around center
+   * @param particlesRatio - float between 0 and 1, corresponding to the
+   * percentage of particles that will be spread
+   * @param center - center of the sphere [x,y,z]
+   * @param radius - in meters
+   */
+  void spreadTargetParticlesSphere(float particlesRatio, pdata_t center[3],
+                                   float radius);
+
+  /**
    * @brief predictTarget - predict target state step
    * @param robotNumber - the robot performing, for debugging purposes
    */
@@ -587,6 +598,26 @@ public:
                                     ros::Time stamp)
   {
     bufTargetObservations_[robotNumber] = obs;
+
+    // If previously target not seen and now is found
+    if (obs.found && !state_.target.seen)
+    {
+      // Update to target seen
+      state_.target.seen = true;
+
+      // Observation to global frame
+      const ParticleFilter::State::RobotState& rs = state_.robots[robotNumber];
+      pdata_t ballGlobal[3];
+      ballGlobal[O_TX] = rs.pose[O_X] + obs.x * cos(rs.pose[O_THETA]) -
+                         obs.y * sin(rs.pose[O_THETA]);
+      ballGlobal[O_TY] = rs.pose[O_Y] + obs.x * sin(rs.pose[O_THETA]) +
+                         obs.y * cos(rs.pose[O_THETA]);
+      ballGlobal[O_TZ] = obs.z;
+
+      // Spread 50% of particles around ballGlobal in a sphere with 1.0 meter
+      // radius
+      spreadTargetParticlesSphere(0.5, ballGlobal, 1.0);
+    }
   }
 
   /**

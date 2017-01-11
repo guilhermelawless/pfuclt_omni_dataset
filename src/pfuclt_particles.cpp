@@ -128,6 +128,21 @@ void ParticleFilter::dynamicReconfigureCallback(
 #endif
 }
 
+void ParticleFilter::spreadTargetParticlesSphere(float particlesRatio,
+                                                 pdata_t center[3],
+                                                 float radius)
+{
+  uint particlesToSpread = nParticles_ * particlesRatio;
+
+  boost::random::uniform_real_distribution<> dist(-radius, radius);
+
+  for (uint p = 0; p < particlesToSpread; ++p)
+  {
+    for (uint s = 0; s < STATES_PER_TARGET; ++s)
+      particles_[O_TARGET + s][p] = center[s] + dist(seed_);
+  }
+}
+
 void ParticleFilter::predictTarget()
 {
   *iteration_oss << "predictTarget() -> ";
@@ -148,8 +163,7 @@ void ParticleFilter::predictTarget()
     // Use X and Y velocity estimates
     for (uint s = 0; s < STATES_PER_TARGET - 1; ++s)
     {
-      pdata_t diff = state_.target.vel[s] * targetIterationTime_.diff +
-                     0.5 * accel[s] * pow(targetIterationTime_.diff, 2);
+      pdata_t diff = 0.5 * accel[s] * pow(targetIterationTime_.diff, 2);
 
       particles_[O_TARGET + s][p] += diff;
 
@@ -380,9 +394,9 @@ void ParticleFilter::fuseTarget()
         Z_Zcap[1] = Z[1] - Zcap[1];
         Z_Zcap[2] = Z[2] - Zcap[2];
 
-        expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / (.3 * obs->covXX) +
-                         Z_Zcap[1] * Z_Zcap[1] / (.3 * obs->covYY) +
-                         Z_Zcap[2] * Z_Zcap[2] * 10.0);
+        expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / obs->covXX +
+                         Z_Zcap[1] * Z_Zcap[1] / obs->covYY +
+                         Z_Zcap[2] * Z_Zcap[2] / .04);
         detValue =
             1.0; // pow((2 * M_PI * obs->covXX * obs->covYY * 10.0), -0.5);
 
@@ -561,9 +575,9 @@ void ParticleFilter::estimate()
     *iteration_oss << "DONE without estimating!";
 
     // Reset velocity estimator and target velocity
-    // state_.targetVelocityEstimator.reset();
-    // state_.target.vel[O_TX] = state_.target.vel[O_TY] =
-    //    state_.target.vel[O_TZ] = 0.0;
+    state_.targetVelocityEstimator.reset();
+    state_.target.vel[O_TX] = state_.target.vel[O_TY] =
+        state_.target.vel[O_TZ] = 0.0;
 
     // Increase standard deviation for target prediction
     if (dynamicVariables_.targetRandStddev != TARGET_RAND_STDDEV_LOST)
@@ -651,7 +665,7 @@ void ParticleFilter::estimate()
   // Ball velocity is estimated using linear regression
   if (state_.targetVelocityEstimator.isReadyToEstimate())
   {
-    state_.target.vel[O_TX] = state_.targetVelocityEstimator.estimate(O_X);
+    state_.target.vel[O_TX] = state_.targetVelocityEstimator.estimate(O_TX);
     state_.target.vel[O_TY] = state_.targetVelocityEstimator.estimate(O_TY);
     state_.target.vel[O_TZ] = state_.targetVelocityEstimator.estimate(O_TZ);
 
