@@ -15,6 +15,7 @@
 
 #include <read_omni_dataset/RobotState.h>
 #include <read_omni_dataset/LRMGTData.h>
+#include <read_omni_dataset/Estimate.h>
 #include <pfuclt_omni_dataset/particle.h>
 #include <pfuclt_omni_dataset/particles.h>
 
@@ -40,6 +41,7 @@
 
 // target motion model and estimator
 #define TARGET_RAND_MEAN 0
+#define TARGET_RAND_STDDEV_LOST 500.0
 
 // concerning time
 #define TARGET_ITERATION_TIME_DEFAULT 0.0333
@@ -106,6 +108,7 @@ protected:
     int velocityEstimatorStackSize;
     double resamplingPercentageToKeep;
     double targetRandStddev;
+    double oldTargetRandSTddev;
     std::vector<std::vector<float> > alpha;
 
     dynamicVariables_s(ros::NodeHandle& nh, const uint nRobots);
@@ -303,8 +306,14 @@ protected:
   std::vector<std::vector<LandmarkObservation> > bufLandmarkObservations_;
   std::vector<TargetObservation> bufTargetObservations_;
   TimeEval targetIterationTime_, odometryTime_;
+  ros::WallTime iterationEvalTime_;
+  ros::WallDuration deltaIteration_, maxDeltaIteration_;
+  ros::WallDuration durationSum;
+  uint16_t numberIterations;
   struct State state_;
   ros::Publisher velPublisher_;
+  ros::Time latestObservationTime_, savedLatestObservationTime_;
+  bool converged_;
 
   /**
    * @brief copyParticle - copies a whole particle from one particle set to
@@ -346,6 +355,17 @@ protected:
   {
     particles_[O_WEIGHT].assign(particles_[O_WEIGHT].size(), val);
   }
+
+  /**
+   * @brief spreadTargetParticlesSphere - spread a percentage of the target
+   * particle in a sphere around center
+   * @param particlesRatio - float between 0 and 1, corresponding to the
+   * percentage of particles that will be spread
+   * @param center - center of the sphere [x,y,z]
+   * @param radius - in meters
+   */
+  void spreadTargetParticlesSphere(float particlesRatio, pdata_t center[3],
+                                   float radius);
 
   /**
    * @brief predictTarget - predict target state step
@@ -540,9 +560,11 @@ public:
    */
   inline void saveLandmarkObservation(const uint robotNumber,
                                       const uint landmarkNumber,
-                                      const LandmarkObservation obs)
+                                      const LandmarkObservation obs,
+                                      ros::Time stamp)
   {
     bufLandmarkObservations_[robotNumber][landmarkNumber] = obs;
+    latestObservationTime_ = stamp;
   }
 
   /**
@@ -572,9 +594,30 @@ public:
    * @param obs - the observation data as a structure defined in this file
    */
   inline void saveTargetObservation(const uint robotNumber,
-                                    const TargetObservation obs)
+                                    const TargetObservation obs,
+                                    ros::Time stamp)
   {
     bufTargetObservations_[robotNumber] = obs;
+
+    // If previously target not seen and now is found
+    if (obs.found && !state_.target.seen)
+    {
+      // Update to target seen
+      state_.target.seen = true;
+
+      // Observation to global frame
+      const ParticleFilter::State::RobotState& rs = state_.robots[robotNumber];
+      pdata_t ballGlobal[3];
+      ballGlobal[O_TX] = rs.pose[O_X] + obs.x * cos(rs.pose[O_THETA]) -
+                         obs.y * sin(rs.pose[O_THETA]);
+      ballGlobal[O_TY] = rs.pose[O_Y] + obs.x * sin(rs.pose[O_THETA]) +
+                         obs.y * cos(rs.pose[O_THETA]);
+      ballGlobal[O_TZ] = obs.z;
+
+      // Spread 50% of particles around ballGlobal in a sphere with 1.0 meter
+      // radius
+      spreadTargetParticlesSphere(0.5, ballGlobal, 1.0);
+    }
   }
 
   /**
@@ -638,9 +681,8 @@ public:
 
 private:
   ros::Subscriber GT_sub_;
-  ros::Publisher robotStatePublisher_, targetStatePublisher_,
-      particlePublisher_, syncedGTPublisher_, targetEstimatePublisher_,
-      targetGTPublisher_, targetParticlePublisher_;
+  ros::Publisher estimatePublisher_, particlePublisher_,
+      targetEstimatePublisher_, targetGTPublisher_, targetParticlePublisher_;
   std::vector<ros::Publisher> particleStdPublishers_;
   std::vector<ros::Publisher> robotGTPublishers_;
   std::vector<ros::Publisher> robotEstimatePublishers_;
@@ -648,8 +690,7 @@ private:
 
   read_omni_dataset::LRMGTData msg_GT_;
   pfuclt_omni_dataset::particles msg_particles_;
-  read_omni_dataset::RobotState msg_state_;
-  read_omni_dataset::BallData msg_target_;
+  read_omni_dataset::Estimate msg_estimate_;
 
   std::vector<tf2_ros::TransformBroadcaster> robotBroadcasters;
 
@@ -658,6 +699,7 @@ private:
   void publishParticles();
   void publishRobotStates();
   void publishTargetState();
+  void publishEstimate();
   void publishGTData();
   void publishTargetObservations();
 
