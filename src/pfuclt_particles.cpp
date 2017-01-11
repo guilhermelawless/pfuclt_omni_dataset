@@ -380,8 +380,8 @@ void ParticleFilter::fuseTarget()
         Z_Zcap[1] = Z[1] - Zcap[1];
         Z_Zcap[2] = Z[2] - Zcap[2];
 
-        expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / (3 * obs->covXX) +
-                         Z_Zcap[1] * Z_Zcap[1] / (3 * obs->covYY) +
+        expArg = -0.5 * (Z_Zcap[0] * Z_Zcap[0] / (.3 * obs->covXX) +
+                         Z_Zcap[1] * Z_Zcap[1] / (.3 * obs->covYY) +
                          Z_Zcap[2] * Z_Zcap[2] * 10.0);
         detValue =
             1.0; // pow((2 * M_PI * obs->covXX * obs->covYY * 10.0), -0.5);
