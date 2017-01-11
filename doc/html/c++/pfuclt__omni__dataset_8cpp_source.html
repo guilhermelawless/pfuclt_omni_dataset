@@ -256,7 +256,7 @@
 <div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;        sin2p * obs.covDD + cos2p * (d2 * obs.covPP + obs.covDD * obs.covPP);</div>
 <div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;</div>
 <div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    <span class="comment">// Save this observation</span></div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    pf_-&gt;saveTargetObservation(robotNumber_, obs);</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    pf_-&gt;saveTargetObservation(robotNumber_, obs, target-&gt;header.stamp);</div>
 <div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;  }</div>
 <div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;  <span class="keywordflow">else</span></div>
 <div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;  {</div>
@@ -385,105 +385,106 @@
 <div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;                  pow(cos(obs.phi), 2) *</div>
 <div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;                      (pow(obs.d, 2) * obs.covPP + obs.covDD * obs.covPP);</div>
 <div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;      pf_-&gt;saveLandmarkObservation(robotNumber_, i, obs);</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;    }</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;  }</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;  pf_-&gt;saveAllLandmarkMeasurementsDone(robotNumber_);</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;}</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;<span class="comment">// end of namespace</span></div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;}</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;</div>
-<div class="line"><a name="l00368"></a><span class="lineno"><a class="line" href="pfuclt__omni__dataset_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97">  368</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="pfuclt__omni__dataset_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97">main</a>(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>* argv[])</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;{</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;  ros::init(argc, argv, <span class="stringliteral">&quot;pfuclt_omni_dataset&quot;</span>);</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  ros::NodeHandle nh(<span class="stringliteral">&quot;~&quot;</span>);</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  <span class="keyword">using namespace </span>pfuclt;</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;  <span class="comment">// Parse input parameters</span></div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;  <span class="comment">// TODO Consider using a library for this</span></div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;  <span class="keywordflow">if</span> (argc &gt; 2)</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;  {</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;    <span class="keywordflow">if</span> (!strcmp(argv[2], <span class="stringliteral">&quot;true&quot;</span>))</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;    {</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;      <span class="keywordflow">if</span> (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;                                         ros::console::levels::Debug))</div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;      {</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;        ros::console::notifyLoggerLevelsChanged();</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;      }</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;      ROS_DEBUG(<span class="stringliteral">&quot;DEBUG mode set&quot;</span>);</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;      <a class="code" href="namespacepfuclt.html#aeb1e43b14297c19139b22827fc71764e">DEBUG</a> = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;    }</div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;      <a class="code" href="namespacepfuclt.html#aeb1e43b14297c19139b22827fc71764e">DEBUG</a> = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;  }</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;    <a class="code" href="namespacepfuclt.html#aeb1e43b14297c19139b22827fc71764e">DEBUG</a> = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  <span class="keywordflow">if</span> (argc &gt; 4)</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  {</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;    <span class="keywordflow">if</span> (!strcmp(argv[4], <span class="stringliteral">&quot;true&quot;</span>))</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;    {</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;      <a class="code" href="namespacepfuclt.html#a889640ed597b9033f612cc805e3b8ae2">PUBLISH</a> = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;      ROS_INFO(<span class="stringliteral">&quot;Publish = true&quot;</span>);</div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;    }</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;    <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;      <a class="code" href="namespacepfuclt.html#a889640ed597b9033f612cc805e3b8ae2">PUBLISH</a> = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;  }</div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;  <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    <a class="code" href="namespacepfuclt.html#a889640ed597b9033f612cc805e3b8ae2">PUBLISH</a> = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;</div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;  <span class="comment">// read parameters from param server</span></div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;  <span class="keyword">using</span> pfuclt_aux::readParam;</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;  readParam&lt;int&gt;(nh, <span class="stringliteral">&quot;/MAX_ROBOTS&quot;</span>, <a class="code" href="namespacepfuclt.html#ab5e65304baae1ebdbc6b6687c1c99bd6">MAX_ROBOTS</a>);</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;  readParam&lt;float&gt;(nh, <span class="stringliteral">&quot;/ROB_HT&quot;</span>, <a class="code" href="namespacepfuclt.html#a18789f225e0df9e8a68567455c0d94ce">ROB_HT</a>);</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;  readParam&lt;int&gt;(nh, <span class="stringliteral">&quot;/NUM_TARGETS&quot;</span>, <a class="code" href="namespacepfuclt.html#a05c54364bd0d14ad8b1074b6e2f1dd4f">NUM_TARGETS</a>);</div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;  readParam&lt;int&gt;(nh, <span class="stringliteral">&quot;/NUM_LANDMARKS&quot;</span>, <a class="code" href="namespacepfuclt.html#a48cecee760412633917a2470e44bed87">NUM_LANDMARKS</a>);</div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  readParam&lt;float&gt;(nh, <span class="stringliteral">&quot;/LANDMARK_COV/K1&quot;</span>, <a class="code" href="namespacepfuclt.html#a4f7c0bbd5c7256886f1e978665a0d60c">K1</a>);</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;  readParam&lt;float&gt;(nh, <span class="stringliteral">&quot;/LANDMARK_COV/K2&quot;</span>, <a class="code" href="namespacepfuclt.html#aa1919114a4a04df2d3d854041b513c68">K2</a>);</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  readParam&lt;float&gt;(nh, <span class="stringliteral">&quot;/LANDMARK_COV/K3&quot;</span>, <a class="code" href="namespacepfuclt.html#a8919dfd188322c71baeabe1b421568a0">K3</a>);</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;  readParam&lt;float&gt;(nh, <span class="stringliteral">&quot;/LANDMARK_COV/K4&quot;</span>, <a class="code" href="namespacepfuclt.html#a205ef22d9ee1677e974e599af5c72f8f">K4</a>);</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;  readParam&lt;float&gt;(nh, <span class="stringliteral">&quot;/LANDMARK_COV/K5&quot;</span>, <a class="code" href="namespacepfuclt.html#a7dc528b7fb1431c213f7b7b72d79d405">K5</a>);</div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;  readParam&lt;bool&gt;(nh, <span class="stringliteral">&quot;/PLAYING_ROBOTS&quot;</span>, <a class="code" href="namespacepfuclt.html#a5acdae0aa94e71ed5e96cec8a482d280">PLAYING_ROBOTS</a>);</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;  readParam&lt;double&gt;(nh, <span class="stringliteral">&quot;/POS_INIT&quot;</span>, <a class="code" href="namespacepfuclt.html#a4a58173e82096aa9f2166288e33d8582">POS_INIT</a>);</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;  readParam&lt;bool&gt;(nh, <span class="stringliteral">&quot;/USE_CUSTOM_VALUES&quot;</span>, <a class="code" href="namespacepfuclt.html#a814d8021bab07dc368b60a75031ef017">USE_CUSTOM_VALUES</a>);</div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;  readParam&lt;int&gt;(nh, <span class="stringliteral">&quot;/MY_ID&quot;</span>, <a class="code" href="namespacepfuclt.html#ab97407f1772be6aadb0c9bfbd4a9eb46">MY_ID</a>);</div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;  uint total_size =</div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;      <a class="code" href="namespacepfuclt.html#ab5e65304baae1ebdbc6b6687c1c99bd6">MAX_ROBOTS</a> * STATES_PER_ROBOT + <a class="code" href="namespacepfuclt.html#a05c54364bd0d14ad8b1074b6e2f1dd4f">NUM_TARGETS</a> * STATES_PER_TARGET;</div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;</div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;  readParam&lt;double&gt;(nh, <span class="stringliteral">&quot;/CUSTOM_PARTICLE_INIT&quot;</span>, <a class="code" href="namespacepfuclt.html#a7cb13cf96d0acc64eeb5477e841f36f9">CUSTOM_PARTICLE_INIT</a>);</div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="namespacepfuclt.html#a7cb13cf96d0acc64eeb5477e841f36f9">CUSTOM_PARTICLE_INIT</a>.size() != (total_size * 2))</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;  {</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;    ROS_ERROR(<span class="stringliteral">&quot;/CUSTOM_PARTICLE_INIT given but not of correct size - should &quot;</span></div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;              <span class="stringliteral">&quot;have %d numbers and has %d&quot;</span>,</div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;              total_size * 2, (<span class="keywordtype">int</span>)<a class="code" href="namespacepfuclt.html#a7cb13cf96d0acc64eeb5477e841f36f9">CUSTOM_PARTICLE_INIT</a>.size());</div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;  }</div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;</div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;  ROS_INFO(<span class="stringliteral">&quot;Waiting for /clock&quot;</span>);</div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;  <span class="keywordflow">while</span> (ros::Time::now().toSec() == 0)</div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;    ;</div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;  ROS_INFO(<span class="stringliteral">&quot;/clock message received&quot;</span>);</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;  pfuclt::RobotFactory Factory(nh);</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="namespacepfuclt.html#a814d8021bab07dc368b60a75031ef017">USE_CUSTOM_VALUES</a> &amp;&amp; <a class="code" href="namespacepfuclt.html#a5acdae0aa94e71ed5e96cec8a482d280">PLAYING_ROBOTS</a>[1])</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;  {</div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;    ROS_WARN(<span class="stringliteral">&quot;OMNI2 not present in dataset.&quot;</span>);</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;    <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;  }</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;  Factory.initializeFixedLandmarks();</div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;  ros::spin();</div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;  <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;}</div>
-<div class="ttc" id="pfuclt__omni__dataset_8cpp_html_a0ddf1224851353fc92bfbff6f499fa97"><div class="ttname"><a href="pfuclt__omni__dataset_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97">main</a></div><div class="ttdeci">int main(int argc, char *argv[])</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__omni__dataset_8cpp_source.html#l00368">pfuclt_omni_dataset.cpp:368</a></div></div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;      pf_-&gt;saveLandmarkObservation(robotNumber_, i, obs,</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;                                   landmarkData-&gt;header.stamp);</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;    }</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;  }</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;  pf_-&gt;saveAllLandmarkMeasurementsDone(robotNumber_);</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;}</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;<span class="comment">// end of namespace</span></div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;}</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;</div>
+<div class="line"><a name="l00369"></a><span class="lineno"><a class="line" href="pfuclt__omni__dataset_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97">  369</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="pfuclt__omni__dataset_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97">main</a>(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>* argv[])</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;{</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  ros::init(argc, argv, <span class="stringliteral">&quot;pfuclt_omni_dataset&quot;</span>);</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  ros::NodeHandle nh(<span class="stringliteral">&quot;~&quot;</span>);</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  <span class="keyword">using namespace </span>pfuclt;</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;  <span class="comment">// Parse input parameters</span></div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;  <span class="comment">// TODO Consider using a library for this</span></div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;  <span class="keywordflow">if</span> (argc &gt; 2)</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;  {</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;    <span class="keywordflow">if</span> (!strcmp(argv[2], <span class="stringliteral">&quot;true&quot;</span>))</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;    {</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;      <span class="keywordflow">if</span> (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;                                         ros::console::levels::Debug))</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;      {</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;        ros::console::notifyLoggerLevelsChanged();</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;      }</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;      ROS_DEBUG(<span class="stringliteral">&quot;DEBUG mode set&quot;</span>);</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;      <a class="code" href="namespacepfuclt.html#aeb1e43b14297c19139b22827fc71764e">DEBUG</a> = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    }</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;    <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;      <a class="code" href="namespacepfuclt.html#aeb1e43b14297c19139b22827fc71764e">DEBUG</a> = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  }</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;  <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;    <a class="code" href="namespacepfuclt.html#aeb1e43b14297c19139b22827fc71764e">DEBUG</a> = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  <span class="keywordflow">if</span> (argc &gt; 4)</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  {</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;    <span class="keywordflow">if</span> (!strcmp(argv[4], <span class="stringliteral">&quot;true&quot;</span>))</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    {</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;      <a class="code" href="namespacepfuclt.html#a889640ed597b9033f612cc805e3b8ae2">PUBLISH</a> = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;      ROS_INFO(<span class="stringliteral">&quot;Publish = true&quot;</span>);</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;    }</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;      <a class="code" href="namespacepfuclt.html#a889640ed597b9033f612cc805e3b8ae2">PUBLISH</a> = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;  }</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;  <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;    <a class="code" href="namespacepfuclt.html#a889640ed597b9033f612cc805e3b8ae2">PUBLISH</a> = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;  <span class="comment">// read parameters from param server</span></div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;  <span class="keyword">using</span> pfuclt_aux::readParam;</div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;  readParam&lt;int&gt;(nh, <span class="stringliteral">&quot;/MAX_ROBOTS&quot;</span>, <a class="code" href="namespacepfuclt.html#ab5e65304baae1ebdbc6b6687c1c99bd6">MAX_ROBOTS</a>);</div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;  readParam&lt;float&gt;(nh, <span class="stringliteral">&quot;/ROB_HT&quot;</span>, <a class="code" href="namespacepfuclt.html#a18789f225e0df9e8a68567455c0d94ce">ROB_HT</a>);</div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;  readParam&lt;int&gt;(nh, <span class="stringliteral">&quot;/NUM_TARGETS&quot;</span>, <a class="code" href="namespacepfuclt.html#a05c54364bd0d14ad8b1074b6e2f1dd4f">NUM_TARGETS</a>);</div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  readParam&lt;int&gt;(nh, <span class="stringliteral">&quot;/NUM_LANDMARKS&quot;</span>, <a class="code" href="namespacepfuclt.html#a48cecee760412633917a2470e44bed87">NUM_LANDMARKS</a>);</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;  readParam&lt;float&gt;(nh, <span class="stringliteral">&quot;/LANDMARK_COV/K1&quot;</span>, <a class="code" href="namespacepfuclt.html#a4f7c0bbd5c7256886f1e978665a0d60c">K1</a>);</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  readParam&lt;float&gt;(nh, <span class="stringliteral">&quot;/LANDMARK_COV/K2&quot;</span>, <a class="code" href="namespacepfuclt.html#aa1919114a4a04df2d3d854041b513c68">K2</a>);</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;  readParam&lt;float&gt;(nh, <span class="stringliteral">&quot;/LANDMARK_COV/K3&quot;</span>, <a class="code" href="namespacepfuclt.html#a8919dfd188322c71baeabe1b421568a0">K3</a>);</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;  readParam&lt;float&gt;(nh, <span class="stringliteral">&quot;/LANDMARK_COV/K4&quot;</span>, <a class="code" href="namespacepfuclt.html#a205ef22d9ee1677e974e599af5c72f8f">K4</a>);</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;  readParam&lt;float&gt;(nh, <span class="stringliteral">&quot;/LANDMARK_COV/K5&quot;</span>, <a class="code" href="namespacepfuclt.html#a7dc528b7fb1431c213f7b7b72d79d405">K5</a>);</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;  readParam&lt;bool&gt;(nh, <span class="stringliteral">&quot;/PLAYING_ROBOTS&quot;</span>, <a class="code" href="namespacepfuclt.html#a5acdae0aa94e71ed5e96cec8a482d280">PLAYING_ROBOTS</a>);</div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;  readParam&lt;double&gt;(nh, <span class="stringliteral">&quot;/POS_INIT&quot;</span>, <a class="code" href="namespacepfuclt.html#a4a58173e82096aa9f2166288e33d8582">POS_INIT</a>);</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;  readParam&lt;bool&gt;(nh, <span class="stringliteral">&quot;/USE_CUSTOM_VALUES&quot;</span>, <a class="code" href="namespacepfuclt.html#a814d8021bab07dc368b60a75031ef017">USE_CUSTOM_VALUES</a>);</div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;  readParam&lt;int&gt;(nh, <span class="stringliteral">&quot;/MY_ID&quot;</span>, <a class="code" href="namespacepfuclt.html#ab97407f1772be6aadb0c9bfbd4a9eb46">MY_ID</a>);</div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;</div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;  uint total_size =</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;      <a class="code" href="namespacepfuclt.html#ab5e65304baae1ebdbc6b6687c1c99bd6">MAX_ROBOTS</a> * STATES_PER_ROBOT + <a class="code" href="namespacepfuclt.html#a05c54364bd0d14ad8b1074b6e2f1dd4f">NUM_TARGETS</a> * STATES_PER_TARGET;</div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;</div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;  readParam&lt;double&gt;(nh, <span class="stringliteral">&quot;/CUSTOM_PARTICLE_INIT&quot;</span>, <a class="code" href="namespacepfuclt.html#a7cb13cf96d0acc64eeb5477e841f36f9">CUSTOM_PARTICLE_INIT</a>);</div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="namespacepfuclt.html#a7cb13cf96d0acc64eeb5477e841f36f9">CUSTOM_PARTICLE_INIT</a>.size() != (total_size * 2))</div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;  {</div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;    ROS_ERROR(<span class="stringliteral">&quot;/CUSTOM_PARTICLE_INIT given but not of correct size - should &quot;</span></div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;              <span class="stringliteral">&quot;have %d numbers and has %d&quot;</span>,</div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;              total_size * 2, (<span class="keywordtype">int</span>)<a class="code" href="namespacepfuclt.html#a7cb13cf96d0acc64eeb5477e841f36f9">CUSTOM_PARTICLE_INIT</a>.size());</div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;  }</div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;  ROS_INFO(<span class="stringliteral">&quot;Waiting for /clock&quot;</span>);</div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;  <span class="keywordflow">while</span> (ros::Time::now().toSec() == 0)</div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;    ;</div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;  ROS_INFO(<span class="stringliteral">&quot;/clock message received&quot;</span>);</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;  pfuclt::RobotFactory Factory(nh);</div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="namespacepfuclt.html#a814d8021bab07dc368b60a75031ef017">USE_CUSTOM_VALUES</a> &amp;&amp; <a class="code" href="namespacepfuclt.html#a5acdae0aa94e71ed5e96cec8a482d280">PLAYING_ROBOTS</a>[1])</div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;  {</div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;    ROS_WARN(<span class="stringliteral">&quot;OMNI2 not present in dataset.&quot;</span>);</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;    <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;  }</div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;  Factory.initializeFixedLandmarks();</div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;</div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;  ros::spin();</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;  <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;}</div>
+<div class="ttc" id="pfuclt__omni__dataset_8cpp_html_a0ddf1224851353fc92bfbff6f499fa97"><div class="ttname"><a href="pfuclt__omni__dataset_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97">main</a></div><div class="ttdeci">int main(int argc, char *argv[])</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__omni__dataset_8cpp_source.html#l00369">pfuclt_omni_dataset.cpp:369</a></div></div>
 <div class="ttc" id="namespacepfuclt_html_a889640ed597b9033f612cc805e3b8ae2"><div class="ttname"><a href="namespacepfuclt.html#a889640ed597b9033f612cc805e3b8ae2">pfuclt::PUBLISH</a></div><div class="ttdeci">bool PUBLISH</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__omni__dataset_8cpp_source.html#l00051">pfuclt_omni_dataset.cpp:51</a></div></div>
 <div class="ttc" id="namespacepfuclt_html_a7b2c77db0cf876700451903cff70c55c"><div class="ttname"><a href="namespacepfuclt.html#a7b2c77db0cf876700451903cff70c55c">pfuclt::NUM_SENSORS_PER_ROBOT</a></div><div class="ttdeci">int NUM_SENSORS_PER_ROBOT</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__omni__dataset_8cpp_source.html#l00013">pfuclt_omni_dataset.cpp:13</a></div></div>
 <div class="ttc" id="namespacepfuclt_html_ab5e65304baae1ebdbc6b6687c1c99bd6"><div class="ttname"><a href="namespacepfuclt.html#ab5e65304baae1ebdbc6b6687c1c99bd6">pfuclt::MAX_ROBOTS</a></div><div class="ttdeci">int MAX_ROBOTS</div><div class="ttdef"><b>Definition:</b> <a href="pfuclt__omni__dataset_8cpp_source.html#l00011">pfuclt_omni_dataset.cpp:11</a></div></div>
@@ -513,7 +514,7 @@
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Thu Dec 15 2016 16:54:00</small>
+<small>autogenerated on Wed Jan 11 2017 15:10:24</small>
 </div>
 </body>
 </html>
