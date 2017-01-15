@@ -275,15 +275,16 @@ void ParticleFilter::fuseRobots()
     if (false == robotsUsed_[r])
       continue;
 
-    // Check that at least one landmark was seen, if not send warning
+    // Check that at least one landmark was seen, if not send warning and skip
     // Update the weight component otherwise, to the previously calculated
     // probability accumulation
-    // But.. fuse anyway since the weight component will be the value from last
-    // time it saw some landmark
     if (0 == landmarksSeen[r])
+    {
       ROS_WARN("In this iteration, OMNI%d didn't see any landmarks, so the "
                "fusing will be skipped for it",
                r + 1);
+      continue;
+    }
     else
       weightComponents_[r] = probabilities[r];
 
