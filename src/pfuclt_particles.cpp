@@ -48,7 +48,7 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
       targetIterationTime_(), odometryTime_(), iterationEvalTime_(), mutex_(),
       dynamicServer_(), O_TARGET(data.nRobots * data.statesPerRobot),
       O_WEIGHT(nSubParticleSets_ - 1), numberIterations(0),
-      durationSum(ros::WallDuration(0))
+      durationSum(ros::WallDuration(0)), robotRandom(data.nRobots, false)
 {
   ROS_INFO("Created particle filter with dimensions %d, %d",
            (int)particles_.size(), (int)particles_[0].size());
@@ -283,10 +283,16 @@ void ParticleFilter::fuseRobots()
       ROS_WARN("In this iteration, OMNI%d didn't see any landmarks, so the "
                "fusing will be skipped for it",
                r + 1);
+
+      robotRandom[r] = true;
+
       continue;
     }
     else
+    {
+      robotRandom[r] = false;
       weightComponents_[r] = probabilities[r];
+    }
 
     // Index offset for this robot in the particles vector
     uint o_robot = r * nStatesPerRobot_;
@@ -434,14 +440,14 @@ void ParticleFilter::fuseTarget()
         mStar = p;
       }
     }
-
-    // Particle m* has been found, let's swap the subparticles
-    for (uint i = 0; i < STATES_PER_TARGET; ++i)
-      std::swap(particles_[O_TARGET + i][m], particles_[O_TARGET + i][mStar]);
-
-    // Update the weight of this particle
-    particles_[O_WEIGHT][m] *= maxTargetSubParticleWeight;
   }
+
+  // Particle m* has been found, let's swap the subparticles
+  for (uint i = 0; i < STATES_PER_TARGET; ++i)
+    std::swap(particles_[O_TARGET + i][m], particles_[O_TARGET + i][mStar]);
+
+  // Update the weight of this particle
+  particles_[O_WEIGHT][m] *= maxTargetSubParticleWeight;
 
   // The target subparticles are now reordered according to their weight
   // contribution
@@ -821,6 +827,19 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
     // Rotate to final position and normalize angle
     particles_[O_THETA + robot_offset][i] = angles::normalize_angle(
         particles_[O_THETA + robot_offset][i] + deltaFinalRotEffective(seed_));
+  }
+
+  if (robotRandom[robotNumber] || !converged_)
+  {
+    // Randomize a bit for this robot since it does not see landmarks and target
+    // isn't seen
+    boost::random::uniform_real_distribution<> randPar(-0.05, 0.05);
+
+    for (uint p = 0; p < nParticles_; ++p)
+    {
+      for (uint s = 0; s < nStatesPerRobot_; ++s)
+        particles_[robot_offset + s][p] += randPar(seed_);
+    }
   }
 
   // If this is the main robot, perform one PF-UCLT iteration
