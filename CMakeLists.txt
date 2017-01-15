@@ -4,6 +4,16 @@ project(pfuclt_omni_dataset)
 
 #set(CMAKE_BUILD_TYPE Debug)
 
+OPTION(USE_OpenMP "Use OpenMP" ON)
+IF(USE_OpenMP)
+  FIND_PACKAGE(OpenMP)
+  IF(OPENMP_FOUND)
+    message(STATUS "OPENMP FOUND")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    SET(OpenMP_LIBS gomp)
+  ENDIF()
+ENDIF()
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 find_package(
   cmake_modules REQUIRED
@@ -66,6 +76,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 set(SOURCE_FILES src/pfuclt_omni_dataset.cpp src/pfuclt_aux.cpp src/pfuclt_particles.cpp)
 
 add_executable(pfuclt_omni_dataset ${SOURCE_FILES})
-add_dependencies(pfuclt_omni_dataset pfuclt_omni_dataset_generate_messages_cpp)
-target_link_libraries(pfuclt_omni_dataset ${catkin_LIBRARIES} ${rosbag_LIBRARIES} ${read_omni_dataset_LIBRARIES} minicsv)
-
+target_compile_options(pfuclt_omni_dataset PRIVATE ${OpenMP_FLAGS})
+add_dependencies(pfuclt_omni_dataset pfuclt_omni_dataset_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pfuclt_omni_dataset ${catkin_LIBRARIES} ${rosbag_LIBRARIES} ${read_omni_dataset_LIBRARIES} minicsv ${OpenMP_LIBS})

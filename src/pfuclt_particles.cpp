@@ -346,7 +346,6 @@ void ParticleFilter::fuseTarget()
   // Instance variables to be worked in the loops
   pdata_t maxTargetSubParticleWeight, totalWeight;
   uint m, p, mStar, r, o_robot;
-  std::vector<pdata_t> probabilities(nRobots_);
   float expArg, detValue, Z[3], Zcap[3], Z_Zcap[3];
   TargetObservation* obs;
 
@@ -359,11 +358,13 @@ void ParticleFilter::fuseTarget()
 
     // Find the particle m* in the set [m:M] for which the weight contribution
     // by the target subparticle to the full weight is maximum
+#pragma omp parallel for private(p, r, o_robot, obs, expArg, detValue, Z,      \
+                                 Zcap, Z_Zcap)
     for (p = m; p < nParticles_; ++p)
     {
       // Vector with probabilities for each robot, starting at 0.0 in case the
       // robot hasn't seen the ball
-      probabilities.assign(nRobots_, 0.0);
+      std::vector<pdata_t> probabilities(nRobots_, 0.0);
 
       // Observations of the target by all robots
       for (r = 0; r < nRobots_; ++r)
@@ -429,8 +430,14 @@ void ParticleFilter::fuseTarget()
         // Swap particle m with m* so that the most relevant (in terms of
         // weight)
         // target subparticle is at the lowest indexes
-        maxTargetSubParticleWeight = totalWeight;
-        mStar = p;
+#pragma omp critical
+        {
+          if (totalWeight > maxTargetSubParticleWeight)
+          {
+            maxTargetSubParticleWeight = totalWeight;
+            mStar = p;
+          }
+        }
       }
     }
 
