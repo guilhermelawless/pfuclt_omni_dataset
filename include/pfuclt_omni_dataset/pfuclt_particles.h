@@ -314,6 +314,7 @@ protected:
   ros::Publisher velPublisher_;
   ros::Time latestObservationTime_, savedLatestObservationTime_;
   bool converged_;
+  std::vector<bool> robotRandom;
 
   /**
    * @brief copyParticle - copies a whole particle from one particle set to
