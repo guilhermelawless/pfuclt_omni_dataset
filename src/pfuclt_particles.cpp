@@ -226,6 +226,7 @@ void ParticleFilter::fuseRobots()
       Eigen::Matrix<pdata_t, 2, 1> LMglobal(landmarksMap_[l].x,
                                             landmarksMap_[l].y);
 
+#pragma omp parallel for
       for (uint p = 0; p < nParticles_; ++p)
       {
 
@@ -363,8 +364,8 @@ void ParticleFilter::fuseTarget()
     maxTargetSubParticleWeight = -1.0;
     mStar = m;
 
-    // Find the particle m* in the set [m:M] for which the weight contribution
-    // by the target subparticle to the full weight is maximum
+// Find the particle m* in the set [m:M] for which the weight contribution
+// by the target subparticle to the full weight is maximum
 #pragma omp parallel for private(p, r, o_robot, obs, expArg, detValue, Z,      \
                                  Zcap, Z_Zcap)
     for (p = m; p < nParticles_; ++p)
@@ -434,9 +435,9 @@ void ParticleFilter::fuseTarget()
       // particle p as mStar
       if (totalWeight > maxTargetSubParticleWeight)
       {
-        // Swap particle m with m* so that the most relevant (in terms of
-        // weight)
-        // target subparticle is at the lowest indexes
+// Swap particle m with m* so that the most relevant (in terms of
+// weight)
+// target subparticle is at the lowest indexes
 #pragma omp critical
         {
           if (totalWeight > maxTargetSubParticleWeight)
