@@ -447,19 +447,19 @@ void ParticleFilter::fuseTarget()
         }
       }
     }
+
+    // Particle m* has been found, let's swap the subparticles
+    for (uint i = 0; i < STATES_PER_TARGET; ++i)
+      std::swap(particles_[O_TARGET + i][m], particles_[O_TARGET + i][mStar]);
+
+    // Update the weight of this particle
+    particles_[O_WEIGHT][m] *= maxTargetSubParticleWeight;
+
+    // The target subparticles are now reordered according to their weight
+    // contribution
+
+    // printWeights("After fuseTarget(): ");
   }
-
-  // Particle m* has been found, let's swap the subparticles
-  for (uint i = 0; i < STATES_PER_TARGET; ++i)
-    std::swap(particles_[O_TARGET + i][m], particles_[O_TARGET + i][mStar]);
-
-  // Update the weight of this particle
-  particles_[O_WEIGHT][m] *= maxTargetSubParticleWeight;
-
-  // The target subparticles are now reordered according to their weight
-  // contribution
-
-  // printWeights("After fuseTarget(): ");
 }
 
 void ParticleFilter::modifiedMultinomialResampler(uint startAt)
