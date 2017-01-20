@@ -342,6 +342,14 @@ void Robot::landmarkDataCallback(
       obs.x = landmarkData->x[i];
       obs.y = landmarkData->y[i];
       obs.d = sqrt(obs.x * obs.x + obs.y * obs.y);
+
+      //TODO remove this "hack" that goes over the dataset threshold distance
+      if(obs.d > 2.0)
+      {
+        pf_->saveLandmarkObservation(robotNumber_, i, false);
+        continue;
+      }
+
       obs.phi = atan2(obs.y, obs.x);
       obs.covDD =
           (K1 * fabs(1.0 - (landmarkData->AreaLandMarkActualinPixels[i] /
