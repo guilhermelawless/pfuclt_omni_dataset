@@ -48,7 +48,7 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
       targetIterationTime_(), odometryTime_(), iterationEvalTime_(), mutex_(),
       dynamicServer_(), O_TARGET(data.nRobots * data.statesPerRobot),
       O_WEIGHT(nSubParticleSets_ - 1), numberIterations(0),
-      durationSum(ros::WallDuration(0)), robotRandom(data.nRobots, false)
+      durationSum(ros::WallDuration(0))
 {
   ROS_INFO("Created particle filter with dimensions %d, %d",
            (int)particles_.size(), (int)particles_[0].size());
@@ -276,22 +276,18 @@ void ParticleFilter::fuseRobots()
     if (false == robotsUsed_[r])
       continue;
 
-    // Check that at least one landmark was seen, if not send warning and skip
-    // Update the weight component otherwise, to the previously calculated
-    // probability accumulation
+    // Check that at least one landmark was seen, if not send warning
+    // If seen use probabilities vector, if not keep using the previous
+    // weightComponents for this robot
     if (0 == landmarksSeen[r])
     {
-      ROS_WARN("In this iteration, OMNI%d didn't see any landmarks, so the "
-               "fusing will be skipped for it",
-               r + 1);
+      ROS_WARN("In this iteration, OMNI%d didn't see any landmarks", r + 1);
 
-      robotRandom[r] = true;
-
-      continue;
+      // weightComponent stays from previous iteration
     }
+
     else
     {
-      robotRandom[r] = false;
       weightComponents_[r] = probabilities[r];
     }
 
@@ -837,7 +833,18 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
         particles_[O_THETA + robot_offset][i] + deltaFinalRotEffective(seed_));
   }
 
-  if (robotRandom[robotNumber] || !converged_)
+  // Check if we should activate robotRandom
+  // Only if no landmarks and no target seen
+  uint nLandmarksSeen = 0;
+  for (std::vector<LandmarkObservation>::iterator it =
+           bufLandmarkObservations_[robotNumber].begin();
+       it != bufLandmarkObservations_[robotNumber].end(); ++it)
+  {
+    if (it->found)
+      nLandmarksSeen++;
+  }
+
+  if (nLandmarksSeen == 0 && !bufTargetObservations_[robotNumber].found && )
   {
     // Randomize a bit for this robot since it does not see landmarks and target
     // isn't seen

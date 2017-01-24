@@ -185,7 +185,8 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
   if (!started_)
     startNow();
 
-  if (target->found)
+  // TODO remove this second hack as well
+  if (target->found || !target->found)
   {
     // ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
     //          target->header.stamp.sec);
@@ -343,8 +344,8 @@ void Robot::landmarkDataCallback(
       obs.y = landmarkData->y[i];
       obs.d = sqrt(obs.x * obs.x + obs.y * obs.y);
 
-      //TODO remove this "hack" that goes over the dataset threshold distance
-      if(obs.d > 2.0)
+      // TODO remove this "hack" that goes over the dataset threshold distance
+      if (obs.d > 2.0)
       {
         pf_->saveLandmarkObservation(robotNumber_, i, false);
         continue;
