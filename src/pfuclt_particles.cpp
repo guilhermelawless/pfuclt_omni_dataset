@@ -844,7 +844,7 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
       nLandmarksSeen++;
   }
 
-  if (nLandmarksSeen == 0 && !bufTargetObservations_[robotNumber].found && )
+  if (nLandmarksSeen == 0 && !bufTargetObservations_[robotNumber].found)
   {
     // Randomize a bit for this robot since it does not see landmarks and target
     // isn't seen
