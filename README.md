@@ -32,3 +32,7 @@ If you use PF-UCLT on an academic work, please cite:
     doi={10.1109/TRO.2017.2715342}, 
     ISSN={1552-3098}, 
     month={},}
+
+## Documentation
+
+Admittedly not very well done, we have doxygen auto-generated documentation in https://guilhermelawless.github.io/pfuclt_omni_dataset/doc/html/c++/index.html
