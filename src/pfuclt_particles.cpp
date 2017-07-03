@@ -226,6 +226,7 @@ void ParticleFilter::fuseRobots()
       Eigen::Matrix<pdata_t, 2, 1> LMglobal(landmarksMap_[l].x,
                                             landmarksMap_[l].y);
 
+#pragma omp parallel for
       for (uint p = 0; p < nParticles_; ++p)
       {
 
@@ -276,16 +277,19 @@ void ParticleFilter::fuseRobots()
       continue;
 
     // Check that at least one landmark was seen, if not send warning
-    // Update the weight component otherwise, to the previously calculated
-    // probability accumulation
-    // But.. fuse anyway since the weight component will be the value from last
-    // time it saw some landmark
+    // If seen use probabilities vector, if not keep using the previous
+    // weightComponents for this robot
     if (0 == landmarksSeen[r])
-      ROS_WARN("In this iteration, OMNI%d didn't see any landmarks, so the "
-               "fusing will be skipped for it",
-               r + 1);
+    {
+      ROS_WARN("In this iteration, OMNI%d didn't see any landmarks", r + 1);
+
+      // weightComponent stays from previous iteration
+    }
+
     else
+    {
       weightComponents_[r] = probabilities[r];
+    }
 
     // Index offset for this robot in the particles vector
     uint o_robot = r * nStatesPerRobot_;
@@ -346,7 +350,6 @@ void ParticleFilter::fuseTarget()
   // Instance variables to be worked in the loops
   pdata_t maxTargetSubParticleWeight, totalWeight;
   uint m, p, mStar, r, o_robot;
-  std::vector<pdata_t> probabilities(nRobots_);
   float expArg, detValue, Z[3], Zcap[3], Z_Zcap[3];
   TargetObservation* obs;
 
@@ -357,13 +360,15 @@ void ParticleFilter::fuseTarget()
     maxTargetSubParticleWeight = -1.0;
     mStar = m;
 
-    // Find the particle m* in the set [m:M] for which the weight contribution
-    // by the target subparticle to the full weight is maximum
+// Find the particle m* in the set [m:M] for which the weight contribution
+// by the target subparticle to the full weight is maximum
+#pragma omp parallel for private(p, r, o_robot, obs, expArg, detValue, Z,      \
+                                 Zcap, Z_Zcap)
     for (p = m; p < nParticles_; ++p)
     {
       // Vector with probabilities for each robot, starting at 0.0 in case the
       // robot hasn't seen the ball
-      probabilities.assign(nRobots_, 0.0);
+      std::vector<pdata_t> probabilities(nRobots_, 0.0);
 
       // Observations of the target by all robots
       for (r = 0; r < nRobots_; ++r)
@@ -426,11 +431,17 @@ void ParticleFilter::fuseTarget()
       // particle p as mStar
       if (totalWeight > maxTargetSubParticleWeight)
       {
-        // Swap particle m with m* so that the most relevant (in terms of
-        // weight)
-        // target subparticle is at the lowest indexes
-        maxTargetSubParticleWeight = totalWeight;
-        mStar = p;
+// Swap particle m with m* so that the most relevant (in terms of
+// weight)
+// target subparticle is at the lowest indexes
+#pragma omp critical
+        {
+          if (totalWeight > maxTargetSubParticleWeight)
+          {
+            maxTargetSubParticleWeight = totalWeight;
+            mStar = p;
+          }
+        }
       }
     }
 
@@ -440,12 +451,12 @@ void ParticleFilter::fuseTarget()
 
     // Update the weight of this particle
     particles_[O_WEIGHT][m] *= maxTargetSubParticleWeight;
+
+    // The target subparticles are now reordered according to their weight
+    // contribution
+
+    // printWeights("After fuseTarget(): ");
   }
-
-  // The target subparticles are now reordered according to their weight
-  // contribution
-
-  // printWeights("After fuseTarget(): ");
 }
 
 void ParticleFilter::modifiedMultinomialResampler(uint startAt)
@@ -820,6 +831,30 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
     // Rotate to final position and normalize angle
     particles_[O_THETA + robot_offset][i] = angles::normalize_angle(
         particles_[O_THETA + robot_offset][i] + deltaFinalRotEffective(seed_));
+  }
+
+  // Check if we should activate robotRandom
+  // Only if no landmarks and no target seen
+  uint nLandmarksSeen = 0;
+  for (std::vector<LandmarkObservation>::iterator it =
+           bufLandmarkObservations_[robotNumber].begin();
+       it != bufLandmarkObservations_[robotNumber].end(); ++it)
+  {
+    if (it->found)
+      nLandmarksSeen++;
+  }
+
+  if (nLandmarksSeen == 0 && !bufTargetObservations_[robotNumber].found)
+  {
+    // Randomize a bit for this robot since it does not see landmarks and target
+    // isn't seen
+    boost::random::uniform_real_distribution<> randPar(-0.05, 0.05);
+
+    for (uint p = 0; p < nParticles_; ++p)
+    {
+      for (uint s = 0; s < nStatesPerRobot_; ++s)
+        particles_[robot_offset + s][p] += randPar(seed_);
+    }
   }
 
   // If this is the main robot, perform one PF-UCLT iteration
