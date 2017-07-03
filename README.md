@@ -8,6 +8,10 @@ An extensive description of the method and results obtained can be found in our 
 
 A. Ahmad; G. Lawless; P. Lima. **An Online Scalable Approach to Unified Multirobot Cooperative Localization and Object Tracking**. *IEEE Transactions on Robotics*, vol.PP, no.99, pp.1-16. **[PDF](https://ps.is.tuebingen.mpg.de/uploads_file/attachment/attachment/378/17-0058_02_MS.pdf)**.
 
+## Requirements
+
+The read_omni_dataset package from https://github.com/aamirahmad/read_omni_dataset , *infinite-robots* branch.
+
 ## Dataset generation
 
 Use the randgen_omni_dataset package from https://github.com/guilhermelawless/randgen_omni_dataset
