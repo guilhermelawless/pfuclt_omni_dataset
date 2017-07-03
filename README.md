@@ -1,31 +1,30 @@
-==================================
-pfuclt_omni_dataset
-==================================
+# pfuclt_omni_dataset
 
-This ROS package performs PF-UCLT on sensor msgs from the omni-dataset (soccer robots dataset)
+This ROS package performs PF-UCLT on sensor msgs from the OMNI dataset (soccer robots dataset)
 
-==================================
-Dataset download
-==================================
+## Related publication
 
-Please download the soccer robot dataset in the rosbags format here (Please see instructions below on how to use the rosbags):
+An extensive description of the method and results obtained can be found in our publication:
 
-http://datasets.isr.ist.utl.pt/lrmdataset/4_Robots_DataSet/rosbags/
+A. Ahmad; G. Lawless; P. Lima. **An Online Scalable Approach to Unified Multirobot Cooperative Localization and Object Tracking**. *IEEE Transactions on Robotics*, vol.PP, no.99, pp.1-16. **[PDF](https://ps.is.tuebingen.mpg.de/uploads_file/attachment/attachment/378/17-0058_02_MS.pdf)**.
 
-In case you want the raw data, i.e., simply the image files from the robot's camera, odometry log etc, in simple text format, please click on the following link. A short readme is also provided over there.
+## Dataset generation
 
-http://datasets.isr.ist.utl.pt/lrmdataset/4_Robots_DataSet/rawdata/
+Use the randgen_omni_dataset package from https://github.com/guilhermelawless/randgen_omni_dataset
 
-LICENSE: Please note that the dataset is also (as well as this ros package) released under the GNU GPLv3 License. 
+## Citation
 
-==================================
-Citation
-==================================
-To-be added
+If you use PF-UCLT on an academic work, please cite:
 
-
-
-==================================
-Brief Description
-==================================
-To-be added
+    @ARTICLE{7964712, 
+    author={A. Ahmad and G. Lawless and P. Lima}, 
+    journal={IEEE Transactions on Robotics}, 
+    title={An Online Scalable Approach to Unified Multirobot Cooperative Localization and Object Tracking}, 
+    year={2017}, 
+    volume={PP}, 
+    number={99}, 
+    pages={1-16}, 
+    keywords={Cooperative perception;distributed robot systems;localization;sensor fusion;visual tracking}, 
+    doi={10.1109/TRO.2017.2715342}, 
+    ISSN={1552-3098}, 
+    month={},}
