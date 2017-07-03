@@ -105,7 +105,6 @@ protected:
   {
     bool firstCallback;
     int nParticles;
-    int velocityEstimatorStackSize;
     double resamplingPercentageToKeep;
     double targetRandStddev;
     double oldTargetRandSTddev;
@@ -146,102 +145,20 @@ protected:
     struct targetState_s
     {
       std::vector<pdata_t> pos;
-      std::vector<pdata_t> vel;
       bool seen;
 
       targetState_s()
-          : pos(STATES_PER_TARGET, 0.0), vel(STATES_PER_TARGET, 0.0),
-            seen(false)
+          : pos(STATES_PER_TARGET, 0.0), seen(false)
       {
       }
     } target;
 
     /**
-     * @brief The targetVelocityEstimator_s struct - will estimate the velocity
-     * of a target using a custom function. The struct keeps vectors with the
-     * latest avilable information, up until a max data amount is reached
-     */
-    struct targetVelocityEstimator_s
-    {
-      std::vector<std::vector<double> > timeVecs;
-      std::vector<std::vector<double> > posVecs;
-      std::vector<double> lastEstimates;
-      estimatorFunc estimateVelocity;
-      geometry_msgs::Vector3 velMsg;
-
-      uint maxDataSize;
-      uint timeInit;
-      uint numberVels;
-
-      targetVelocityEstimator_s(const uint numberVels, const int maxDataSize,
-                                estimatorFunc ptrFunc)
-          : numberVels(numberVels), posVecs(numberVels, std::vector<double>()),
-            timeVecs(numberVels, std::vector<double>()),
-            maxDataSize(maxDataSize), lastEstimates(numberVels)
-      {
-        // Pointer to the estimator function
-        estimateVelocity = ptrFunc;
-
-        // Reserve the data size
-        for (uint velType = 0; velType < numberVels; ++velType)
-        {
-          timeVecs[velType].reserve(maxDataSize);
-          posVecs[velType].reserve(maxDataSize);
-        }
-
-        ROS_INFO("Created a target velocity estimator");
-      }
-
-      void insertZeros();
-
-      void insert(const double timeData,
-                  const std::vector<TargetObservation>& obsData,
-                  const std::vector<RobotState>& robotStates);
-
-      bool isReadyToEstimate()
-      {
-        for (uint velType = 0; velType < numberVels; ++velType)
-        {
-          if (timeVecs[velType].size() != timeVecs[velType].capacity())
-            return false;
-        }
-
-        return true;
-      }
-
-      double estimate(const uint velType)
-      {
-        lastEstimates[velType] =
-            estimateVelocity(timeVecs[velType], posVecs[velType]);
-
-        return lastEstimates[velType];
-      }
-
-      void resize(const uint newStackSize);
-
-      void reset()
-      {
-        for (uint velType = 0; velType < numberVels; ++velType)
-        {
-          timeVecs[velType].clear();
-          posVecs[velType].clear();
-        }
-      }
-
-    } targetVelocityEstimator;
-
-    /**
      * @brief State - constructor
      */
-    State(const uint nStatesPerRobot, const uint nRobots,
-          const uint velocityEstimatorStackSize)
-        : nStatesPerRobot(nStatesPerRobot), nRobots(nRobots),
-          targetVelocityEstimator(STATES_PER_TARGET, velocityEstimatorStackSize,
-                                  pfuclt_aux::linearRegressionSlope)
+    State(const uint nStatesPerRobot, const uint nRobots)
+        : nStatesPerRobot(nStatesPerRobot), nRobots(nRobots)
     {
-      ROS_INFO("Target Velocity Estimator initialiazed with a stack size of %d",
-               velocityEstimatorStackSize);
-
       // Create and initialize the robots vector
       for (uint r = 0; r < nRobots; ++r)
         robots.push_back(robotState_s(nStatesPerRobot));
@@ -311,7 +228,6 @@ protected:
   ros::WallDuration durationSum;
   uint16_t numberIterations;
   struct State state_;
-  ros::Publisher velPublisher_;
   ros::Time latestObservationTime_, savedLatestObservationTime_;
   bool converged_;
 
@@ -395,8 +311,7 @@ protected:
   void resample();
 
   /**
-   * @brief resample - state estimation through weighted means, and linear
-   * regression for the target velocity
+   * @brief estimate - state estimation through weighted means of particle weights
    */
   void estimate();
 

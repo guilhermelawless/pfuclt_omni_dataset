@@ -43,8 +43,7 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
           data.nRobots, std::vector<LandmarkObservation>(data.nLandmarks)),
       bufTargetObservations_(data.nRobots),
       weightComponents_(data.nRobots, subparticles_t(nParticles_, 0.0)),
-      state_(data.statesPerRobot, data.nRobots,
-             dynamicVariables_.velocityEstimatorStackSize),
+      state_(data.statesPerRobot, data.nRobots),
       targetIterationTime_(), odometryTime_(), iterationEvalTime_(), mutex_(),
       dynamicServer_(), O_TARGET(data.nRobots * data.statesPerRobot),
       O_WEIGHT(nSubParticleSets_ - 1), numberIterations(0),
@@ -58,9 +57,6 @@ ParticleFilter::ParticleFilter(struct PFinitData& data)
       callback;
   callback = boost::bind(&ParticleFilter::dynamicReconfigureCallback, this, _1);
   dynamicServer_.setCallback(callback);
-
-  // Advertise target velocity
-  velPublisher_ = nh_.advertise<geometry_msgs::Vector3>("/target/velocity", 10);
 }
 
 void ParticleFilter::dynamicReconfigureCallback(
@@ -77,28 +73,17 @@ void ParticleFilter::dynamicReconfigureCallback(
     return;
 
   ROS_INFO("Dynamic Reconfigure Callback:\n\tparticles = "
-           "%d\n\tvelocity_estimator_stack_size = "
            "%d\n\tresampling_percentage_to_keep = "
            "%f\n\tpredict_model_stddev = "
            "%f\n\tOMNI1_alpha=%s\n\tOMNI3_alpha=%s\n\tOMNI4_alpha=%s\n\tOMNI5_"
            "alpha=%s",
-           config.particles, config.groups.target.velocity_estimator_stack_size,
+           config.particles,
            config.groups.resampling.percentage_to_keep,
            config.groups.target.predict_model_stddev,
            config.groups.alphas.OMNI1_alpha.c_str(),
            config.groups.alphas.OMNI3_alpha.c_str(),
            config.groups.alphas.OMNI4_alpha.c_str(),
            config.groups.alphas.OMNI5_alpha.c_str());
-
-  // Resize velocity estimator if value changed
-  if (dynamicVariables_.velocityEstimatorStackSize !=
-      config.groups.target.velocity_estimator_stack_size)
-  {
-    ROS_INFO("Resizing target velocity estimator to %d",
-             config.groups.target.velocity_estimator_stack_size);
-    state_.targetVelocityEstimator.resize(
-        config.groups.target.velocity_estimator_stack_size);
-  }
 
   // Resize particles and re-initialize the pf if value changed
   if (dynamicVariables_.nParticles != config.particles)
@@ -111,8 +96,6 @@ void ParticleFilter::dynamicReconfigureCallback(
   }
 
   // Update with desired values
-  dynamicVariables_.velocityEstimatorStackSize =
-      config.groups.target.velocity_estimator_stack_size;
   dynamicVariables_.nParticles = config.particles;
   dynamicVariables_.resamplingPercentageToKeep =
       config.groups.resampling.percentage_to_keep;
@@ -160,25 +143,11 @@ void ParticleFilter::predictTarget()
                                          targetAcceleration(seed_),
                                          targetAcceleration(seed_) };
 
-    // Use X and Y velocity estimates
+    // Use random acceleration model
     for (uint s = 0; s < STATES_PER_TARGET - 1; ++s)
     {
-      pdata_t diff = 0.5 * accel[s] * pow(targetIterationTime_.diff, 2);
-
-      particles_[O_TARGET + s][p] += diff;
-
-      /*
-      ROS_DEBUG_COND(
-          p == 0,
-          "Target[%d] predicted a difference of %fm after iterationTime "
-          "= %fs and velocity %fm/s",
-          s, diff, targetIterationTime_.diff, state_.target.vel[s]);
-      */
+      particles_[O_TARGET + s][p] += 0.5 * accel[s] * pow(targetIterationTime_.diff, 2);
     }
-
-    // but for Z only the random acceleration model
-    particles_[O_TARGET + O_TZ][p] +=
-        0.5 * accel[O_TZ] * pow(targetIterationTime_.diff, 2);
   }
 }
 
@@ -304,7 +273,7 @@ void ParticleFilter::fuseRobots()
       // Re-order the particle subsets of this robot
       uint sort_index = sorted[p];
 
-      // Copy this subparticle set from dupParticles' sort_index particle
+      // Copy this sub-particle set from dupParticles' sort_index particle
       copyParticle(particles_, dupParticles, p, sort_index, o_robot,
                    o_robot + nStatesPerRobot_ - 1);
 
@@ -339,10 +308,6 @@ void ParticleFilter::fuseTarget()
   if (!ballSeen)
   {
     *iteration_oss << "Ball not seen ->";
-
-    // Insert zeros in the velocity estimator
-    state_.targetVelocityEstimator.insertZeros();
-
     return;
   }
   // If program is here, at least one robot saw the ball
@@ -357,7 +322,7 @@ void ParticleFilter::fuseTarget()
   for (m = 0; m < nParticles_; ++m)
   {
     // Keep track of the maximum contributed weight and that particle's index
-    maxTargetSubParticleWeight = -1.0;
+    maxTargetSubParticleWeight = -1.0f;
     mStar = m;
 
 // Find the particle m* in the set [m:M] for which the weight contribution
@@ -407,20 +372,6 @@ void ParticleFilter::fuseTarget()
 
         // Probability value for this robot and this particle
         probabilities[r] = detValue * exp(expArg);
-
-        // ROS_DEBUG_COND(r==4 && m == 0 && p < 50, "Prob(OMNI4) = %f",
-        // probabilities[r]);
-
-        // Debugging a bit
-        /*
-        ROS_DEBUG_COND(
-            !p && !m, "OMNI%d particle 0 is at {%f;%f;%f}, measured {%f;%f;%f} "
-                      "and the ball subparticles are {%f; %f; %f}",
-            r + 1, particles_[o_robot + O_X][0], particles_[o_robot + O_Y][0],
-            particles_[o_robot + O_THETA][0], obs.x, obs.y, obs.z,
-            particles_[O_TARGET + O_TX][0], particles_[O_TARGET + O_TY][0],
-            particles_[O_TARGET + O_TZ][0]);
-        */
       }
 
       // Total weight contributed by this particle
@@ -579,16 +530,7 @@ void ParticleFilter::estimate()
 
   if (weightSum < MIN_WEIGHTSUM)
   {
-    ROS_WARN(
-        "Didn't estimate, performed reset in velocity estimator to be safe");
-
-    // Print iteration and state information
     *iteration_oss << "DONE without estimating!";
-
-    // Reset velocity estimator and target velocity
-    state_.targetVelocityEstimator.reset();
-    state_.target.vel[O_TX] = state_.target.vel[O_TY] =
-        state_.target.vel[O_TZ] = 0.0;
 
     // Increase standard deviation for target prediction
     if (dynamicVariables_.targetRandStddev != TARGET_RAND_STDDEV_LOST)
@@ -603,7 +545,8 @@ void ParticleFilter::estimate()
   }
 
   // Return (if necessary) to old target prediction model stddev
-  dynamicVariables_.targetRandStddev = dynamicVariables_.oldTargetRandSTddev;
+  if(dynamicVariables_.targetRandStddev != dynamicVariables_.oldTargetRandSTddev)
+    dynamicVariables_.targetRandStddev = dynamicVariables_.oldTargetRandSTddev;
 
   // For each robot
   for (uint r = 0; r < nRobots_; ++r)
@@ -667,28 +610,6 @@ void ParticleFilter::estimate()
   state_.target.pos[O_TX] = targetWeightedMeans[O_TX];
   state_.target.pos[O_TY] = targetWeightedMeans[O_TY];
   state_.target.pos[O_TZ] = targetWeightedMeans[O_TZ];
-
-  // Add to the velocity estimator
-  double timeNow = ros::Time::now().toNSec() * 1e-9;
-  state_.targetVelocityEstimator.insert(timeNow, bufTargetObservations_,
-                                        state_.robots);
-
-  // Ball velocity is estimated using linear regression
-  if (state_.targetVelocityEstimator.isReadyToEstimate())
-  {
-    state_.target.vel[O_TX] = state_.targetVelocityEstimator.estimate(O_TX);
-    state_.target.vel[O_TY] = state_.targetVelocityEstimator.estimate(O_TY);
-    state_.target.vel[O_TZ] = state_.targetVelocityEstimator.estimate(O_TZ);
-
-    // Save velocities in velocity msg and publish
-    state_.targetVelocityEstimator.velMsg.x = state_.target.vel[O_TX];
-    state_.targetVelocityEstimator.velMsg.y = state_.target.vel[O_TY];
-    state_.targetVelocityEstimator.velMsg.z = state_.target.vel[O_TZ];
-    velPublisher_.publish(state_.targetVelocityEstimator.velMsg);
-  }
-  else
-    state_.target.vel[O_TX] = state_.target.vel[O_TY] =
-        state_.target.vel[O_TZ] = 0.0;
 
   *iteration_oss << "DONE!";
 }
@@ -1286,128 +1207,11 @@ void PFPublisher::nextIteration()
 #endif
 }
 
-void ParticleFilter::State::targetVelocityEstimator_s::insertZeros()
-{
-  for (uint velType = 0; velType < numberVels; ++velType)
-  {
-    // If empty, no need to insert zeros
-    if (timeVecs[velType].empty())
-      return;
-
-    // Figure out last known position
-    const double lastPos = posVecs[velType].back();
-
-    // Insert the same position at a new time
-    timeVecs[velType].push_back(ros::Time::now().toNSec() * 1e-9 - timeInit);
-    posVecs[velType].push_back(lastPos);
-  }
-}
-
-void ParticleFilter::State::targetVelocityEstimator_s::insert(
-    const double timeData, const std::vector<TargetObservation>& obsData,
-    const std::vector<ParticleFilter::State::RobotState>& robotStates)
-{
-  pdata_t ballGlobal[3];
-  bool readyToInsert = false;
-  size_t size = robotStates.size();
-  uint chosenRobot = 0;
-  pdata_t maxConf = 0.0;
-
-  // ROS_DEBUG("Inserting new data in velocity estimator");
-
-  // Check if the vectors are full
-  for (uint v = 0; v < numberVels; ++v)
-  {
-    if (timeVecs[v].capacity() == timeVecs[v].size())
-    {
-      // Erase first element of both vectors
-      timeVecs[v].erase(timeVecs[v].begin());
-      posVecs[v].erase(posVecs[v].begin());
-    }
-  }
-
-  // Choose the robot based on having found the ball and the maximum
-  // confidence
-  for (uint r = 0; r < size; ++r)
-  {
-    if (obsData[r].found)
-    {
-      // TODO these hard coded values.. change or what?
-      if (robotStates[r].conf > maxConf &&
-          sqrt(pow(obsData[r].x, 2) + pow(obsData[r].y, 2)) < 4.0)
-      {
-        readyToInsert = true;
-        chosenRobot = r;
-        maxConf = robotStates[r].conf;
-      }
-    }
-  }
-
-  // If ball hasn't be seen, don't insert and just return
-  if (!readyToInsert)
-    return;
-
-  // Pick the state and data from the chosen robot
-  const RobotState& rs = robotStates[chosenRobot];
-  const TargetObservation& obs = obsData[chosenRobot];
-  // Calc. coordinates in global frame based on observation data and robot
-  // state belief
-  ballGlobal[O_TX] = rs.pose[O_X] + obs.x * cos(rs.pose[O_THETA]) -
-                     obs.y * sin(rs.pose[O_THETA]);
-  ballGlobal[O_TY] = rs.pose[O_Y] + obs.x * sin(rs.pose[O_THETA]) +
-                     obs.y * cos(rs.pose[O_THETA]);
-  ballGlobal[O_TZ] = obs.z;
-
-  // Insert data in the vectors, with special attention if the timeVec is
-  // empty
-  for (uint velType = 0; velType < numberVels; ++velType)
-  {
-    if (timeVecs[velType].empty())
-      timeInit = ros::Time::now().toNSec() * 1e-9;
-
-    timeVecs[velType].push_back(timeData - timeInit);
-    posVecs[velType].push_back(ballGlobal[velType]);
-  }
-}
-
-void ParticleFilter::State::targetVelocityEstimator_s::resize(
-    const uint newStackSize)
-{
-  // ROS_DEBUG("Resizing target velocity estimator");
-
-  // Update to new stack size
-  maxDataSize = newStackSize;
-
-  // When using std::vector::resize, the last elements will be removed if the
-  // new stack size is lower. Since we want to remove the first, we'll have to
-  // do that manually
-  for (uint velType = 0; velType < numberVels; ++velType)
-  {
-    if (newStackSize < timeVecs[velType].size())
-    {
-      uint sizeIter = newStackSize;
-      uint currSize = timeVecs[velType].size();
-      while (sizeIter > currSize)
-      {
-        timeVecs[velType].erase(timeVecs[velType].begin());
-        posVecs[velType].erase(posVecs[velType].begin());
-        sizeIter--;
-      }
-    }
-
-    // Reserve the new size
-    timeVecs[velType].reserve(maxDataSize);
-    posVecs[velType].reserve(maxDataSize);
-  }
-}
-
 ParticleFilter::dynamicVariables_s::dynamicVariables_s(ros::NodeHandle& nh,
                                                        const uint nRobots)
     : alpha(nRobots, std::vector<float>(NUM_ALPHAS)), firstCallback(true)
 {
   // Get node parameters, assume they exist
-  readParam<int>(nh, "velocity_estimator_stack_size",
-                 velocityEstimatorStackSize);
   readParam<double>(nh, "percentage_to_keep", resamplingPercentageToKeep);
 
   readParam<int>(nh, "particles", nParticles);
