@@ -5,53 +5,26 @@
 
 #define ROS_TDIFF(t) (t.toSec() - timeInit.toSec())
 
-namespace pfuclt
+namespace pfuclt_omni_dataset
 {
 int MY_ID;
 int MAX_ROBOTS;
-int NUM_ROBOTS; // total number of playing robots in the team including self
-int NUM_SENSORS_PER_ROBOT; // SENSORS include odometry, each feature sensor like
-// a ball detector, each landmark-set detector and so
-// on. In this case for example the number of sensors
-// are 3, 1-odometry, 1-orange ball, 1-landmarkset.
-// Usually this must co-incide with the number of
-// topics to which each robot is publishing its
-// sensed information.
-int NUM_TARGETS; // Number of targets being tracked. In omni dataset, only one
-// target exists for now: the orange ball. This may be improved
-// in future by adding the blue ball which can be seen the raw
-// footage of the dataset experiment
-int NUM_LANDMARKS = 10;
-std::vector<bool> PLAYING_ROBOTS; // indicate which robot(s) is(are) playing
-
-// Empirically obtained coefficients in the covariance expression. See (add
-// publications here)
-
-// coefficients for landmark observation covariance
-float K1, K2;
-
-// coefficients for target observation covariance
-float K3, K4, K5;
-
+int NUM_TARGETS;
+int NUM_LANDMARKS;
+std::vector<bool> PLAYING_ROBOTS;
+float K1, K2; // coefficients for landmark observation covariance
+float K3, K4, K5; // coefficients for target observation covariance
 float ROB_HT; // Fixed height of the robots above ground in meters
-
-// Initial 2D positons of the robot as obtained from the overhead ground truth
-// system. The order is OMNI1 OMNI2 OMNI3 OMNI4 and OMNI5. Notice OMNI2 is
-// initialized as 0,0 because the robot is absent from the dataset.
 std::vector<double> POS_INIT;
 
-int N_DIMENSIONS;
-
-bool USE_CUSTOM_VALUES = false; // If set to true via the parameter server, the
-// custom values will be used
-std::vector<double> CUSTOM_PARTICLE_INIT; // Used to set custom values when
-// initiating the particle filter set (will still be a uniform distribution)
+bool USE_CUSTOM_VALUES = false; // If set to true via the parameter server, the custom values will be used
+std::vector<double> CUSTOM_PARTICLE_INIT; // Used to set custom values when initiating the particle filter set (will still be a uniform distribution)
 
 bool DEBUG;
 bool PUBLISH;
 
 // for ease of access
-std::vector<pfuclt_aux::Landmark> landmarks;
+std::vector<Landmark> landmarks;
 ros::Time timeInit;
 
 // Method definitions
@@ -71,7 +44,7 @@ RobotFactory::RobotFactory(ros::NodeHandle& nh) : nh_(nh)
   timeInit = ros::Time::now();
   ROS_INFO("Init time set to %f", timeInit.toSec());
 
-  for (uint rn = 0; rn < MAX_ROBOTS; rn++)
+  for (int rn = 0; rn < MAX_ROBOTS; rn++)
   {
     if (PLAYING_ROBOTS[rn])
     {
@@ -92,7 +65,6 @@ void RobotFactory::tryInitializeParticles()
 void RobotFactory::initializeFixedLandmarks()
 {
   std::string filename;
-  using namespace pfuclt_aux;
 
   // get the filename from parameter server
   if (!readParam<std::string>(nh_, "/LANDMARKS_CONFIG", filename))
@@ -103,7 +75,7 @@ void RobotFactory::initializeFixedLandmarks()
   ROS_ERROR_COND(landmarks.empty(), "Couldn't open file \"%s\"",
                  filename.c_str());
 
-  ROS_ERROR_COND(landmarks.size() != NUM_LANDMARKS,
+  ROS_ERROR_COND((int)landmarks.size() != NUM_LANDMARKS,
                  "Read a number of landmarks different from the specified in "
                  "NUM_LANDMARKS");
 
@@ -167,7 +139,7 @@ void Robot::odometryCallback(const nav_msgs::Odometry::ConstPtr& odometry)
   if (!pf_->isInitialized())
     parent_->tryInitializeParticles();
 
-  pfuclt_ptcls::Odometry odomStruct;
+  Odometry odomStruct;
   odomStruct.x = odometry->pose.pose.position.x;
   odomStruct.y = odometry->pose.pose.position.y;
   odomStruct.theta = tf2::getYaw(odometry->pose.pose.orientation);
@@ -191,7 +163,7 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
     // ROS_DEBUG("OMNI%d ball data at time %d", robotNumber_ + 1,
     //          target->header.stamp.sec);
 
-    pfuclt_ptcls::TargetObservation obs;
+    TargetObservation obs;
 
     obs.found = true;
     obs.x = target->x;
@@ -240,7 +212,7 @@ void Robot::targetCallback(const read_omni_dataset::BallData::ConstPtr& target)
   pf_->saveAllTargetMeasurementsDone(robotNumber_);
 
   // If this is the "self robot", update the iteration time
-  if (MY_ID == robotNumber_ + 1)
+  if (MY_ID == (int)robotNumber_ + 1)
     pf_->updateTargetIterationTime(target->header.stamp);
 }
 
@@ -338,7 +310,7 @@ void Robot::landmarkDataCallback(
 
     else
     {
-      pfuclt_ptcls::LandmarkObservation obs;
+      LandmarkObservation obs;
       obs.found = true;
       obs.x = landmarkData->x[i];
       obs.y = landmarkData->y[i];
@@ -372,94 +344,90 @@ void Robot::landmarkDataCallback(
   pf_->saveAllLandmarkMeasurementsDone(robotNumber_);
 }
 
-// end of namespace
+// end of namespace pfuclt_omni_dataset
 }
 
 int main(int argc, char* argv[])
 {
+  using namespace pfuclt_omni_dataset;
+
+  // Parse input parameters
+  // TODO Consider using a library for this
+  std::cout << "Usage: pfuclt_omni_dataset --debug [true|FALSE] --publish [TRUE|false]" << std::endl;
+  if (argc > 2)
+  {
+      if (!strcmp(argv[2], "true"))
+      {
+          if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
+                                             ros::console::levels::Debug))
+          {
+              ros::console::notifyLoggerLevelsChanged();
+          }
+
+          DEBUG = true;
+      }
+      else
+          DEBUG = false;
+  }
+  else
+      DEBUG = false;
+
+  if (argc > 4)
+  {
+      if (!strcmp(argv[4], "true"))
+      {
+          PUBLISH = true;
+      }
+      else
+          PUBLISH = false;
+  }
+  else
+      PUBLISH = false;
+
+  ROS_INFO_STREAM("DEBUG set to " << std::boolalpha << DEBUG << " and PUBLISH set to " << std::boolalpha << PUBLISH);
 
   ros::init(argc, argv, "pfuclt_omni_dataset");
   ros::NodeHandle nh("~");
 
-  using namespace pfuclt;
-
-  // Parse input parameters
-  // TODO Consider using a library for this
-  if (argc > 2)
-  {
-    if (!strcmp(argv[2], "true"))
-    {
-      if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
-                                         ros::console::levels::Debug))
-      {
-        ros::console::notifyLoggerLevelsChanged();
-      }
-
-      ROS_DEBUG("DEBUG mode set");
-      DEBUG = true;
-    }
-    else
-      DEBUG = false;
-  }
-  else
-    DEBUG = false;
-
-  if (argc > 4)
-  {
-    if (!strcmp(argv[4], "true"))
-    {
-      PUBLISH = true;
-      ROS_INFO("Publish = true");
-    }
-    else
-      PUBLISH = false;
-  }
-  else
-    PUBLISH = false;
-
   // read parameters from param server
-  using pfuclt_aux::readParam;
+  readParam<int>(nh, "MAX_ROBOTS", MAX_ROBOTS);
+  readParam<float>(nh, "ROB_HT", ROB_HT);
+  readParam<int>(nh, "NUM_TARGETS", NUM_TARGETS);
+  readParam<int>(nh, "NUM_LANDMARKS", NUM_LANDMARKS);
+  readParam<float>(nh, "LANDMARK_COV/K1", K1);
+  readParam<float>(nh, "LANDMARK_COV/K2", K2);
+  readParam<float>(nh, "LANDMARK_COV/K3", K3);
+  readParam<float>(nh, "LANDMARK_COV/K4", K4);
+  readParam<float>(nh, "LANDMARK_COV/K5", K5);
+  readParam<bool>(nh, "PLAYING_ROBOTS", PLAYING_ROBOTS);
+  readParam<double>(nh, "POS_INIT", POS_INIT);
+  readParam<bool>(nh, "USE_CUSTOM_VALUES", USE_CUSTOM_VALUES);
+  readParam<int>(nh, "MY_ID", MY_ID);
 
-  readParam<int>(nh, "/MAX_ROBOTS", MAX_ROBOTS);
-  readParam<float>(nh, "/ROB_HT", ROB_HT);
-  readParam<int>(nh, "/NUM_TARGETS", NUM_TARGETS);
-  readParam<int>(nh, "/NUM_LANDMARKS", NUM_LANDMARKS);
-  readParam<float>(nh, "/LANDMARK_COV/K1", K1);
-  readParam<float>(nh, "/LANDMARK_COV/K2", K2);
-  readParam<float>(nh, "/LANDMARK_COV/K3", K3);
-  readParam<float>(nh, "/LANDMARK_COV/K4", K4);
-  readParam<float>(nh, "/LANDMARK_COV/K5", K5);
-  readParam<bool>(nh, "/PLAYING_ROBOTS", PLAYING_ROBOTS);
-  readParam<double>(nh, "/POS_INIT", POS_INIT);
-  readParam<bool>(nh, "/USE_CUSTOM_VALUES", USE_CUSTOM_VALUES);
-  readParam<int>(nh, "/MY_ID", MY_ID);
+  uint total_size = (uint)MAX_ROBOTS * STATES_PER_ROBOT + NUM_TARGETS * STATES_PER_TARGET;
 
-  uint total_size =
-      MAX_ROBOTS * STATES_PER_ROBOT + NUM_TARGETS * STATES_PER_TARGET;
-
-  readParam<double>(nh, "/CUSTOM_PARTICLE_INIT", CUSTOM_PARTICLE_INIT);
+  readParam<double>(nh, "CUSTOM_PARTICLE_INIT", CUSTOM_PARTICLE_INIT);
   if (CUSTOM_PARTICLE_INIT.size() != (total_size * 2))
   {
-    ROS_ERROR("/CUSTOM_PARTICLE_INIT given but not of correct size - should "
+    ROS_ERROR("CUSTOM_PARTICLE_INIT given but not of correct size - should "
               "have %d numbers and has %d",
               total_size * 2, (int)CUSTOM_PARTICLE_INIT.size());
   }
 
   ROS_INFO("Waiting for /clock");
-  while (ros::Time::now().toSec() == 0)
-    ;
+  ros::Time::waitForValid();
   ROS_INFO("/clock message received");
 
-  pfuclt::RobotFactory Factory(nh);
+  pfuclt_omni_dataset::RobotFactory Factory(nh);
 
   if (USE_CUSTOM_VALUES && PLAYING_ROBOTS[1])
   {
     ROS_WARN("OMNI2 not present in dataset.");
-    return 0;
+    return EXIT_FAILURE;
   }
 
   Factory.initializeFixedLandmarks();
 
   ros::spin();
-  return 0;
+  return EXIT_SUCCESS;
 }

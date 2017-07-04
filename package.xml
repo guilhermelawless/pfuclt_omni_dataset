@@ -4,7 +4,7 @@
   <version>0.0.2</version>
   <description>This is a ROS package to systematically read sensor msgs from the omni-dataset (soccer robots dataset) and perform PF-UCLT on it.</description>
   <maintainer email="guilherme.lawless@gmail.com">Guilherme Lawless</maintainer>
-  <maintainer email="aamir.iitkgp@gmail.com">aamir</maintainer>
+  <maintainer email="aamir.iitkgp@gmail.com">Aamir Ahmad</maintainer>
   <license>GPLv3</license>
 
   <build_depend>cmake_modules</build_depend>
@@ -15,6 +15,7 @@
   <build_depend>std_msgs</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>tf2</build_depend>
+  <build_depend>tf2_ros</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>nav_msgs</build_depend>
   <build_depend>message_generation</build_depend>
@@ -27,7 +28,8 @@
   <run_depend>rospy</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>tf</run_depend>
-  <run_depend>t2</run_depend>
+  <run_depend>tf2</run_depend>
+  <run_depend>tf2_ros</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>nav_msgs</run_depend>
   <run_depend>message_generation</run_depend>
@@ -35,6 +37,7 @@
   <run_depend>eigen</run_depend>
   <run_depend>boost</run_depend>
   <run_depend>dynamic_reconfigure</run_depend>
+  <run_depend>read_omni_dataset</run_depend>
 
   <export>
   	<rosdoc config="rosdoc.yaml" />

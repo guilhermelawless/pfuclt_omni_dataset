@@ -1,6 +1,7 @@
 #ifndef PARTICLES_H
 #define PARTICLES_H
 
+#include <ros/ros.h>
 #include <pfuclt_omni_dataset/pfuclt_aux.h>
 
 #include <vector>
@@ -11,18 +12,12 @@
 #include <boost/thread/mutex.hpp>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
-#include <tf2_ros/transform_broadcaster.h>
 
-#include <read_omni_dataset/RobotState.h>
-#include <read_omni_dataset/LRMGTData.h>
-#include <read_omni_dataset/Estimate.h>
 #include <pfuclt_omni_dataset/particle.h>
 #include <pfuclt_omni_dataset/particles.h>
 
 #include <dynamic_reconfigure/server.h>
 #include <pfuclt_omni_dataset/DynamicConfig.h>
-
-#include <geometry_msgs/Vector3.h>
 
 #define NUM_ALPHAS 4
 
@@ -52,11 +47,8 @@
 
 //#define MORE_DEBUG true
 
-namespace pfuclt_ptcls
+namespace pfuclt_omni_dataset
 {
-
-using namespace pfuclt_aux;
-
 typedef float pdata_t;
 
 typedef double (*estimatorFunc)(const std::vector<double>&,
@@ -97,7 +89,7 @@ class ParticleFilter
 {
 private:
   boost::mutex mutex_;
-  dynamic_reconfigure::Server<pfuclt_omni_dataset::DynamicConfig>
+  dynamic_reconfigure::Server<DynamicConfig>
       dynamicServer_;
 
 protected:
@@ -122,8 +114,8 @@ protected:
    */
   struct State
   {
-    uint nRobots;
     uint nStatesPerRobot;
+    uint nRobots;
 
     /**
      * @brief The robotState_s struct - saves information on the belief of a
@@ -172,10 +164,10 @@ public:
    */
   struct PFinitData
   {
+    ros::NodeHandle& nh;
     const uint mainRobotID, nTargets, statesPerRobot, nRobots, nLandmarks;
     const std::vector<bool>& robotsUsed;
     const std::vector<Landmark>& landmarksMap;
-    ros::NodeHandle& nh;
 
     /**
      * @brief PFinitData
@@ -209,17 +201,17 @@ protected:
   ros::NodeHandle& nh_;
   uint nParticles_;
   const uint mainRobotID_;
-  const std::vector<Landmark>& landmarksMap_;
-  const std::vector<bool>& robotsUsed_;
   const uint nTargets_;
-  const uint nRobots_;
   const uint nStatesPerRobot_;
+  const uint nRobots_;
   const uint nSubParticleSets_;
   const uint nLandmarks_;
   particles_t particles_;
   particles_t weightComponents_;
   RNGType seed_;
   bool initialized_;
+  const std::vector<Landmark>& landmarksMap_;
+  const std::vector<bool>& robotsUsed_;
   std::vector<std::vector<LandmarkObservation> > bufLandmarkObservations_;
   std::vector<TargetObservation> bufTargetObservations_;
   TimeEval targetIterationTime_, odometryTime_;
@@ -554,99 +546,6 @@ public:
   void saveAllTargetMeasurementsDone(const uint robotNumber);
 };
 
-/**
- * @brief The PFPublisher class - implements publishing for the ParticleFilter
- * class using ROS
- */
-class PFPublisher : public ParticleFilter
-{
-public:
-  struct PublishData
-  {
-    float robotHeight;
-
-    /**
-     * @brief PublishData - contains information necessary for the PFPublisher
-     * class
-     * @param nh - the node handle object
-     * @param robotHeight - the fixed robot height
-     */
-    PublishData(float robotHeight) : robotHeight(robotHeight) {}
-  };
-
-  /**
-   * @brief resize_particles - change to a different number of particles and
-   * resize the publishing message
-   * @param n - the desired number of particles
-   */
-  void resize_particles(const uint n)
-  {
-    // Call base class method
-    ParticleFilter::resize_particles(n);
-
-    ROS_INFO("Resizing particle message");
-
-    // Resize particle message
-    msg_particles_.particles.resize(n);
-    for (uint p = 0; p < n; ++p)
-    {
-      msg_particles_.particles[p].particle.resize(nSubParticleSets_);
-    }
-  }
-
-private:
-  ros::Subscriber GT_sub_;
-  ros::Publisher estimatePublisher_, particlePublisher_,
-      targetEstimatePublisher_, targetGTPublisher_, targetParticlePublisher_;
-  std::vector<ros::Publisher> particleStdPublishers_;
-  std::vector<ros::Publisher> robotGTPublishers_;
-  std::vector<ros::Publisher> robotEstimatePublishers_;
-  ros::Publisher targetObservationsPublisher_;
-
-  read_omni_dataset::LRMGTData msg_GT_;
-  pfuclt_omni_dataset::particles msg_particles_;
-  read_omni_dataset::Estimate msg_estimate_;
-
-  std::vector<tf2_ros::TransformBroadcaster> robotBroadcasters;
-
-  struct PublishData pubData;
-
-  void publishParticles();
-  void publishRobotStates();
-  void publishTargetState();
-  void publishEstimate();
-  void publishGTData();
-  void publishTargetObservations();
-
-public:
-  /**
-   * @brief PFPublisher - constructor
-   * @param data - a structure with the necessary initializing data for the
-   * ParticleFilter class
-   * @param publishData - a structure with some more data for this class
-   */
-  PFPublisher(struct ParticleFilter::PFinitData& data,
-              struct PublishData publishData);
-
-  /**
-   * @brief getPFReference - retrieve a reference to the base class's members
-   * @remark C++ surely is awesome
-   * @return returns a reference to the base ParticleFilter for this object
-   */
-  ParticleFilter* getPFReference() { return (ParticleFilter*)this; }
-
-  /**
-   * @brief gtDataCallback - callback of ground truth data
-   */
-  void gtDataCallback(const read_omni_dataset::LRMGTData::ConstPtr&);
-
-  /**
-   * @brief nextIteration - extends the base class method to add the ROS
-   * publishing
-   */
-  void nextIteration();
-};
-
-// end of namespace pfuclt_ptcls
+// end of namespace pfuclt_omni_dataset
 }
 #endif // PARTICLES_H

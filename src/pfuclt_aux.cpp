@@ -2,7 +2,7 @@
 #include <minicsv/minicsv.h>
 #include <iostream>
 
-namespace pfuclt_aux
+namespace pfuclt_omni_dataset
 {
 std::vector<Landmark> getLandmarks(const char* filename)
 {
@@ -24,5 +24,5 @@ std::vector<Landmark> getLandmarks(const char* filename)
   return lm_vec;
 }
 
-// end of namespace
+// end of namespace pfuclt_omni_dataset
 }

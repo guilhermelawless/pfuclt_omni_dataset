@@ -4,14 +4,13 @@
 #include <ros/ros.h>
 #include <vector>
 #include <fstream>
-#include <pfuclt_omni_dataset/pfuclt_aux.h>
 #include <boost/ref.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
 
-namespace pfuclt_aux
+namespace pfuclt_omni_dataset
 {
 /**
  * @brief The ORDER_TYPE enum - use to define an ascending or descending
@@ -46,13 +45,13 @@ std::vector<Landmark> getLandmarks(const char* filename);
   * @param vec - vector of type T with values to calculate std.dev
   * @return standard deviation as a double
   */
-template <typename T> double calc_stdDev(const std::vector<T>& vec)
+template <typename T> T calc_stdDev(const std::vector<T>& vec)
 {
   using namespace boost::accumulators;
 
   accumulator_set<T, stats<tag::variance> > acc;
   std::for_each(vec.begin(), vec.end(), boost::bind<void>(boost::ref(acc), _1));
-  return (double)sqrt(extract::variance(acc));
+  return (T)sqrt(extract::variance(acc));
 }
 
 /**
@@ -66,7 +65,7 @@ template <typename T> double calc_stdDev(const std::vector<T>& vec)
  */
 template <typename T>
 std::vector<unsigned int> order_index(std::vector<T> const& values,
-                                      const ORDER_TYPE order = pfuclt_aux::DESC)
+                                      const ORDER_TYPE order = DESC)
 {
   // from http://stackoverflow.com/a/10585614 and modified
   // return sorted indices of vector values
@@ -77,7 +76,7 @@ std::vector<unsigned int> order_index(std::vector<T> const& values,
   std::vector<unsigned int> indices(values.size());
   int i = 0;
   std::transform(values.begin(), values.end(), indices.begin(), ref(i)++);
-  if (order == pfuclt_aux::DESC)
+  if (order == DESC)
   {
     std::sort(indices.begin(), indices.end(),
               ref(values)[arg1] > ref(values)[arg2]);
@@ -149,8 +148,10 @@ bool readParam(ros::NodeHandle& nh, const std::string name,
     ROS_INFO("%s", oss.str().c_str());
     return true;
   }
-  else
+  else {
     ROS_ERROR("Failed to receive parameter %s", name.c_str());
+    return false;
+  }
 }
 
 /**
@@ -196,7 +197,7 @@ typedef struct timeEval_s
 
 }TimeEval;
 
-// end of namespace
+// end of namespace pfuclt_omni_dataset
 }
 
 #endif // PFUCLT_AUX_H

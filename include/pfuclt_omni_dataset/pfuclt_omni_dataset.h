@@ -23,11 +23,11 @@
 // Auxiliary libraries
 #include <pfuclt_omni_dataset/pfuclt_aux.h>
 #include <pfuclt_omni_dataset/pfuclt_particles.h>
+#include <pfuclt_omni_dataset/pfuclt_publisher.h>
 
-namespace pfuclt
+namespace pfuclt_omni_dataset
 {
-using namespace pfuclt_ptcls;
-#define NUM_WEIGHT 1
+
 #define STATES_PER_ROBOT 3
 #define HEURISTICS_THRESH_DEFAULT                                              \
   {                                                                            \
@@ -137,5 +137,5 @@ public:
   bool hasStarted() { return started_; }
 };
 
-// end of namespace
+// end of namespace pfuclt_omni_dataset
 }
