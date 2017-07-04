@@ -9,8 +9,8 @@
 #include <sstream>
 #include <boost/random.hpp>
 #include <boost/thread/mutex.hpp>
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Geometry>
 #include <tf2_ros/transform_broadcaster.h>
 
 #include <read_omni_dataset/RobotState.h>

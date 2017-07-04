@@ -154,14 +154,6 @@ bool readParam(ros::NodeHandle& nh, const std::string name,
 }
 
 /**
- * @brief linearRegressionSlope - applies linear regression to a set of data and calculates the slope
- * @param x - vector of time (or other) data
- * @param y - vector of data
- * @return slope of the linear regression affine function
- */
-double linearRegressionSlope(const std::vector<double>& x, const std::vector<double>& y);
-
-/**
  * @brief The timeEval_s struct - takes care of time difference evaluation through the ros::Time methods
  */
 typedef struct timeEval_s

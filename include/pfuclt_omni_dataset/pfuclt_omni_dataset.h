@@ -12,8 +12,8 @@
 #include <read_omni_dataset/LRMLandmarksData.h>
 
 // Eigen libraries
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Geometry>
 
 // Boost libraries
 #include <boost/bind.hpp>

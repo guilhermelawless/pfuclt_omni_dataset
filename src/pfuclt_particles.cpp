@@ -15,12 +15,6 @@
 #include <visualization_msgs/Marker.h>
 #include <read_omni_dataset/read_omni_dataset.h> // defines version of messages
 
-//#define DONT_RESAMPLE true
-//#define DONT_FUSE_TARGET true
-//#define DONT_FUSE_ROBOTS true
-#define BROADCAST_TF_AND_POSES true
-#define PUBLISH_PTCLS true
-#define EVALUATE_TIME_PERFORMANCE true
 //#define RECONFIGURE_ALPHAS true
 
 namespace pfuclt_ptcls
@@ -705,15 +699,12 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
 
   *iteration_oss << "predict(OMNI" << robotNumber + 1 << ") -> ";
 
-#ifdef EVALUATE_TIME_PERFORMANCE
   // If this is the main robot, update the odometry time
   if (mainRobotID_ == robotNumber)
   {
     odometryTime_.updateTime(ros::WallTime::now());
     iterationEvalTime_ = ros::WallTime::now();
   }
-#endif
-
   using namespace boost::random;
 
   // Variables concerning this robot specifically
@@ -786,22 +777,11 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
 
     // All the PF-UCLT steps
     predictTarget();
-
-#ifndef DONT_FUSE_ROBOTS
     fuseRobots();
-#endif
-
-#ifndef DONT_FUSE_TARGET
     fuseTarget();
-#endif
-
-#ifndef DONT_RESAMPLE
     resample();
-#endif
-
     estimate();
 
-#ifdef EVALUATE_TIME_PERFORMANCE
     ROS_INFO("(WALL TIME) Odometry analyzed with = %fms",
              1e3 * odometryTime_.diff);
 
@@ -816,7 +796,6 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
                     << 1e-6 * deltaIteration_.toNSec() << "ms ::: Worst case: "
                     << 1e-6 * maxDeltaIteration_.toNSec() << "ms ::: Average: "
                     << 1e-6 * (durationSum.toNSec() / numberIterations) << "s");
-#endif
 
     // ROS_DEBUG("Iteration: %s", iteration_oss->str().c_str());
     // Clear ostringstream
@@ -917,7 +896,6 @@ void PFPublisher::publishParticles()
   // Send it!
   particlePublisher_.publish(msg_particles_);
 
-#ifdef PUBLISH_PTCLS
   // Also send as a series of PoseArray messages for each robot
   for (uint r = 0; r < nRobots_; ++r)
   {
@@ -960,8 +938,6 @@ void PFPublisher::publishParticles()
     target_particles.points.insert(target_particles.points.begin(), point);
   }
   targetParticlePublisher_.publish(target_particles);
-
-#endif
 }
 
 void PFPublisher::publishRobotStates()
@@ -988,7 +964,6 @@ void PFPublisher::publishRobotStates()
     // Transform to our message type
     tf2::toMsg(tf2t, rosState);
 
-#ifdef BROADCAST_TF_AND_POSES
     // TF2 broadcast
     geometry_msgs::TransformStamped estTransf;
     estTransf.header.stamp = savedLatestObservationTime_;
@@ -1004,7 +979,6 @@ void PFPublisher::publishRobotStates()
     // Pose is everything at 0 as it's the same as the TF
 
     robotEstimatePublishers_[r].publish(estPose);
-#endif
   }
 }
 
@@ -1023,7 +997,6 @@ void PFPublisher::publishTargetState()
     msg_estimate_.targetVisibility[r] = bufTargetObservations_[r].found;
   }
 
-#ifdef BROADCAST_TF_AND_POSES
   // Publish as a standard pose msg using the previous TF
   geometry_msgs::PointStamped estPoint;
   estPoint.header.stamp = ros::Time::now();
@@ -1033,7 +1006,6 @@ void PFPublisher::publishTargetState()
   estPoint.point.z = state_.target.pos[O_TZ];
 
   targetEstimatePublisher_.publish(estPoint);
-#endif
 }
 
 void PFPublisher::publishEstimate()

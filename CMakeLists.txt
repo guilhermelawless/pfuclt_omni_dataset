@@ -46,7 +46,7 @@ generate_dynamic_reconfigure_options(
   config/Dynamic.cfg
 )
 
-INCLUDE_DIRECTORIES(${catkin_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${catkin_INCLUDE_DIRS} include)
 
 ## Generate messages in the 'msg' folder
 add_message_files(
@@ -67,15 +67,16 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
-FIND_PACKAGE(Eigen REQUIRED)
-INCLUDE_DIRECTORIES(${Eigen_INCLUDE_DIRS})
+FIND_PACKAGE(Eigen3 REQUIRED)
+INCLUDE_DIRECTORIES(${Eigen3_INCLUDE_DIRS})
 
 find_package(Boost COMPONENTS filesystem REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
+set(HEADER_FILES include/pfuclt_omni_dataset/pfuclt_aux.h include/pfuclt_omni_dataset/pfuclt_omni_dataset.h include/pfuclt_omni_dataset/pfuclt_particles.h)
 set(SOURCE_FILES src/pfuclt_omni_dataset.cpp src/pfuclt_aux.cpp src/pfuclt_particles.cpp)
 
-add_executable(pfuclt_omni_dataset ${SOURCE_FILES})
+add_executable(pfuclt_omni_dataset ${HEADER_FILES} ${SOURCE_FILES})
 target_compile_options(pfuclt_omni_dataset PRIVATE ${OpenMP_FLAGS})
 add_dependencies(pfuclt_omni_dataset pfuclt_omni_dataset_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-target_link_libraries(pfuclt_omni_dataset ${catkin_LIBRARIES} ${rosbag_LIBRARIES} ${read_omni_dataset_LIBRARIES} minicsv ${OpenMP_LIBS})
+target_link_libraries(pfuclt_omni_dataset ${catkin_LIBRARIES} ${rosbag_LIBRARIES} ${Eigen3_LIBRARIES} ${Boost_LIBRARIES} ${read_omni_dataset_LIBRARIES} minicsv ${OpenMP_LIBS})
