@@ -8,13 +8,13 @@ depends:
 - message_runtime
 - catkin
 - roscpp
-- t2
 - eigen
 - std_msgs
 - read_omni_dataset
 - message_generation
 - cmake_modules
 - rospy
+- tf2_ros
 - tf
 - geometry_msgs
 - boost
@@ -22,7 +22,7 @@ depends:
 description: This is a ROS package to systematically read sensor msgs from the omni-dataset
   (soccer robots dataset) and perform PF-UCLT on it.
 license: GPLv3
-maintainers: Guilherme Lawless <guilherme.lawless@gmail.com>, aamir <aamir.iitkgp@gmail.com>
+maintainers: Guilherme Lawless <guilherme.lawless@gmail.com>, Aamir Ahmad <aamir.iitkgp@gmail.com>
 msgs:
 - particle
 - particles

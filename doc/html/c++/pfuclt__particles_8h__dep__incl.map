@@ -1,5 +1,7 @@
 <map id="pfuclt_particles.h" name="pfuclt_particles.h">
-<area shape="rect" id="node2" href="$pfuclt__omni__dataset_8h.html" title="pfuclt_omni_dataset.h" alt="" coords="5,80,156,107"/>
-<area shape="rect" id="node3" href="$pfuclt__omni__dataset_8cpp.html" title="pfuclt_omni_dataset.cpp" alt="" coords="55,155,219,181"/>
-<area shape="rect" id="node4" href="$pfuclt__particles_8cpp.html" title="pfuclt_particles.cpp" alt="" coords="232,80,367,107"/>
+<area shape="rect" id="node2" href="$pfuclt__omni__dataset_8h.html" title="pfuclt_omni_dataset.h" alt="" coords="69,155,220,181"/>
+<area shape="rect" id="node3" href="$pfuclt__omni__dataset_8cpp.html" title="pfuclt_omni_dataset.cpp" alt="" coords="5,229,169,256"/>
+<area shape="rect" id="node4" href="$pfuclt__publisher_8h.html" title="pfuclt_publisher.h" alt="" coords="151,80,275,107"/>
+<area shape="rect" id="node6" href="$pfuclt__particles_8cpp.html" title="pfuclt_particles.cpp" alt="" coords="299,80,433,107"/>
+<area shape="rect" id="node5" href="$pfuclt__publisher_8cpp.html" title="pfuclt_publisher.cpp" alt="" coords="245,155,383,181"/>
 </map>

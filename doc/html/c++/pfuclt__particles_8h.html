@@ -34,30 +34,26 @@
 <div class="title">pfuclt_particles.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &lt;<a class="el" href="pfuclt__aux_8h_source.html">pfuclt_omni_dataset/pfuclt_aux.h</a>&gt;</code><br />
+<div class="textblock"><code>#include &lt;ros/ros.h&gt;</code><br />
+<code>#include &lt;<a class="el" href="pfuclt__aux_8h_source.html">pfuclt_omni_dataset/pfuclt_aux.h</a>&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;algorithm&gt;</code><br />
 <code>#include &lt;iostream&gt;</code><br />
 <code>#include &lt;sstream&gt;</code><br />
 <code>#include &lt;boost/random.hpp&gt;</code><br />
 <code>#include &lt;boost/thread/mutex.hpp&gt;</code><br />
-<code>#include &lt;Eigen/Core&gt;</code><br />
-<code>#include &lt;Eigen/Geometry&gt;</code><br />
-<code>#include &lt;tf2_ros/transform_broadcaster.h&gt;</code><br />
-<code>#include &lt;read_omni_dataset/RobotState.h&gt;</code><br />
-<code>#include &lt;read_omni_dataset/LRMGTData.h&gt;</code><br />
-<code>#include &lt;read_omni_dataset/Estimate.h&gt;</code><br />
+<code>#include &lt;eigen3/Eigen/Core&gt;</code><br />
+<code>#include &lt;eigen3/Eigen/Geometry&gt;</code><br />
 <code>#include &lt;pfuclt_omni_dataset/particle.h&gt;</code><br />
 <code>#include &lt;pfuclt_omni_dataset/particles.h&gt;</code><br />
 <code>#include &lt;dynamic_reconfigure/server.h&gt;</code><br />
 <code>#include &lt;pfuclt_omni_dataset/DynamicConfig.h&gt;</code><br />
-<code>#include &lt;geometry_msgs/Vector3.h&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for pfuclt_particles.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="pfuclt__particles_8h__incl.png" border="0" usemap="#pfuclt__particles_8h" alt=""/></div>
 <map name="pfuclt__particles_8h" id="pfuclt__particles_8h">
-<area shape="rect" id="node2" href="pfuclt__aux_8h.html" title="pfuclt_omni_dataset\l/pfuclt_aux.h" alt="" coords="257,80,396,121"/>
+<area shape="rect" id="node3" href="pfuclt__aux_8h.html" title="pfuclt_omni_dataset\l/pfuclt_aux.h" alt="" coords="234,80,373,121"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -65,9 +61,11 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="pfuclt__particles_8h__dep__incl.png" border="0" usemap="#pfuclt__particles_8hdep" alt=""/></div>
 <map name="pfuclt__particles_8hdep" id="pfuclt__particles_8hdep">
-<area shape="rect" id="node2" href="pfuclt__omni__dataset_8h.html" title="pfuclt_omni_dataset.h" alt="" coords="5,80,156,107"/>
-<area shape="rect" id="node3" href="pfuclt__omni__dataset_8cpp.html" title="pfuclt_omni_dataset.cpp" alt="" coords="55,155,219,181"/>
-<area shape="rect" id="node4" href="pfuclt__particles_8cpp.html" title="pfuclt_particles.cpp" alt="" coords="232,80,367,107"/>
+<area shape="rect" id="node2" href="pfuclt__omni__dataset_8h.html" title="pfuclt_omni_dataset.h" alt="" coords="69,155,220,181"/>
+<area shape="rect" id="node3" href="pfuclt__omni__dataset_8cpp.html" title="pfuclt_omni_dataset.cpp" alt="" coords="5,229,169,256"/>
+<area shape="rect" id="node4" href="pfuclt__publisher_8h.html" title="pfuclt_publisher.h" alt="" coords="151,80,275,107"/>
+<area shape="rect" id="node6" href="pfuclt__particles_8cpp.html" title="pfuclt_particles.cpp" alt="" coords="299,80,433,107"/>
+<area shape="rect" id="node5" href="pfuclt__publisher_8cpp.html" title="pfuclt_publisher.cpp" alt="" coords="245,155,383,181"/>
 </map>
 </div>
 </div>
@@ -75,37 +73,32 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1dynamicVariables__s.html">pfuclt_ptcls::ParticleFilter::dynamicVariables_s</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__omni__dataset_1_1ParticleFilter_1_1dynamicVariables__s.html">pfuclt_omni_dataset::ParticleFilter::dynamicVariables_s</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1landmarkObs__s.html">pfuclt_ptcls::landmarkObs_s</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__omni__dataset_1_1landmarkObs__s.html">pfuclt_omni_dataset::landmarkObs_s</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1odometry__s.html">pfuclt_ptcls::odometry_s</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__omni__dataset_1_1odometry__s.html">pfuclt_omni_dataset::odometry_s</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">pfuclt_ptcls::ParticleFilter</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__omni__dataset_1_1ParticleFilter.html">pfuclt_omni_dataset::ParticleFilter</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1PFinitData.html">pfuclt_ptcls::ParticleFilter::PFinitData</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1PFinitData.html" title="The PFinitData struct - provides encapsulation to the initial data necessary to construct a ParticleF...">PFinitData</a> struct - provides encapsulation to the initial data necessary to construct a <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a> instance.  <a href="structpfuclt__ptcls_1_1ParticleFilter_1_1PFinitData.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__omni__dataset_1_1ParticleFilter_1_1PFinitData.html">pfuclt_omni_dataset::ParticleFilter::PFinitData</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__omni__dataset_1_1ParticleFilter_1_1PFinitData.html" title="The PFinitData struct - provides encapsulation to the initial data necessary to construct a ParticleF...">PFinitData</a> struct - provides encapsulation to the initial data necessary to construct a <a class="el" href="classpfuclt__omni__dataset_1_1ParticleFilter.html">ParticleFilter</a> instance.  <a href="structpfuclt__omni__dataset_1_1ParticleFilter_1_1PFinitData.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpfuclt__ptcls_1_1PFPublisher.html">pfuclt_ptcls::PFPublisher</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classpfuclt__ptcls_1_1PFPublisher.html" title="The PFPublisher class - implements publishing for the ParticleFilter class using ROS. ">PFPublisher</a> class - implements publishing for the <a class="el" href="classpfuclt__ptcls_1_1ParticleFilter.html">ParticleFilter</a> class using ROS.  <a href="classpfuclt__ptcls_1_1PFPublisher.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__omni__dataset_1_1ParticleFilter_1_1State_1_1robotState__s.html">pfuclt_omni_dataset::ParticleFilter::State::robotState_s</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__omni__dataset_1_1ParticleFilter_1_1State_1_1robotState__s.html" title="The robotState_s struct - saves information on the belief of a robot&#39;s state. ">robotState_s</a> struct - saves information on the belief of a robot's state.  <a href="structpfuclt__omni__dataset_1_1ParticleFilter_1_1State_1_1robotState__s.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1PFPublisher_1_1PublishData.html">pfuclt_ptcls::PFPublisher::PublishData</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__omni__dataset_1_1ParticleFilter_1_1State.html">pfuclt_omni_dataset::ParticleFilter::State</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The state_s struct - defines a structure to hold state information for the particle filter class.  <a href="structpfuclt__omni__dataset_1_1ParticleFilter_1_1State.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1robotState__s.html">pfuclt_ptcls::ParticleFilter::State::robotState_s</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1robotState__s.html" title="The robotState_s struct - saves information on the belief of a robot&#39;s state. ">robotState_s</a> struct - saves information on the belief of a robot's state.  <a href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1robotState__s.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__omni__dataset_1_1targetObs__s.html">pfuclt_omni_dataset::targetObs_s</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html">pfuclt_ptcls::ParticleFilter::State</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The state_s struct - defines a structure to hold state information for the particle filter class.  <a href="structpfuclt__ptcls_1_1ParticleFilter_1_1State.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1targetObs__s.html">pfuclt_ptcls::targetObs_s</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1targetState__s.html">pfuclt_ptcls::ParticleFilter::State::targetState_s</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1targetState__s.html" title="The targetState_s struct - saves information on the belief of the target&#39;s state. ...">targetState_s</a> struct - saves information on the belief of the target's state.  <a href="structpfuclt__ptcls_1_1ParticleFilter_1_1State_1_1targetState__s.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__omni__dataset_1_1ParticleFilter_1_1State_1_1targetState__s.html">pfuclt_omni_dataset::ParticleFilter::State::targetState_s</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__omni__dataset_1_1ParticleFilter_1_1State_1_1targetState__s.html" title="The targetState_s struct - saves information on the belief of the target&#39;s state. ...">targetState_s</a> struct - saves information on the belief of the target's state.  <a href="structpfuclt__omni__dataset_1_1ParticleFilter_1_1State_1_1targetState__s.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
 Namespaces</h2></td></tr>
-<tr class="memitem:namespacepfuclt__ptcls"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__ptcls.html">pfuclt_ptcls</a></td></tr>
+<tr class="memitem:namespacepfuclt__omni__dataset"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html">pfuclt_omni_dataset</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
@@ -139,22 +132,22 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:a58e1082c0a5f662c475f4ba5009f8d7e"><td class="memItemLeft" align="right" valign="top">typedef double(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__ptcls.html#a58e1082c0a5f662c475f4ba5009f8d7e">pfuclt_ptcls::estimatorFunc</a>) (const std::vector&lt; double &gt; &amp;, const std::vector&lt; double &gt; &amp;)</td></tr>
-<tr class="separator:a58e1082c0a5f662c475f4ba5009f8d7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a78ffbd1ec94878aa4dea862dd06f2cd9"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpfuclt__ptcls_1_1landmarkObs__s.html">pfuclt_ptcls::landmarkObs_s</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__ptcls.html#a78ffbd1ec94878aa4dea862dd06f2cd9">pfuclt_ptcls::LandmarkObservation</a></td></tr>
-<tr class="separator:a78ffbd1ec94878aa4dea862dd06f2cd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ebc1dd5c03f8a8925366d8bd872a0ab"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpfuclt__ptcls_1_1odometry__s.html">pfuclt_ptcls::odometry_s</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__ptcls.html#a1ebc1dd5c03f8a8925366d8bd872a0ab">pfuclt_ptcls::Odometry</a></td></tr>
-<tr class="separator:a1ebc1dd5c03f8a8925366d8bd872a0ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa0bb2a558a57194f93f5470fc581ef52"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; subparticles_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__ptcls.html#aa0bb2a558a57194f93f5470fc581ef52">pfuclt_ptcls::particles_t</a></td></tr>
-<tr class="separator:aa0bb2a558a57194f93f5470fc581ef52"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42fe47110230c79d79033d5e2c945104"><td class="memItemLeft" align="right" valign="top">typedef float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__ptcls.html#a42fe47110230c79d79033d5e2c945104">pfuclt_ptcls::pdata_t</a></td></tr>
-<tr class="separator:a42fe47110230c79d79033d5e2c945104"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a95759aa5b5fa0789f4993143c08cb7a2"><td class="memItemLeft" align="right" valign="top">typedef boost::random::mt19937&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__ptcls.html#a95759aa5b5fa0789f4993143c08cb7a2">pfuclt_ptcls::RNGType</a></td></tr>
-<tr class="separator:a95759aa5b5fa0789f4993143c08cb7a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad636c13e367ae1ac32ffa12029f079cb"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; pdata_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__ptcls.html#ad636c13e367ae1ac32ffa12029f079cb">pfuclt_ptcls::subparticles_t</a></td></tr>
-<tr class="separator:ad636c13e367ae1ac32ffa12029f079cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a18d3b8c67bb61648a105ef59a20e3bc8"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpfuclt__ptcls_1_1targetObs__s.html">pfuclt_ptcls::targetObs_s</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__ptcls.html#a18d3b8c67bb61648a105ef59a20e3bc8">pfuclt_ptcls::TargetObservation</a></td></tr>
-<tr class="separator:a18d3b8c67bb61648a105ef59a20e3bc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfa66785311138b40f3ce574c8a097ee"><td class="memItemLeft" align="right" valign="top">typedef double(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#acfa66785311138b40f3ce574c8a097ee">pfuclt_omni_dataset::estimatorFunc</a>) (const std::vector&lt; double &gt; &amp;, const std::vector&lt; double &gt; &amp;)</td></tr>
+<tr class="separator:acfa66785311138b40f3ce574c8a097ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e97a40309baf40d14cf7c4038c31d98"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpfuclt__omni__dataset_1_1landmarkObs__s.html">pfuclt_omni_dataset::landmarkObs_s</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#a3e97a40309baf40d14cf7c4038c31d98">pfuclt_omni_dataset::LandmarkObservation</a></td></tr>
+<tr class="separator:a3e97a40309baf40d14cf7c4038c31d98"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4bbdb43ef054d0a9c6b7e01c10328e2"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpfuclt__omni__dataset_1_1odometry__s.html">pfuclt_omni_dataset::odometry_s</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#ad4bbdb43ef054d0a9c6b7e01c10328e2">pfuclt_omni_dataset::Odometry</a></td></tr>
+<tr class="separator:ad4bbdb43ef054d0a9c6b7e01c10328e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f5480a949940e905d7d7b5c7acad9c5"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; subparticles_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#a7f5480a949940e905d7d7b5c7acad9c5">pfuclt_omni_dataset::particles_t</a></td></tr>
+<tr class="separator:a7f5480a949940e905d7d7b5c7acad9c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7bc183c16cedd5ccfc2a6088457e06cb"><td class="memItemLeft" align="right" valign="top">typedef float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#a7bc183c16cedd5ccfc2a6088457e06cb">pfuclt_omni_dataset::pdata_t</a></td></tr>
+<tr class="separator:a7bc183c16cedd5ccfc2a6088457e06cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b0a3a64a15719fb5fdac9a498427e98"><td class="memItemLeft" align="right" valign="top">typedef boost::random::mt19937&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#a5b0a3a64a15719fb5fdac9a498427e98">pfuclt_omni_dataset::RNGType</a></td></tr>
+<tr class="separator:a5b0a3a64a15719fb5fdac9a498427e98"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40f2bf639aac536549f59594b51beade"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; pdata_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#a40f2bf639aac536549f59594b51beade">pfuclt_omni_dataset::subparticles_t</a></td></tr>
+<tr class="separator:a40f2bf639aac536549f59594b51beade"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4118a917b1138a12909f01ac2e615c4"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpfuclt__omni__dataset_1_1targetObs__s.html">pfuclt_omni_dataset::targetObs_s</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#ac4118a917b1138a12909f01ac2e615c4">pfuclt_omni_dataset::TargetObservation</a></td></tr>
+<tr class="separator:ac4118a917b1138a12909f01ac2e615c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
 <a class="anchor" id="a210704f5a559b37514924a909fe0edd7"></a>
@@ -167,7 +160,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00051">51</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00046">46</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
 
 </div>
 </div>
@@ -181,7 +174,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00027">27</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00022">22</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
 
 </div>
 </div>
@@ -195,7 +188,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00035">35</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00030">30</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
 
 </div>
 </div>
@@ -209,7 +202,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00037">37</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00032">32</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
 
 </div>
 </div>
@@ -223,7 +216,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00038">38</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00033">33</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
 
 </div>
 </div>
@@ -237,7 +230,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00039">39</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00034">34</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
 
 </div>
 </div>
@@ -251,7 +244,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00033">33</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00028">28</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
 
 </div>
 </div>
@@ -265,7 +258,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00034">34</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00029">29</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
 
 </div>
 </div>
@@ -279,7 +272,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00030">30</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00025">25</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
 
 </div>
 </div>
@@ -293,7 +286,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00047">47</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00042">42</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
 
 </div>
 </div>
@@ -307,7 +300,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00048">48</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00043">43</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
 
 </div>
 </div>
@@ -321,7 +314,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00043">43</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00038">38</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
 
 </div>
 </div>
@@ -335,7 +328,7 @@ Typedefs</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00044">44</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
+<p>Definition at line <a class="el" href="pfuclt__particles_8h_source.html#l00039">39</a> of file <a class="el" href="pfuclt__particles_8h_source.html">pfuclt_particles.h</a>.</p>
 
 </div>
 </div>
@@ -345,7 +338,7 @@ Typedefs</h2></td></tr>
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Mon Jul 3 2017 16:11:29</small>
+<small>autogenerated on Tue Jul 4 2017 19:38:38</small>
 </div>
 </body>
 </html>

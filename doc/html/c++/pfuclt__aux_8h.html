@@ -38,7 +38,6 @@
 <div class="textblock"><code>#include &lt;ros/ros.h&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;fstream&gt;</code><br />
-<code>#include &lt;<a class="el" href="pfuclt__aux_8h_source.html">pfuclt_omni_dataset/pfuclt_aux.h</a>&gt;</code><br />
 <code>#include &lt;boost/ref.hpp&gt;</code><br />
 <code>#include &lt;boost/accumulators/accumulators.hpp&gt;</code><br />
 <code>#include &lt;boost/accumulators/statistics.hpp&gt;</code><br />
@@ -56,11 +55,13 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="pfuclt__aux_8h__dep__incl.png" border="0" usemap="#pfuclt__aux_8hdep" alt=""/></div>
 <map name="pfuclt__aux_8hdep" id="pfuclt__aux_8hdep">
-<area shape="rect" id="node2" href="pfuclt__omni__dataset_8h.html" title="pfuclt_omni_dataset.h" alt="" coords="22,155,173,182"/>
-<area shape="rect" id="node3" href="pfuclt__omni__dataset_8cpp.html" title="pfuclt_omni_dataset.cpp" alt="" coords="15,230,179,257"/>
-<area shape="rect" id="node4" href="pfuclt__particles_8h.html" title="pfuclt_particles.h" alt="" coords="135,81,257,107"/>
-<area shape="rect" id="node6" href="pfuclt__aux_8cpp.html" title="pfuclt_aux.cpp" alt="" coords="281,81,388,107"/>
-<area shape="rect" id="node5" href="pfuclt__particles_8cpp.html" title="pfuclt_particles.cpp" alt="" coords="249,155,383,182"/>
+<area shape="rect" id="node2" href="pfuclt__omni__dataset_8h.html" title="pfuclt_omni_dataset.h" alt="" coords="5,229,156,256"/>
+<area shape="rect" id="node3" href="pfuclt__omni__dataset_8cpp.html" title="pfuclt_omni_dataset.cpp" alt="" coords="357,304,521,331"/>
+<area shape="rect" id="node4" href="pfuclt__particles_8h.html" title="pfuclt_particles.h" alt="" coords="273,80,395,107"/>
+<area shape="rect" id="node8" href="pfuclt__aux_8cpp.html" title="pfuclt_aux.cpp" alt="" coords="527,80,634,107"/>
+<area shape="rect" id="node5" href="pfuclt__publisher_8h.html" title="pfuclt_publisher.h" alt="" coords="119,155,243,181"/>
+<area shape="rect" id="node7" href="pfuclt__particles_8cpp.html" title="pfuclt_particles.cpp" alt="" coords="267,155,401,181"/>
+<area shape="rect" id="node6" href="pfuclt__publisher_8cpp.html" title="pfuclt_publisher.cpp" alt="" coords="181,229,319,256"/>
 </map>
 </div>
 </div>
@@ -68,58 +69,55 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__aux_1_1landmark__s.html">pfuclt_aux::landmark_s</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Landmark struct - used to store a landmark, defined by its serial number, and its position {x,y}.  <a href="structpfuclt__aux_1_1landmark__s.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__omni__dataset_1_1landmark__s.html">pfuclt_omni_dataset::landmark_s</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Landmark struct - used to store a landmark, defined by its serial number, and its position {x,y}.  <a href="structpfuclt__omni__dataset_1_1landmark__s.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__aux_1_1timeEval__s.html">pfuclt_aux::timeEval_s</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__aux_1_1timeEval__s.html" title="The timeEval_s struct - takes care of time difference evaluation through the ros::Time methods...">timeEval_s</a> struct - takes care of time difference evaluation through the ros::Time methods.  <a href="structpfuclt__aux_1_1timeEval__s.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpfuclt__omni__dataset_1_1timeEval__s.html">pfuclt_omni_dataset::timeEval_s</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__omni__dataset_1_1timeEval__s.html" title="The timeEval_s struct - takes care of time difference evaluation through the ros::Time methods...">timeEval_s</a> struct - takes care of time difference evaluation through the ros::Time methods.  <a href="structpfuclt__omni__dataset_1_1timeEval__s.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
 Namespaces</h2></td></tr>
-<tr class="memitem:namespacepfuclt__aux"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html">pfuclt_aux</a></td></tr>
+<tr class="memitem:namespacepfuclt__omni__dataset"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html">pfuclt_omni_dataset</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:a3030f9bc1952f850948000342f3dc114"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpfuclt__aux_1_1landmark__s.html">pfuclt_aux::landmark_s</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#a3030f9bc1952f850948000342f3dc114">pfuclt_aux::Landmark</a></td></tr>
-<tr class="memdesc:a3030f9bc1952f850948000342f3dc114"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Landmark struct - used to store a landmark, defined by its serial number, and its position {x,y}.  <a href="namespacepfuclt__aux.html#a3030f9bc1952f850948000342f3dc114">More...</a><br /></td></tr>
-<tr class="separator:a3030f9bc1952f850948000342f3dc114"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc4a8671d23415945f58026932f6772d"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpfuclt__aux_1_1timeEval__s.html">pfuclt_aux::timeEval_s</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#abc4a8671d23415945f58026932f6772d">pfuclt_aux::TimeEval</a></td></tr>
-<tr class="memdesc:abc4a8671d23415945f58026932f6772d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__aux_1_1timeEval__s.html" title="The timeEval_s struct - takes care of time difference evaluation through the ros::Time methods...">timeEval_s</a> struct - takes care of time difference evaluation through the ros::Time methods.  <a href="namespacepfuclt__aux.html#abc4a8671d23415945f58026932f6772d">More...</a><br /></td></tr>
-<tr class="separator:abc4a8671d23415945f58026932f6772d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af649e5fd2db5baea281c891bf172a4f6"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpfuclt__omni__dataset_1_1landmark__s.html">pfuclt_omni_dataset::landmark_s</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#af649e5fd2db5baea281c891bf172a4f6">pfuclt_omni_dataset::Landmark</a></td></tr>
+<tr class="memdesc:af649e5fd2db5baea281c891bf172a4f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Landmark struct - used to store a landmark, defined by its serial number, and its position {x,y}.  <a href="namespacepfuclt__omni__dataset.html#af649e5fd2db5baea281c891bf172a4f6">More...</a><br /></td></tr>
+<tr class="separator:af649e5fd2db5baea281c891bf172a4f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79b1dded69bb66fc12d41bd27718149c"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpfuclt__omni__dataset_1_1timeEval__s.html">pfuclt_omni_dataset::timeEval_s</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#a79b1dded69bb66fc12d41bd27718149c">pfuclt_omni_dataset::TimeEval</a></td></tr>
+<tr class="memdesc:a79b1dded69bb66fc12d41bd27718149c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="structpfuclt__omni__dataset_1_1timeEval__s.html" title="The timeEval_s struct - takes care of time difference evaluation through the ros::Time methods...">timeEval_s</a> struct - takes care of time difference evaluation through the ros::Time methods.  <a href="namespacepfuclt__omni__dataset.html#a79b1dded69bb66fc12d41bd27718149c">More...</a><br /></td></tr>
+<tr class="separator:a79b1dded69bb66fc12d41bd27718149c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:ab461bfff32a907a13f3f67e874c01ec1"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#ab461bfff32a907a13f3f67e874c01ec1">pfuclt_aux::ORDER_TYPE</a> { <a class="el" href="namespacepfuclt__aux.html#ab461bfff32a907a13f3f67e874c01ec1aca632c322e076015903c2e386f032f87">pfuclt_aux::ASC</a>, 
-<a class="el" href="namespacepfuclt__aux.html#ab461bfff32a907a13f3f67e874c01ec1a5b9491f115a56df4dd7cbf78f60f25e7">pfuclt_aux::DESC</a>
- }<tr class="memdesc:ab461bfff32a907a13f3f67e874c01ec1"><td class="mdescLeft">&#160;</td><td class="mdescRight">The ORDER_TYPE enum - use to define an ascending or descending ordering.  <a href="namespacepfuclt__aux.html#ab461bfff32a907a13f3f67e874c01ec1">More...</a><br /></td></tr>
+<tr class="memitem:aa907255aa131ea4a2f6f186ef71bdf8f"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#aa907255aa131ea4a2f6f186ef71bdf8f">pfuclt_omni_dataset::ORDER_TYPE</a> { <a class="el" href="namespacepfuclt__omni__dataset.html#aa907255aa131ea4a2f6f186ef71bdf8face73c3052baf181033e177807811ae67">pfuclt_omni_dataset::ASC</a>, 
+<a class="el" href="namespacepfuclt__omni__dataset.html#aa907255aa131ea4a2f6f186ef71bdf8fa852d632f43f90cc7ba6ace275d4ee25f">pfuclt_omni_dataset::DESC</a>
+ }<tr class="memdesc:aa907255aa131ea4a2f6f186ef71bdf8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The ORDER_TYPE enum - use to define an ascending or descending ordering.  <a href="namespacepfuclt__omni__dataset.html#aa907255aa131ea4a2f6f186ef71bdf8f">More...</a><br /></td></tr>
 </td></tr>
-<tr class="separator:ab461bfff32a907a13f3f67e874c01ec1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:aa907255aa131ea4a2f6f186ef71bdf8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aa120dcfefcc07375eb8086e6eaba0aa9"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:aa120dcfefcc07375eb8086e6eaba0aa9"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#aa120dcfefcc07375eb8086e6eaba0aa9">pfuclt_aux::calc_stdDev</a> (const std::vector&lt; T &gt; &amp;vec)</td></tr>
-<tr class="memdesc:aa120dcfefcc07375eb8086e6eaba0aa9"><td class="mdescLeft">&#160;</td><td class="mdescRight">calc_stdDev - Calculates standard deviation from a vector of type T  <a href="namespacepfuclt__aux.html#aa120dcfefcc07375eb8086e6eaba0aa9">More...</a><br /></td></tr>
-<tr class="separator:aa120dcfefcc07375eb8086e6eaba0aa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4611b0d375e3e97111f5038a68a45e25"><td class="memItemLeft" align="right" valign="top">std::vector&lt; Landmark &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#a4611b0d375e3e97111f5038a68a45e25">pfuclt_aux::getLandmarks</a> (const char *filename)</td></tr>
-<tr class="memdesc:a4611b0d375e3e97111f5038a68a45e25"><td class="mdescLeft">&#160;</td><td class="mdescRight">getLandmarks - read landmark configuration from CSV file  <a href="namespacepfuclt__aux.html#a4611b0d375e3e97111f5038a68a45e25">More...</a><br /></td></tr>
-<tr class="separator:a4611b0d375e3e97111f5038a68a45e25"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2ac2e95ac2cd55a6d4e57f4c6de43b27"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#a2ac2e95ac2cd55a6d4e57f4c6de43b27">pfuclt_aux::linearRegressionSlope</a> (const std::vector&lt; double &gt; &amp;x, const std::vector&lt; double &gt; &amp;y)</td></tr>
-<tr class="memdesc:a2ac2e95ac2cd55a6d4e57f4c6de43b27"><td class="mdescLeft">&#160;</td><td class="mdescRight">linearRegressionSlope - applies linear regression to a set of data and calculates the slope  <a href="namespacepfuclt__aux.html#a2ac2e95ac2cd55a6d4e57f4c6de43b27">More...</a><br /></td></tr>
-<tr class="separator:a2ac2e95ac2cd55a6d4e57f4c6de43b27"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa346a9c10159dc03c6e27f294d80cad2"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:aa346a9c10159dc03c6e27f294d80cad2"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; unsigned int &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#aa346a9c10159dc03c6e27f294d80cad2">pfuclt_aux::order_index</a> (std::vector&lt; T &gt; const &amp;values, const ORDER_TYPE order=<a class="el" href="namespacepfuclt__aux.html#ab461bfff32a907a13f3f67e874c01ec1a5b9491f115a56df4dd7cbf78f60f25e7">pfuclt_aux::DESC</a>)</td></tr>
-<tr class="memdesc:aa346a9c10159dc03c6e27f294d80cad2"><td class="mdescLeft">&#160;</td><td class="mdescRight">order_index - Generates a vector of indexes ordered according to another vector  <a href="namespacepfuclt__aux.html#aa346a9c10159dc03c6e27f294d80cad2">More...</a><br /></td></tr>
-<tr class="separator:aa346a9c10159dc03c6e27f294d80cad2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a968f9190cf84dacce97201d822825e52"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a968f9190cf84dacce97201d822825e52"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#a968f9190cf84dacce97201d822825e52">pfuclt_aux::readParam</a> (ros::NodeHandle &amp;nh, const std::string name, T &amp;variable)</td></tr>
-<tr class="memdesc:a968f9190cf84dacce97201d822825e52"><td class="mdescLeft">&#160;</td><td class="mdescRight">readParam - reads and returns a parameter from the ROS parameter server  <a href="namespacepfuclt__aux.html#a968f9190cf84dacce97201d822825e52">More...</a><br /></td></tr>
-<tr class="separator:a968f9190cf84dacce97201d822825e52"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeddd38527db75a680896b9750d158a7e"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:aeddd38527db75a680896b9750d158a7e"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepfuclt__aux.html#aeddd38527db75a680896b9750d158a7e">pfuclt_aux::readParam</a> (ros::NodeHandle &amp;nh, const std::string name, std::vector&lt; T &gt; &amp;variable)</td></tr>
-<tr class="separator:aeddd38527db75a680896b9750d158a7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67cb4e05228ca113437630a2f8507385"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a67cb4e05228ca113437630a2f8507385"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#a67cb4e05228ca113437630a2f8507385">pfuclt_omni_dataset::calc_stdDev</a> (const std::vector&lt; T &gt; &amp;vec)</td></tr>
+<tr class="memdesc:a67cb4e05228ca113437630a2f8507385"><td class="mdescLeft">&#160;</td><td class="mdescRight">calc_stdDev - Calculates standard deviation from a vector of type T  <a href="namespacepfuclt__omni__dataset.html#a67cb4e05228ca113437630a2f8507385">More...</a><br /></td></tr>
+<tr class="separator:a67cb4e05228ca113437630a2f8507385"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13cd113c2f0616e8f62b62ad560bd349"><td class="memItemLeft" align="right" valign="top">std::vector&lt; Landmark &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#a13cd113c2f0616e8f62b62ad560bd349">pfuclt_omni_dataset::getLandmarks</a> (const char *filename)</td></tr>
+<tr class="memdesc:a13cd113c2f0616e8f62b62ad560bd349"><td class="mdescLeft">&#160;</td><td class="mdescRight">getLandmarks - read landmark configuration from CSV file  <a href="namespacepfuclt__omni__dataset.html#a13cd113c2f0616e8f62b62ad560bd349">More...</a><br /></td></tr>
+<tr class="separator:a13cd113c2f0616e8f62b62ad560bd349"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55988bc59e2711d6988b9635628766d3"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a55988bc59e2711d6988b9635628766d3"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; unsigned int &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#a55988bc59e2711d6988b9635628766d3">pfuclt_omni_dataset::order_index</a> (std::vector&lt; T &gt; const &amp;values, const ORDER_TYPE order=DESC)</td></tr>
+<tr class="memdesc:a55988bc59e2711d6988b9635628766d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">order_index - Generates a vector of indexes ordered according to another vector  <a href="namespacepfuclt__omni__dataset.html#a55988bc59e2711d6988b9635628766d3">More...</a><br /></td></tr>
+<tr class="separator:a55988bc59e2711d6988b9635628766d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50be2e920cc59ab2b50d50a6edbec821"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a50be2e920cc59ab2b50d50a6edbec821"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#a50be2e920cc59ab2b50d50a6edbec821">pfuclt_omni_dataset::readParam</a> (ros::NodeHandle &amp;nh, const std::string name, T &amp;variable)</td></tr>
+<tr class="memdesc:a50be2e920cc59ab2b50d50a6edbec821"><td class="mdescLeft">&#160;</td><td class="mdescRight">readParam - reads and returns a parameter from the ROS parameter server  <a href="namespacepfuclt__omni__dataset.html#a50be2e920cc59ab2b50d50a6edbec821">More...</a><br /></td></tr>
+<tr class="separator:a50be2e920cc59ab2b50d50a6edbec821"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04c16cb19be0243ba8e9f70ceea8106b"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a04c16cb19be0243ba8e9f70ceea8106b"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacepfuclt__omni__dataset.html#a04c16cb19be0243ba8e9f70ceea8106b">pfuclt_omni_dataset::readParam</a> (ros::NodeHandle &amp;nh, const std::string name, std::vector&lt; T &gt; &amp;variable)</td></tr>
+<tr class="separator:a04c16cb19be0243ba8e9f70ceea8106b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 
@@ -127,7 +125,7 @@ Functions</h2></td></tr>
 <hr size="1"><div style="align: right;">
 <a href="http://wiki.ros.org/pfuclt_omni_dataset">pfuclt_omni_dataset</a><br />
 Author(s): </br />
-<small>autogenerated on Mon Jul 3 2017 16:11:29</small>
+<small>autogenerated on Tue Jul 4 2017 19:38:38</small>
 </div>
 </body>
 </html>

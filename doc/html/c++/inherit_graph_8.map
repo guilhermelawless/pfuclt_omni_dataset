@@ -1,3 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structpfuclt__aux_1_1timeEval__s.html" title="The timeEval_s struct &#45; takes care of time difference evaluation through the ros::Time methods..." alt="" coords="5,5,160,32"/>
+<area shape="rect" id="node1" href="$classpfuclt__omni__dataset_1_1ParticleFilter.html" title="pfuclt_omni_dataset\l::ParticleFilter" alt="" coords="5,5,144,47"/>
+<area shape="rect" id="node2" href="$classpfuclt__omni__dataset_1_1PFPublisher.html" title="The PFPublisher class &#45; implements publishing for the ParticleFilter class using ROS. " alt="" coords="192,5,331,47"/>
 </map>
