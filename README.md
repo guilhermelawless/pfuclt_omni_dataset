@@ -12,6 +12,10 @@ A. Ahmad; G. Lawless; P. Lima. **An Online Scalable Approach to Unified Multirob
 
 The read_omni_dataset package from https://github.com/aamirahmad/read_omni_dataset , *infinite-robots* branch.
 
+## Optimization
+
+Some steps of the algorithm can be parallelized using OpenMP. To choose the number of threads to be used, set an environment variable in the terminal you're using to run the algorithm as: `export OMP_NUM_THREADS=<number of threads to use>`
+
 ## Dataset generation
 
 Use the randgen_omni_dataset package from https://github.com/guilhermelawless/randgen_omni_dataset
