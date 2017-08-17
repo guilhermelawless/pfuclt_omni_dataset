@@ -67,7 +67,7 @@ void RobotFactory::initializeFixedLandmarks()
   std::string filename;
 
   // get the filename from parameter server
-  if (!readParam<std::string>(nh_, "/LANDMARKS_CONFIG", filename))
+  if (!readParam<std::string>(nh_, "LANDMARKS_CONFIG", filename))
     return;
 
   // parse the file and copy to vector of Landmarks

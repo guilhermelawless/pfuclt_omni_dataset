@@ -121,7 +121,7 @@ void ParticleFilter::predictTarget()
                                          (pdata_t)targetAcceleration(seed_) };
 
     // Use random acceleration model
-    for (uint s = 0; s < STATES_PER_TARGET - 1; ++s)
+    for (uint s = 0; s < STATES_PER_TARGET; ++s)
     {
       particles_[O_TARGET + s][p] += 0.5 * accel[s] * pow(targetIterationTime_.diff, 2);
     }
@@ -777,7 +777,7 @@ void ParticleFilter::predict(const uint robotNumber, const Odometry odom,
     ROS_INFO_STREAM("(WALL TIME) Iteration time: "
                     << 1e-6 * deltaIteration_.toNSec() << "ms ::: Worst case: "
                     << 1e-6 * maxDeltaIteration_.toNSec() << "ms ::: Average: "
-                    << 1e-6 * (durationSum.toNSec() / numberIterations) << "s");
+                    << 1e-6 * (durationSum.toNSec() / numberIterations) << "ms");
 
     // ROS_DEBUG("Iteration: %s", iteration_oss->str().c_str());
     // Clear ostringstream
