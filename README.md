@@ -39,4 +39,4 @@ If you use PF-UCLT on an academic work, please cite:
 
 ## Documentation
 
-Admittedly not very well done, we have doxygen auto-generated documentation in https://guilhermelawless.github.io/pfuclt_omni_dataset/doc/html/c++/index.html
+Not very detailed but we have doxygen auto-generated documentation in https://guilhermelawless.github.io/pfuclt_omni_dataset/doc/html/c++/index.html
