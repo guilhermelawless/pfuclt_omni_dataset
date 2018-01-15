@@ -10,7 +10,7 @@ A. Ahmad; G. Lawless; P. Lima. **An Online Scalable Approach to Unified Multirob
 
 ## Requirements
 
-The read_omni_dataset package from https://github.com/aamirahmad/read_omni_dataset , *infinite-robots* branch.
+The read_omni_dataset package from https://github.com/guilhermelawless/read_omni_dataset .
 
 ## Optimization
 
